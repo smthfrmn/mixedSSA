@@ -1,31 +1,8 @@
-#library(data.table)
-#library(tidyverse)
-#library(here)
-#library(assertive)
-# data("deer")
-
 # TODO:
 # - include random effects in update functions
-# - include log relative selection function
-# - what is the relative probability selecting one location over another?
-# - delta method
 # - continuous updating distributions:
 #     - 5, 50, 95%
-# - plotting updated distributions
 
-
-# ssf1 <- deer |>
-#   steps_by_burst() |>
-#   random_steps() |>
-#   mutate(
-#     log_sl_ = log(sl_),
-#     cos_ta_ = cos(ta_)
-#   )
-#
-# ssf1$animal <- sample(c("cat", "dog", "mouse", "snake"), size = nrow(ssf1), replace = TRUE)
-#
-# model <- glmmTMB(case_ ~ sl_ + log_sl_ + cos_ta_ + sl_:animal + log_sl_:animal + cos_ta_:animal, data = ssf1)
-# model <- readRDS(here("Snapper.ssf_sum_6min_all.rds"))
 
 #' @import amt
 #' @import methods
@@ -39,11 +16,12 @@ get_update_distribution_function_and_args <- function(distribution) {
 }
 
 
-get_updated_parameters <- function(args_df_row, dist, update_fn) {
+update_parameters <- function(args_df_row, dist, update_fn) {
   args <- c(list(dist = dist), sapply(args_df_row[2:length(args_df_row)], as.numeric))
   updated_parameters <- do.call(update_fn, args)$params
   return(updated_parameters)
 }
+
 
 get_default_coefficient_names <- function(distribution) {
   update_fn_args <- get_update_distribution_function_and_args(distribution)$args
@@ -106,13 +84,13 @@ validate_args <- function(data, model, distribution, coefficient_names, referenc
 }
 
 
-# TODO: add support for means coding
-
 #' Update movement distributions based on fitted models
 #'
 #' @export
 #'
 #' @import dplyr
+#' @import amt
+#' @import glmmTMB
 update_distributions_by_categorical_var <- function(data, model,
                                                     distribution,
                                                     coefficient_names = NULL,
@@ -139,8 +117,8 @@ update_distributions_by_categorical_var <- function(data, model,
 
   for (i in 1:length(coefficient_names)) {
     args_str <- coefficient_names[i]
-    interaction_coefficients <- names(coefs) %>%
-      str_detect(pattern = str_interp("^${args_str}:")) %>%
+    interaction_coefficients <- names(coefs) |>
+      str_detect(pattern = str_interp("^${args_str}:")) |>
       keep(coefs, .)
 
     interaction_coefficient_name <- names(interaction_coefficients)
@@ -175,22 +153,22 @@ update_distributions_by_categorical_var <- function(data, model,
     )
   }
 
-  pivoted_args_df <- args_df %>%
+  pivoted_args_df <- args_df |>
     mutate(
       interaction_coefficient_value = as.numeric(interaction_coefficient_value),
       coefficient_value = as.numeric(coefficient_value),
       coefficient_value_sum = interaction_coefficient_value + coefficient_value
-    ) %>%
+    ) |>
     pivot_wider(
       names_from = coefficient_name,
       values_from = coefficient_value_sum
-    ) %>%
-    group_by(category) %>%
+    ) |>
+    group_by(category) |>
     summarize(across(coefficient_names, mean, na.rm = TRUE))
 
   colnames(pivoted_args_df) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
   all_updated_parameters <- apply(pivoted_args_df, 1,
-    get_updated_parameters_,
+    update_parameters,
     dist = observed_fitted_distribution,
     update_fn = update_fn
   )
@@ -201,7 +179,6 @@ update_distributions_by_categorical_var <- function(data, model,
     observed_row,
     cbind(pivoted_args_df, rbindlist(all_updated_parameters))
   )
-
 
   return(final_df)
 }
