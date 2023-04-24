@@ -253,7 +253,7 @@ test_that("get_categories_from_coefficients", {
 })
 
 
-test_that("get_summed_coefficients", {
+test_that("get_summed_coefficients with_interactions TRUE", {
   dists <- get_supported_distributions()
 
   for (i in 1:length(dists)) {
@@ -264,22 +264,49 @@ test_that("get_summed_coefficients", {
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
 
-      expected_df <- data.frame(cbind(
-        category = sapply(HABITATS, function(habitat) {
+      expected_tibble <- tibble::tibble(
+        category = unname(sapply(HABITATS, function(habitat) {
           habitat_string <- ifelse(
             habitat == "forest", habitat, str_interp("habitat${habitat}"))
-        }),
+        })),
         coefficient_name = coef_name,
         coefficient_value_sum = get_expected_coefficient_sums(distribution = dist,
                                                               coef_index = j)
-      )) %>%
+      ) %>%
         arrange(coefficient_value_sum)
 
-      summed_coefficients_df <- get_summed_coefficients(
+      actual_tibble <- get_summed_coefficients(
         mock_coefs, coef_name, reference_category = REFERENCE_CATEGORY) %>%
         arrange(coefficient_value_sum)
 
-      expect_equal(tibble::as_tibble(summed_coefficients_df), tibble::as_tibble(expected_df))
+      expect_equal(actual_tibble,
+                   expected_tibble)
+    }
+  }
+})
+
+
+test_that("get_summed_coefficients with_interactions FALSE", {
+  dists <- get_supported_distributions()
+
+  for (i in 1:length(dists)) {
+    dist <- dists[i]
+    mock_coefs <- get_mock_coefs(dist, with_interaction = FALSE)
+    coef_names <- get_default_coefficient_names(dists[i])
+
+    for (j in 1:length(coef_names)) {
+      coef_name <- coef_names[j]
+
+      expected_df <- tibble::tibble(
+        category = c("reference_category"),
+        coefficient_name = c(coef_name),
+        coefficient_value_sum = c(j + 1)
+      )
+
+      summed_coefficients_df <- get_summed_coefficients(
+        mock_coefs, coef_name, reference_category = "reference_category")
+
+      expect_equal(summed_coefficients_df, expected_df)
     }
   }
 })

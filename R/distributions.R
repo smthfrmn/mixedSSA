@@ -147,13 +147,13 @@ get_summed_coefficients <- function(coefs, coefficient_name, reference_category)
   coefficient_name_vector <- rep(coefficient_name, nrows)
   coefficient_value_vector <- rep(coefs[coefficient_name], nrows)
 
-  reference_category_row <- cbind(
+  reference_category_row <- tibble::tibble(
     category = reference_category,
     coefficient_name = coefficient_name,
     coefficient_value_sum = unname(coefs[coefficient_name])
   )
 
-  non_reference_category_rows <- cbind(
+  non_reference_category_rows <- tibble::tibble(
     category = categories,
     coefficient_name = coefficient_name_vector,
     coefficient_value_sum = unname(interaction_coefficient_values + coefficient_value_vector)
@@ -164,13 +164,15 @@ get_summed_coefficients <- function(coefs, coefficient_name, reference_category)
     reference_category_row
   )
 
-  return(as.data.frame(args_df))
+  row.names(args_df) <- NULL
+
+  return(tibble::as_tibble(args_df))
 }
 
 
 
-get_summed_coefficients_all <- function(coefs, coefficient_names) {
-  summed_coefficients_df <- data.frame()
+get_summed_coefficients_all <- function(coefs, coefficient_names, reference_category) {
+  summed_coefficients_df <- tibble::tibble()
 
   for (i in 1:length(coefficient_names)) {
     coefficient_name <- coefficient_names[i]
@@ -178,7 +180,8 @@ get_summed_coefficients_all <- function(coefs, coefficient_names) {
       summed_coefficients_df,
       get_summed_coefficients(
         coefs = coefs,
-        coefficient_name = coefficient_name
+        coefficient_name = coefficient_name,
+        reference_category = "",
       )
     )
   }
