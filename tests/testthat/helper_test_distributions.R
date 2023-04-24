@@ -70,9 +70,25 @@ get_default_coefficient_names_by_dist <- function(distribution) {
 }
 
 
-get_sample_observed_distribution <- function(distribution = "gamma") {
-  data <- get_sample_deer_data()
-  return(amt::fit_distr(data, distribution, na.rm = TRUE))
+get_cached_distribution <- function(dist_name) {
+  file_path <- here(str_interp("tests/testthat/data/distributions/${dist_name}.rds"))
+  if(file.exists(file_path)) {
+    return(readRDS(file_path))
+  }
+  return(NULL)
+}
+
+get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_") {
+  distribution <- get_cached_distribution(dist_name)
+  if(is.null(distribution)) {
+    print("bad")
+    data <- get_sample_deer_data()[[column]]
+    distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
+    file_path <- here(str_interp("tests/testthat/data/distributions/${dist_name}.rds"))
+    saveRDS(distribution, file = file_path)
+  }
+
+  return(distribution)
 }
 
 

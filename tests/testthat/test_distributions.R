@@ -30,22 +30,76 @@ update_parameters <- function(args_df_row, dist, update_fn) {
 }
 
 
-test_that("update_parameters for all distributions", {
-  # distributions <- get_supported_distributions()
-  # update_fns <- list(
-  #   amt::update_gamma,
-  #   amt::update_exp,
-  #   amt::update_hnorm,
-  #   amt::update_lnorm,
-  #   amt::update_vonmises
-  # )
-  #
-  # for (i in 1:length(distributions)) {
-  #   dist <- get_sample_observed_distribution(distribution = distributions[i])
-  #   update_fn <- update_fns[[i]]
-  #   params <- update_parameters(args_df_row, dist, update_fn)
-  #   expect_equal(0, 1)
-  # }
+test_that("update_parameters for all distributions with interaction", {
+  distributions <- get_supported_distributions()
+  update_fns <- list(
+    amt::update_gamma,
+    amt::update_exp,
+    amt::update_hnorm,
+    amt::update_lnorm,
+    amt::update_vonmises
+  )
+
+
+  args_tibble_rows <- hash(
+    "gamma" = tibble(
+      category = "placeholder",
+      beta_sl = 0.003,
+      beta_log_sl = 0.002
+    ),
+    "exp" = tibble(
+      category = "placeholder",
+      beta_sl = 0.003
+    ),
+    "hnorm" = tibble(
+      category = "placeholder",
+      beta_sl_sq = 0.0003
+    ),
+    "lnorm" = tibble(
+      category = "placeholder",
+      beta_log_sl = 0.002,
+      beta_log_sl_sq = 0.004
+    ),
+    "vonmises" = tibble(
+      category = "placeholder",
+      beta_cos_ta = 0.002
+    )
+  )
+
+  expected_params <- hash(
+    "gamma" = list(
+      shape = 0.7764141,
+      scale = -1157.715
+    ),
+    "exp" = list(
+      rate = -0.0002215319
+    ),
+    "hnorm" = list(
+      sd = 0  # not working
+    ),
+    "lnorm" = list(
+      meanLog = 5.211295,
+      sdLog = 1.5606
+    ),
+    "vonmises" = list(
+      kappa = 2.500574,
+      mu = 0  # TODO: this is an object
+    )
+  )
+
+  for (i in 1:length(distributions)) {
+    distribution_name <- distributions[i]
+    column <- ifelse(distribution_name == "vonmises", "cos_ta_", "sl_")
+    dist <- get_sample_observed_distribution(dist_name = distribution_name, column = column)
+    update_fn <- update_fns[[i]]
+
+    args_tibble_row <- args_tibble_rows[[distribution_name]]
+    actual_params <- update_parameters(args_tibble_row, dist, update_fn)
+    print(actual_params)
+
+    expected_params <- expected_params[[distribution_name]]
+    expect_equal(actual_params, expected_params)
+  }
 })
 
 
@@ -237,7 +291,6 @@ test_that("get_categories_from_coefficients", {
   expected_categories <- c("habitatforest", "habitatlake", "habitatmountain")
 
   for (i in 1:length(dists)) {
-
     coefs <- get_mock_coefs(dists[i])
     coef_names <- get_default_coefficient_names(dists[i])
 
@@ -267,20 +320,27 @@ test_that("get_summed_coefficients with_interactions TRUE", {
       expected_tibble <- tibble::tibble(
         category = unname(sapply(HABITATS, function(habitat) {
           habitat_string <- ifelse(
-            habitat == "forest", habitat, str_interp("habitat${habitat}"))
+            habitat == "forest", habitat, str_interp("habitat${habitat}")
+          )
         })),
         coefficient_name = coef_name,
-        coefficient_value_sum = get_expected_coefficient_sums(distribution = dist,
-                                                              coef_index = j)
+        coefficient_value_sum = get_expected_coefficient_sums(
+          distribution = dist,
+          coef_index = j
+        )
       ) %>%
         arrange(coefficient_value_sum)
 
       actual_tibble <- get_summed_coefficients(
-        mock_coefs, coef_name, reference_category = REFERENCE_CATEGORY) %>%
+        mock_coefs, coef_name,
+        reference_category = REFERENCE_CATEGORY
+      ) %>%
         arrange(coefficient_value_sum)
 
-      expect_equal(actual_tibble,
-                   expected_tibble)
+      expect_equal(
+        actual_tibble,
+        expected_tibble
+      )
     }
   }
 })
@@ -297,25 +357,99 @@ test_that("get_summed_coefficients with_interactions FALSE", {
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
 
-      expected_df <- tibble::tibble(
+      expected_tibble <- tibble::tibble(
         category = c("reference_category"),
         coefficient_name = c(coef_name),
         coefficient_value_sum = c(j + 1)
       )
 
-      summed_coefficients_df <- get_summed_coefficients(
-        mock_coefs, coef_name, reference_category = "reference_category")
+      actual_tibble <- get_summed_coefficients(
+        mock_coefs, coef_name,
+        reference_category = "reference_category"
+      )
 
-      expect_equal(summed_coefficients_df, expected_df)
+      expect_equal(
+        actual_tibble,
+        expected_tibble
+      )
     }
   }
 })
 
 
-test_that("get_summed_coefficients_all", {
+test_that("get_summed_coefficients_all with_interaction TRUE", {
+  dists <- get_supported_distributions()
+  for (i in 1:length(dists)) {
+    dist <- dists[i]
 
+    mock_coefs <- get_mock_coefs(dist, with_interaction = TRUE)
+    coef_names <- get_default_coefficient_names(dists[i])
+    expected_tibble <- tibble::tibble()
+    for (j in 1:length(coef_names)) {
+      coef_name <- coef_names[j]
+      expected_tibble <- rbind(
+        expected_tibble,
+        tibble::tibble(
+          category = unname(sapply(HABITATS, function(habitat) {
+            habitat_string <- ifelse(
+              habitat == "forest", habitat, str_interp("habitat${habitat}")
+            )
+          })),
+          coefficient_name = coef_name,
+          coefficient_value_sum = get_expected_coefficient_sums(
+            distribution = dist,
+            coef_index = j
+          )
+        )
+      ) %>%
+        arrange(coefficient_value_sum)
+    }
 
+    actual_tibble <- get_summed_coefficients_all(
+      coefs = mock_coefs,
+      coefficient_names = coef_names,
+      reference_category = REFERENCE_CATEGORY
+    ) %>%
+      arrange(coefficient_value_sum)
+
+    expect_equal(actual_tibble, expected_tibble)
+  }
 })
+
+
+test_that("get_summed_coefficients_all with_interaction FALSE", {
+  dists <- get_supported_distributions()
+  for (i in 1:length(dists)) {
+    dist <- dists[i]
+
+    mock_coefs <- get_mock_coefs(dist, with_interaction = FALSE)
+    coef_names <- get_default_coefficient_names(dists[i])
+    expected_tibble <- tibble::tibble()
+    for (j in 1:length(coef_names)) {
+      coef_name <- coef_names[j]
+
+      expected_tibble <- rbind(
+        expected_tibble,
+        tibble::tibble(
+          category = c("reference_category"),
+          coefficient_name = c(coef_name),
+          coefficient_value_sum = c(j + 1)
+        )
+      ) %>%
+        arrange(coefficient_value_sum)
+    }
+
+    actual_tibble <- get_summed_coefficients_all(
+      coefs = mock_coefs,
+      coefficient_names = coef_names,
+      reference_category = "reference_category"
+    ) %>%
+      arrange(coefficient_value_sum)
+
+    expect_equal(actual_tibble, expected_tibble)
+  }
+})
+
 
 
 test_that("get_updated_parameters", {

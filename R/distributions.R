@@ -16,8 +16,8 @@ get_update_distribution_function_and_args <- function(distribution) {
 }
 
 
-update_parameters <- function(args_df_row, dist, update_fn) {
-  args <- c(list(dist = dist), sapply(args_df_row[2:length(args_df_row)], as.numeric))
+update_parameters <- function(args_tibble_row, dist, update_fn) {
+  args <- c(list(dist = dist), sapply(args_tibble_row[2:length(args_tibble_row)], as.numeric))
   updated_parameters <- do.call(update_fn, args)$params
   return(updated_parameters)
 }
@@ -96,9 +96,9 @@ get_categories_from_coefficients <- function(interaction_coefficients) {
 
 
 #' @import stringr
-get_updated_parameters <- function(distribution, summed_coefficients_df) {
+get_updated_parameters <- function(distribution, summed_coefficients_tibble) {
   # use group_by here instead
-  pivoted_args_df <- args_df |>
+  pivoted_args_tibble <- summed_coefficients_tibble |>
     mutate(
       coefficient_value_sum = as.numeric(coefficient_value_sum)
     ) |>
@@ -109,14 +109,14 @@ get_updated_parameters <- function(distribution, summed_coefficients_df) {
     group_by(category) |>
     summarize(across(coefficient_names, mean, na.rm = TRUE))
 
-  colnames(pivoted_args_df) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
+  colnames(pivoted_args_tibble) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
 
   observed_fitted_distribution <- amt::fit_distr(data, distribution, na.rm = TRUE)
   update_fn_and_args <- get_update_distribution_function_and_args(distribution)
   update_fn <- update_fn_and_args$fn
   update_fn_arg_names <- update_fn_and_args$args
 
-  all_updated_parameters <- apply(pivoted_args_df,
+  all_updated_parameters <- apply(pivoted_args_tibble,
     1, update_parameters,
     dist = observed_fitted_distribution,
     update_fn = update_fn
@@ -125,12 +125,12 @@ get_updated_parameters <- function(distribution, summed_coefficients_df) {
   observed_params <- observed_fitted_distribution$params
   observed_row <- c("observed", NA, NA, unlist(observed_params))
 
-  updated_parameters_df <- rbind(
+  updated_parameters_tibble <- rbind(
     observed_row,
-    cbind(pivoted_args_df, rbindlist(all_updated_parameters))
+    cbind(pivoted_args_tibble, rbindlist(all_updated_parameters))
   )
 
-  return(updated_parameters_df)
+  return(updated_parameters_tibble)
 }
 
 
@@ -159,37 +159,35 @@ get_summed_coefficients <- function(coefs, coefficient_name, reference_category)
     coefficient_value_sum = unname(interaction_coefficient_values + coefficient_value_vector)
   )
 
-  args_df <- rbind(
+  args_tibble <- rbind(
     non_reference_category_rows,
     reference_category_row
   )
 
-  row.names(args_df) <- NULL
+  row.names(args_tibble) <- NULL
 
-  return(tibble::as_tibble(args_df))
+  return(tibble::as_tibble(args_tibble))
 }
 
 
 
 get_summed_coefficients_all <- function(coefs, coefficient_names, reference_category) {
-  summed_coefficients_df <- tibble::tibble()
+  summed_coefficients_tibble <- tibble::tibble()
 
   for (i in 1:length(coefficient_names)) {
     coefficient_name <- coefficient_names[i]
-    summed_coefficients_df <- rbind(
-      summed_coefficients_df,
+    summed_coefficients_tibble <- rbind(
+      summed_coefficients_tibble,
       get_summed_coefficients(
         coefs = coefs,
         coefficient_name = coefficient_name,
-        reference_category = "",
+        reference_category = reference_category
       )
     )
   }
 
-  return(summed_coefficients_df)
+  return(summed_coefficients_tibble)
 }
-
-
 
 
 
@@ -215,8 +213,8 @@ update_distributions_by_categorical_var <- function(data, model,
   coefs <- glmmTMB::fixef(model)$cond
   coefficient_names <- if (is.null(coefficient_names)) get_default_coefficient_names(distribution) else coefficient_names
 
-  summed_coefficients_df <- get_summed_coefficients_all(coefs, coefficient_names)
-  updated_parameters_df <- get_updated_parameters(distribution, summed_coefficients_df)
+  summed_coefficients_tibble <- get_summed_coefficients_all(coefs, coefficient_names)
+  updated_parameters_tibble <- get_updated_parameters(distribution, summed_coefficients_tibble)
 
-  return(updated_parameters_df)
+  return(updated_parameters_tibble)
 }
