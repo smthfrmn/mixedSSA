@@ -31,21 +31,21 @@ update_parameters <- function(args_df_row, dist, update_fn) {
 
 
 test_that("update_parameters for all distributions", {
-  distributions <- get_supported_distributions()
-  update_fns <- list(
-    amt::update_gamma,
-    amt::update_exp,
-    amt::update_hnorm,
-    amt::update_lnorm,
-    amt::update_vonmises
-  )
-
-  for (i in 1:length(distributions)) {
-    # dist <- get_sample_observed_distribution(distribution = distributions[i])
-    # update_fn <- update_fns[[i]]
-    # params <- update_parameters(args_df_row, dist, update_fn)
-    expect_equal(0, 1)
-  }
+  # distributions <- get_supported_distributions()
+  # update_fns <- list(
+  #   amt::update_gamma,
+  #   amt::update_exp,
+  #   amt::update_hnorm,
+  #   amt::update_lnorm,
+  #   amt::update_vonmises
+  # )
+  #
+  # for (i in 1:length(distributions)) {
+  #   dist <- get_sample_observed_distribution(distribution = distributions[i])
+  #   update_fn <- update_fns[[i]]
+  #   params <- update_parameters(args_df_row, dist, update_fn)
+  #   expect_equal(0, 1)
+  # }
 })
 
 
@@ -232,8 +232,84 @@ test_that("validate_args succeeds with null coefficient names", {
 })
 
 
+test_that("get_categories_from_coefficients", {
+  dists <- get_supported_distributions()
+  expected_categories <- c("habitatforest", "habitatlake", "habitatmountain")
 
-test_that("update_distributions_by_categorical_var", {
+  for (i in 1:length(dists)) {
+
+    coefs <- get_mock_coefs(dists[i])
+    coef_names <- get_default_coefficient_names(dists[i])
+
+    for (j in 1:length(coef_names)) {
+      coef_name <- coef_names[j]
+      interaction_coefficients <- names(coefs) %>%
+        str_detect(pattern = str_interp("^${coef_name}:")) %>%
+        purrr::keep(coefs, .)
+      categories <- get_categories_from_coefficients(interaction_coefficients)
+      expect_equal(categories, expected_categories)
+    }
+  }
+})
+
+
+test_that("get_summed_coefficients", {
+  dists <- get_supported_distributions()
+
+  for (i in 1:length(dists)) {
+    dist <- dists[i]
+    mock_coefs <- get_mock_coefs(dist)
+    coef_names <- get_default_coefficient_names(dists[i])
+
+    for (j in 1:length(coef_names)) {
+      coef_name <- coef_names[j]
+
+      expected_df <- data.frame(cbind(
+        category = sapply(HABITATS, function(habitat) {
+          habitat_string <- ifelse(
+            habitat == "forest", habitat, str_interp("habitat${habitat}"))
+        }),
+        coefficient_name = coef_name,
+        coefficient_value_sum = get_expected_coefficient_sums(distribution = dist,
+                                                              coef_index = j)
+      )) %>%
+        arrange(coefficient_value_sum)
+
+      summed_coefficients_df <- get_summed_coefficients(
+        mock_coefs, coef_name, reference_category = REFERENCE_CATEGORY) %>%
+        arrange(coefficient_value_sum)
+
+      expect_equal(tibble::as_tibble(summed_coefficients_df), tibble::as_tibble(expected_df))
+    }
+  }
+})
+
+
+test_that("get_summed_coefficients_all", {
+
+
+})
+
+
+test_that("get_updated_parameters", {
+
+
+})
+
+
+test_that("update_distributions_by_categorical_var no interaction", {
+
+
+})
+
+
+test_that("update_distributions_by_categorical_var with interaction", {
+
+
+})
+
+
+test_that("update_distributions_by_categorical_var with custom coefficient names", {
 
 
 })

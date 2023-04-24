@@ -84,6 +84,112 @@ validate_args <- function(data, model, distribution, coefficient_names, referenc
 }
 
 
+get_categories_from_coefficients <- function(interaction_coefficients) {
+  interaction_coefficient_names <- names(interaction_coefficients)
+
+  categories <- sapply(interaction_coefficient_names, function(name) {
+    return(str_extract(name, regex("(?<=:).*")))
+  })
+
+  return(unname(categories))
+}
+
+
+#' @import stringr
+get_updated_parameters <- function(distribution, summed_coefficients_df) {
+  # use group_by here instead
+  pivoted_args_df <- args_df |>
+    mutate(
+      coefficient_value_sum = as.numeric(coefficient_value_sum)
+    ) |>
+    pivot_wider(
+      names_from = coefficient_name,
+      values_from = coefficient_value_sum
+    ) |>
+    group_by(category) |>
+    summarize(across(coefficient_names, mean, na.rm = TRUE))
+
+  colnames(pivoted_args_df) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
+
+  observed_fitted_distribution <- amt::fit_distr(data, distribution, na.rm = TRUE)
+  update_fn_and_args <- get_update_distribution_function_and_args(distribution)
+  update_fn <- update_fn_and_args$fn
+  update_fn_arg_names <- update_fn_and_args$args
+
+  all_updated_parameters <- apply(pivoted_args_df,
+    1, update_parameters,
+    dist = observed_fitted_distribution,
+    update_fn = update_fn
+  )
+
+  observed_params <- observed_fitted_distribution$params
+  observed_row <- c("observed", NA, NA, unlist(observed_params))
+
+  updated_parameters_df <- rbind(
+    observed_row,
+    cbind(pivoted_args_df, rbindlist(all_updated_parameters))
+  )
+
+  return(updated_parameters_df)
+}
+
+
+#' @import purrr
+get_summed_coefficients <- function(coefs, coefficient_name, reference_category) {
+  interaction_coefficients <- names(coefs) %>%
+    str_detect(pattern = str_interp("^${coefficient_name}:")) %>%
+    purrr::keep(coefs, .)
+
+  categories <- get_categories_from_coefficients(interaction_coefficients)
+  interaction_coefficient_values <- unname(interaction_coefficients)
+  nrows <- length(interaction_coefficient_values)
+
+  coefficient_name_vector <- rep(coefficient_name, nrows)
+  coefficient_value_vector <- rep(coefs[coefficient_name], nrows)
+
+  reference_category_row <- cbind(
+    category = reference_category,
+    coefficient_name = coefficient_name,
+    coefficient_value_sum = unname(coefs[coefficient_name])
+  )
+
+  non_reference_category_rows <- cbind(
+    category = categories,
+    coefficient_name = coefficient_name_vector,
+    coefficient_value_sum = unname(interaction_coefficient_values + coefficient_value_vector)
+  )
+
+  args_df <- rbind(
+    non_reference_category_rows,
+    reference_category_row
+  )
+
+  return(as.data.frame(args_df))
+}
+
+
+
+get_summed_coefficients_all <- function(coefs, coefficient_names) {
+  summed_coefficients_df <- data.frame()
+
+  for (i in 1:length(coefficient_names)) {
+    coefficient_name <- coefficient_names[i]
+    summed_coefficients_df <- rbind(
+      summed_coefficients_df,
+      get_summed_coefficients(
+        coefs = coefs,
+        coefficient_name = coefficient_name
+      )
+    )
+  }
+
+  return(summed_coefficients_df)
+}
+
+
+
+
+
 #' Update movement distributions based on fitted models
 #'
 #' @export
@@ -103,82 +209,11 @@ update_distributions_by_categorical_var <- function(data, model,
     reference_category = reference_category
   )
 
-
   coefs <- glmmTMB::fixef(model)$cond
-  observed_fitted_distribution <- amt::fit_distr(data, distribution, na.rm = TRUE)
-
   coefficient_names <- if (is.null(coefficient_names)) get_default_coefficient_names(distribution) else coefficient_names
 
-  update_fn_and_args <- get_update_distribution_function_and_args(distribution)
-  update_fn <- update_fn_and_args$fn
-  update_fn_arg_names <- update_fn_and_args$args
+  summed_coefficients_df <- get_summed_coefficients_all(coefs, coefficient_names)
+  updated_parameters_df <- get_updated_parameters(distribution, summed_coefficients_df)
 
-  args_df <- data.frame()
-
-  for (i in 1:length(coefficient_names)) {
-    args_str <- coefficient_names[i]
-    interaction_coefficients <- names(coefs) |>
-      str_detect(pattern = str_interp("^${args_str}:")) |>
-      keep(coefs, .)
-
-    interaction_coefficient_name <- names(interaction_coefficients)
-
-    category <- sapply(interaction_coefficient_name, function(name) {
-      return(str_extract(name, regex("(?<=:).*")))
-    })
-
-    interaction_coefficient_value <- unname(interaction_coefficients)
-    nrows <- length(interaction_coefficient_value)
-
-    coefficient_name <- rep(args_str, nrows)
-    coefficient_value <- rep(coefs[args_str], nrows)
-
-    non_interaction_row <- cbind(
-      interaction_coefficient_name = args_str,
-      category = reference_category,
-      interaction_coefficient_value = 0,
-      coefficient_name = args_str,
-      coefficient_value = coefs[args_str]
-    )
-
-    args_df <- rbind(
-      args_df,
-      cbind(
-        interaction_coefficient_name,
-        category,
-        interaction_coefficient_value,
-        coefficient_name, coefficient_value
-      ),
-      non_interaction_row
-    )
-  }
-
-  pivoted_args_df <- args_df |>
-    mutate(
-      interaction_coefficient_value = as.numeric(interaction_coefficient_value),
-      coefficient_value = as.numeric(coefficient_value),
-      coefficient_value_sum = interaction_coefficient_value + coefficient_value
-    ) |>
-    pivot_wider(
-      names_from = coefficient_name,
-      values_from = coefficient_value_sum
-    ) |>
-    group_by(category) |>
-    summarize(across(coefficient_names, mean, na.rm = TRUE))
-
-  colnames(pivoted_args_df) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
-  all_updated_parameters <- apply(pivoted_args_df, 1,
-    update_parameters,
-    dist = observed_fitted_distribution,
-    update_fn = update_fn
-  )
-
-  observed_params <- observed_fitted_distribution$params
-  observed_row <- c("observed", NA, NA, observed_params$shape, observed_params$scale)
-  final_df <- rbind(
-    observed_row,
-    cbind(pivoted_args_df, rbindlist(all_updated_parameters))
-  )
-
-  return(final_df)
+  return(updated_parameters_df)
 }
