@@ -34,25 +34,25 @@ test_that("update_parameters for all distributions", {
 
 
   args_tibble_rows <- hash(
-    "gamma" = tibble(
+    "gamma" = tibble::tibble(
       category = "placeholder",
       beta_sl = 0.003,
       beta_log_sl = 0.002
     ),
-    "exp" = tibble(
+    "exp" = tibble::tibble(
       category = "placeholder",
       beta_sl = 0.003
     ),
-    "hnorm" = tibble(
+    "hnorm" = tibble::tibble(
       category = "placeholder",
       beta_sl_sq = 0.0003
     ),
-    "lnorm" = tibble(
+    "lnorm" = tibble::tibble(
       category = "placeholder",
       beta_log_sl = 0.002,
       beta_log_sl_sq = 0.004
     ),
-    "vonmises" = tibble(
+    "vonmises" = tibble::tibble(
       category = "placeholder",
       beta_cos_ta = 0.002
     )
@@ -293,9 +293,7 @@ test_that("get_categories_from_coefs", {
 
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
-      interaction_coefs <- names(coefs) %>%
-        str_detect(pattern = str_interp("^${coef_name}:")) %>%
-        purrr::keep(coefs, .)
+      interaction_coefs <- coefs[grepl(str_interp("^${coef_name}:"), names(coefs))]
       categories <- get_categories_from_coefs(interaction_coefs)
       expect_equal(categories, expected_categories)
     }
@@ -476,7 +474,7 @@ test_that("get_updated_parameters with interactions", {
       summed_coefs_tibble = summed_coef_tibble
     )
 
-    file_path <- here(str_interp("tests/testthat/data/expected_updated_parameters_tibbles/${dist_name}.rds"))
+    file_path <- here(str_interp("${testthat::test_path()}/data/expected_updated_parameters_tibbles/${dist_name}.rds"))
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
   }

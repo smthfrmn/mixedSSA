@@ -2,25 +2,24 @@ Package: movementUtilities
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("Smith", "Freeman", , "smithifreeman@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "https://orcid.org/0009-0008-0430-653X"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Imports: 
     amt,
     assertive,
-    data.table,
     dplyr,
     glmmTMB,
-    hash,
     methods,
-    mockr,
-    purrr,
     stringr,
-    tidyr
+    tidyr,
+    tibble
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    mockr,
+    hash,
+    here
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

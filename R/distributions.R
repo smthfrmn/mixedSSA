@@ -80,7 +80,7 @@ validate_args <- function(data, model, dist_name, coef_names, reference_category
     stop("argument 'data' must be a vector of type numeric. Make sure you are passing either the step lengths column (e.g. sl_) or turn angles (e.g. cos_ta_).")
   }
 
-  if (!class(model) == "glmmTMB") {
+  if (!is(model, "glmmTMB")) {
     stop("argument 'model' must be of class 'glmmTMB'")
   }
 
@@ -117,13 +117,12 @@ fit_distribution <- function(data, dist_name, na_rm) {
 
 #' @import stringr
 #' @import tidyr
-#' @import data.table
 get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
 
   pivoted_args_tibble <- summed_coefs_tibble |>
     pivot_wider(
-      names_from = coef_name,
-      values_from = coef_value_sum
+      names_from = "coef_name",
+      values_from = "coef_value_sum"
     )
 
   observed_fitted_distribution <- fit_distribution(data = data,
@@ -153,18 +152,17 @@ get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
 
   updated_parameters_tibble <- rbind(
     observed_row,
-    cbind(pivoted_args_tibble, rbindlist(all_updated_parameters))
+    cbind(pivoted_args_tibble,
+          dplyr::bind_rows(all_updated_parameters))
   )
 
   return(updated_parameters_tibble)
 }
 
 
-#' @import purrr
+#' @import tibble
 get_summed_coefs <- function(coefs, coef_name, reference_category) {
-  interaction_coefs <- names(coefs) %>%
-    str_detect(pattern = str_interp("^${coef_name}:")) %>%
-    purrr::keep(coefs, .)
+  interaction_coefs <- coefs[grepl(str_interp("^${coef_name}:"), names(coefs))]
 
   categories <- get_categories_from_coefs(interaction_coefs)
   interaction_coef_values <- unname(interaction_coefs)
@@ -173,13 +171,13 @@ get_summed_coefs <- function(coefs, coef_name, reference_category) {
   coef_name_vector <- rep(coef_name, nrows)
   coef_value_vector <- rep(coefs[coef_name], nrows)
 
-  reference_category_row <- tibble::tibble(
+  reference_category_row <- tibble(
     category = reference_category,
     coef_name = coef_name,
     coef_value_sum = unname(coefs[coef_name])
   )
 
-  non_reference_category_rows <- tibble::tibble(
+  non_reference_category_rows <- tibble(
     category = categories,
     coef_name = coef_name_vector,
     coef_value_sum = unname(interaction_coef_values + coef_value_vector)
@@ -192,13 +190,13 @@ get_summed_coefs <- function(coefs, coef_name, reference_category) {
 
   row.names(args_tibble) <- NULL
 
-  return(tibble::as_tibble(args_tibble))
+  return(args_tibble)
 }
 
 
-
+#' @import tibble
 get_summed_coefs_all <- function(coefs, coef_names, reference_category) {
-  summed_coefs_tibble <- tibble::tibble()
+  summed_coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
     coef_name <- coef_names[i]
@@ -240,7 +238,7 @@ update_distributions_by_categorical_var <- function(data, model,
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
   summed_coefs_tibble <- get_summed_coefs_all(coefs = coefs,
-                                              coef_name = coef_names)
+                                              coef_names = coef_names)
   updated_parameters_tibble <- get_updated_parameters(data = data,
                                                       dist_name = dist_name,
                                                       summed_coefs_tibble = summed_coefs_tibble)
