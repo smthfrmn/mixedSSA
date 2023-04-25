@@ -1,5 +1,6 @@
 library(hash)
 library(amt)
+library(here)
 
 
 REFERENCE_CATEGORY <- "forest"
@@ -55,8 +56,7 @@ get_sample_models <- function(data = get_sample_deer_data(), with_interaction = 
 }
 
 get_supported_distributions <- function() {
-  distributions <- c("gamma", "exp", "hnorm", "lnorm", "vonmises")
-  return(distributions)
+  return(SUPPORTED_DISTRIBUTIONS)
 }
 
 get_default_coefficient_names_by_dist <- function(distribution) {
@@ -81,7 +81,7 @@ get_cached_distribution <- function(dist_name) {
 get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_") {
   distribution <- get_cached_distribution(dist_name)
   if(is.null(distribution)) {
-    print("bad")
+    print("NOT GETTING CACHED")
     data <- get_sample_deer_data()[[column]]
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
     file_path <- here(str_interp("tests/testthat/data/distributions/${dist_name}.rds"))

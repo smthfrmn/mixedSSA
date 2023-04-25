@@ -2,7 +2,16 @@
 # - include random effects in update functions
 # - continuous updating distributions:
 #     - 5, 50, 95%
+# - add unif distribution support
+# - constants
 
+GAMMA <- "gamma"
+EXP <- "exp"
+HNORM <- "hnorm"
+LNORM <- "lnorm"
+VONMISES <- "vonmises"
+
+SUPPORTED_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM, VONMISES)
 
 #' @import amt
 #' @import methods
@@ -18,7 +27,14 @@ get_update_distribution_function_and_args <- function(distribution) {
 
 update_parameters <- function(args_tibble_row, dist, update_fn) {
   args <- c(list(dist = dist), sapply(args_tibble_row[2:length(args_tibble_row)], as.numeric))
-  updated_parameters <- do.call(update_fn, args)$params
+
+  response <- do.call(update_fn, args)
+  updated_parameters <- response$params
+
+  if(response$name == VONMISES){
+    updated_parameters$mu <- updated_parameters$mu[[1]]
+  }
+
   return(updated_parameters)
 }
 
@@ -68,9 +84,7 @@ validate_args <- function(data, model, distribution, coefficient_names, referenc
     stop("argument 'model' must be of class 'glmmTMB'")
   }
 
-  valid_distributions <- c("gamma", "exp", "hnorm", "lnorm", "vonmises")
-
-  if (!distribution %in% valid_distributions) {
+  if (!distribution %in% SUPPORTED_DISTRIBUTIONS) {
     stop(stringr::str_interp("argument 'distribution' must be one of ${valid_distributions}"))
   }
 
