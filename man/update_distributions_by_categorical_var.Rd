@@ -7,8 +7,8 @@
 update_distributions_by_categorical_var(
   data,
   model,
-  distribution,
-  coefficient_names = NULL,
+  dist_name,
+  coef_names = NULL,
   reference_category = "reference_category"
 )
 }

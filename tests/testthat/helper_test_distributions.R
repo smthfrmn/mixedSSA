@@ -2,23 +2,24 @@ library(hash)
 library(amt)
 library(here)
 
-
+# Deal with check() running from different place
 REFERENCE_CATEGORY <- "forest"
 HABITATS <- c(REFERENCE_CATEGORY, "desert", "lake", "mountain")
 
 get_sample_deer_data <- function() {
-  data("deer")
-  deer_amt_data <- deer |>
-    steps_by_burst() |>
-    random_steps() |>
-    mutate(
-      sl_sq_ = sl_ * sl_,
-      log_sl_ = log(sl_),
-      log_sl_sq_ = log_sl_ * log_sl_,
-      cos_ta_ = cos(ta_)
-    )
-
-  return(set_sample_habitat(deer_amt_data))
+  # data("deer")
+  # deer_amt_data <- deer |>
+  #   steps_by_burst() |>
+  #   random_steps() |>
+  #   mutate(
+  #     sl_sq_ = sl_ * sl_,
+  #     log_sl_ = log(sl_),
+  #     log_sl_sq_ = log_sl_ * log_sl_,
+  #     cos_ta_ = cos(ta_)
+  #   )
+  # deer_data <- set_sample_habitat(deer_amt_data)
+  file_path = here("tests/testthat/data/deer_data.rds")
+  return(readRDS(file_path))
 }
 
 
@@ -55,11 +56,20 @@ get_sample_models <- function(data = get_sample_deer_data(), with_interaction = 
   return(models)
 }
 
+
+get_sample_coefs <- function(dist_name, data = get_sample_deer_data(),
+                             with_interaction = FALSE) {
+  model <- get_sample_models(with_interaction = with_interaction)[[dist_name]]
+  return(fixef(model)$cond)
+}
+
+
 get_supported_distributions <- function() {
   return(SUPPORTED_DISTRIBUTIONS)
 }
 
-get_default_coefficient_names_by_dist <- function(distribution) {
+
+get_default_coef_names_by_dist <- function(distribution) {
   return(hash(
     "gamma" = c("sl_", "log_sl_"),
     "exp" = c("sl_"),
@@ -92,12 +102,6 @@ get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_"
 }
 
 
-get_sample_args_df_row <- function(distribution = "gamma") {
-  # args_df_row <- c("reference_category", "1.416323e-06", "-0.0009192258")
-  # names(args_df_row) <- c("category", "beta_sl", "beta_log_sl")
-}
-
-
 get_mock_coefs <- function(distribution, with_interaction = TRUE) {
   model <- get_sample_models(with_interaction = with_interaction)[[distribution]]
   coefs <- glmmTMB::fixef(model)$cond
@@ -106,8 +110,8 @@ get_mock_coefs <- function(distribution, with_interaction = TRUE) {
 }
 
 
-get_expected_coefficient_sums <- function(distribution, coef_index){
-  expected_coefficient_sums = hash(
+get_expected_coef_sums <- function(distribution, coef_index){
+  expected_coef_sums = hash(
     "gamma" = hash(
       "1" = c(2, 6, 7, 8),  # sl_
       "2" = c(3, 10, 11, 12)  # log_sl_
@@ -130,5 +134,5 @@ get_expected_coefficient_sums <- function(distribution, coef_index){
     )
   )
 
-  return(as.vector(expected_coefficient_sums[[distribution]][[as.character(coef_index)]]))
+  return(as.vector(expected_coef_sums[[distribution]][[as.character(coef_index)]]))
 }

@@ -67,7 +67,7 @@ test_that("update_parameters for all distributions", {
       rate = -0.00022153185
     ),
     "hnorm" = list(
-      sd = 0   # TODO: not working
+      sd = 0 # TODO: not working
     ),
     "lnorm" = list(
       meanlog = 5.2112948,
@@ -80,20 +80,20 @@ test_that("update_parameters for all distributions", {
   )
 
   for (i in 1:length(distributions)) {
-    distribution_name <- distributions[i]
-    column <- ifelse(distribution_name == "vonmises", "cos_ta_", "sl_")
+    dist_name <- distributions[i]
+    column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
 
-    if(distribution_name == "hnorm"){
+    if (dist_name == "hnorm") {
       # TODO: ACTUALLY FIX THIS...
       next
     }
 
-    dist <- get_sample_observed_distribution(dist_name = distribution_name, column = column)
-    update_fn <- update_fns[[distribution_name]]
+    dist <- get_sample_observed_distribution(dist_name = dist_name, column = column)
+    update_fn <- update_fns[[dist_name]]
 
-    current_expected_params <- expected_params[[distribution_name]]
+    current_expected_params <- expected_params[[dist_name]]
 
-    args_tibble_row <- args_tibble_rows[[distribution_name]]
+    args_tibble_row <- args_tibble_rows[[dist_name]]
     actual_params <- update_parameters(args_tibble_row, dist, update_fn)
 
     expect_equal(actual_params, current_expected_params)
@@ -101,7 +101,7 @@ test_that("update_parameters for all distributions", {
 })
 
 
-test_that("get_default_coefficient_names", {
+test_that("get_default_coef_names", {
   distributions <- get_supported_distributions()
 
   expected_params_list <- list(
@@ -113,31 +113,31 @@ test_that("get_default_coefficient_names", {
   )
 
   for (i in 1:length(distributions)) {
-    default_coefs <- get_default_coefficient_names(distributions[i])
+    default_coefs <- get_default_coef_names(distributions[i])
     expect_equal(default_coefs, expected_params_list[[i]])
   }
 })
 
 
-test_that("validate_coefficient_names fails number of args", {
+test_that("validate_coef_names fails number of args", {
   distributions <- get_supported_distributions()
   expected_number_params <- c(2, 1, 1, 2, 1)
 
   for (i in 1:length(distributions)) {
     expected_num <- expected_number_params[i]
-    wrong_num_coefficient_names <- rep("coef_name", expected_num + 1)
+    wrong_num_coef_names <- rep("coef_name", expected_num + 1)
     model <- NULL # don't need this for this test
-    distribution <- distributions[i]
+    dist_name <- distributions[i]
 
     expected_param_str <- ifelse(expected_num == 1, "parameter", "parameters")
     expected_error_msg <- str_interp(
-      "distribution ${distribution} expects ${expected_num} ${expected_param_str} to be passed, not ${expected_num + 1}"
+      "distribution ${dist_name} expects ${expected_num} ${expected_param_str} to be passed, not ${expected_num + 1}"
     )
     expect_error(
-      validate_coefficient_names(
+      validate_coef_names(
         model = model,
-        distribution = distribution,
-        coefficient_names = wrong_num_coefficient_names
+        dist_name = dist_name,
+        coef_names = wrong_num_coef_names
       ),
       expected_error_msg
     )
@@ -145,10 +145,9 @@ test_that("validate_coefficient_names fails number of args", {
 })
 
 
-test_that("validate_coefficient_names fails unmatching coefficient names", {
+test_that("validate_coef_names fails unmatching coef names", {
   distributions <- get_supported_distributions()
 
-  # coefficient names from MODELS
   expected_params_list <- list(
     c("sl_", "log_sl_"),
     c("sl_"),
@@ -164,20 +163,20 @@ test_that("validate_coefficient_names fails unmatching coefficient names", {
   })
 
   for (i in 1:length(distributions)) {
-    distribution <- distributions[i]
-    model <- get_sample_models()[[distribution]] # from helper_test_distributions.R
+    dist_name <- distributions[i]
+    model <- get_sample_models()[[dist_name]]
 
-    wrong_coefficient_names <- actual_params_list[[i]]
-    expect_error(validate_coefficient_names(
+    wrong_coef_names <- actual_params_list[[i]]
+    expect_error(validate_coef_names(
       model = model,
-      distribution = distribution,
-      coefficient_names = wrong_coefficient_names
+      dist_name = dist_name,
+      coef_names = wrong_coef_names
     ))
   }
 })
 
 
-test_that("validate_coefficient_names succeeds", {
+test_that("validate_coef_names succeeds", {
   distributions <- get_supported_distributions()
   expected_params_list <- list(
     c("sl_", "log_sl_"),
@@ -188,15 +187,15 @@ test_that("validate_coefficient_names succeeds", {
   )
 
   for (i in 1:length(distributions)) {
-    distribution <- distributions[i]
-    model <- get_sample_models()[[distribution]] # from helper_test_distributions.R
+    dist_name <- distributions[i]
+    model <- get_sample_models()[[dist_name]]
 
-    right_coefficient_names <- expected_params_list[[i]]
+    right_coef_names <- expected_params_list[[i]]
 
-    expect_no_error(validate_coefficient_names(
+    expect_no_error(validate_coef_names(
       model = model,
-      distribution = distribution,
-      coefficient_names = right_coefficient_names
+      dist_name = dist_name,
+      coef_names = right_coef_names
     ))
   }
 })
@@ -205,15 +204,15 @@ test_that("validate_coefficient_names succeeds", {
 test_that("validate_args fails non-numeric data", {
   sample_data <- get_sample_deer_data()
   model <- get_sample_models()[["gamma"]]
-  distribution <- "gamma"
-  coefficient_names <- c("sl_", "log_sl_")
+  dist_name <- "gamma"
+  coef_names <- c("sl_", "log_sl_")
   error_msg <- "argument 'data' must be a vector of type numeric. Make sure you are passing either the step lengths column (e.g. sl_) or turn angles (e.g. cos_ta_)."
 
   error <- expect_error(validate_args(
     data = as.character(sample_data$sl_),
     model = model,
-    distribution = distribution,
-    coefficient_names = coefficient_names,
+    dist_name = dist_name,
+    coef_names = coef_names,
     reference_category = "reference_category"
   ))
 
@@ -223,14 +222,14 @@ test_that("validate_args fails non-numeric data", {
 
 test_that("validate_args fails non-glmmTMB model", {
   sample_data <- get_sample_deer_data()
-  distribution <- "gamma"
-  coefficient_names <- c("sl_", "log_sl_")
+  dist_name <- "gamma"
+  coef_names <- c("sl_", "log_sl_")
 
   error <- expect_error(validate_args(
     data = sample_data$sl_,
     model = "I am not a model",
-    distribution = distribution,
-    coefficient_names = coefficient_names,
+    dist_name = dist_name,
+    coef_names = coef_names,
     reference_category = "reference_category"
   ), "argument 'model' must be of class 'glmmTMB'")
 })
@@ -239,78 +238,78 @@ test_that("validate_args fails non-glmmTMB model", {
 test_that("validate_args fails non-string reference_category", {
   sample_data <- get_sample_deer_data()
   model <- get_sample_models()[["gamma"]]
-  distribution <- "gamma"
-  coefficient_names <- c("sl_", "log_sl_")
+  dist_name <- "gamma"
+  coef_names <- c("sl_", "log_sl_")
 
   error <- expect_error(validate_args(
     data = sample_data$sl_,
     model = model,
-    distribution = distribution,
-    coefficient_names = coefficient_names,
+    dist_name = dist_name,
+    coef_names = coef_names,
     reference_category = 123
   ), "argument 'reference_category' must be a string")
 })
 
 
 
-test_that("validate_args succeeds with user-passed coefficient names", {
+test_that("validate_args succeeds with user-passed coef names", {
   sample_data <- get_sample_deer_data()
   model <- get_sample_models()[["gamma"]]
-  distribution <- "gamma"
-  coefficient_names <- c("sl_", "log_sl_")
+  dist_name <- "gamma"
+  coef_names <- c("sl_", "log_sl_")
 
   expect_no_error(validate_args(
     data = sample_data$sl_,
     model = model,
-    distribution = distribution,
-    coefficient_names = coefficient_names,
+    dist_name = dist_name,
+    coef_names = coef_names,
     reference_category = "reference_category"
   ))
 })
 
 
-test_that("validate_args succeeds with null coefficient names", {
+test_that("validate_args succeeds with null coef names", {
   sample_data <- get_sample_deer_data()
   model <- get_sample_models()[["gamma"]]
-  distribution <- "gamma"
+  dist_name <- "gamma"
 
   expect_no_error(validate_args(
     data = sample_data$sl_,
     model = model,
-    distribution = distribution,
-    coefficient_names = NULL,
+    dist_name = dist_name,
+    coef_names = NULL,
     reference_category = "reference_category"
   ))
 })
 
 
-test_that("get_categories_from_coefficients", {
+test_that("get_categories_from_coefs", {
   dists <- get_supported_distributions()
   expected_categories <- c("habitatdesert", "habitatlake", "habitatmountain")
 
   for (i in 1:length(dists)) {
     coefs <- get_mock_coefs(dists[i])
-    coef_names <- get_default_coefficient_names(dists[i])
+    coef_names <- get_default_coef_names(dists[i])
 
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
-      interaction_coefficients <- names(coefs) %>%
+      interaction_coefs <- names(coefs) %>%
         str_detect(pattern = str_interp("^${coef_name}:")) %>%
         purrr::keep(coefs, .)
-      categories <- get_categories_from_coefficients(interaction_coefficients)
+      categories <- get_categories_from_coefs(interaction_coefs)
       expect_equal(categories, expected_categories)
     }
   }
 })
 
 
-test_that("get_summed_coefficients with_interactions TRUE", {
+test_that("get_summed_coefs with_interactions TRUE", {
   dists <- get_supported_distributions()
 
   for (i in 1:length(dists)) {
     dist <- dists[i]
     mock_coefs <- get_mock_coefs(dist)
-    coef_names <- get_default_coefficient_names(dists[i])
+    coef_names <- get_default_coef_names(dists[i])
 
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
@@ -321,19 +320,19 @@ test_that("get_summed_coefficients with_interactions TRUE", {
             habitat == "forest", habitat, str_interp("habitat${habitat}")
           )
         })),
-        coefficient_name = coef_name,
-        coefficient_value_sum = get_expected_coefficient_sums(
+        coef_name = coef_name,
+        coef_value_sum = get_expected_coef_sums(
           distribution = dist,
           coef_index = j
         )
       ) %>%
-        arrange(coefficient_value_sum)
+        arrange(coef_value_sum)
 
-      actual_tibble <- get_summed_coefficients(
+      actual_tibble <- get_summed_coefs(
         mock_coefs, coef_name,
         reference_category = REFERENCE_CATEGORY
       ) %>%
-        arrange(coefficient_value_sum)
+        arrange(coef_value_sum)
 
       expect_equal(
         actual_tibble,
@@ -344,24 +343,24 @@ test_that("get_summed_coefficients with_interactions TRUE", {
 })
 
 
-test_that("get_summed_coefficients with_interactions FALSE", {
+test_that("get_summed_coefs with_interactions FALSE", {
   dists <- get_supported_distributions()
 
   for (i in 1:length(dists)) {
     dist <- dists[i]
     mock_coefs <- get_mock_coefs(dist, with_interaction = FALSE)
-    coef_names <- get_default_coefficient_names(dists[i])
+    coef_names <- get_default_coef_names(dists[i])
 
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
 
       expected_tibble <- tibble::tibble(
         category = c("reference_category"),
-        coefficient_name = c(coef_name),
-        coefficient_value_sum = c(j + 1)
+        coef_name = c(coef_name),
+        coef_value_sum = c(j + 1)
       )
 
-      actual_tibble <- get_summed_coefficients(
+      actual_tibble <- get_summed_coefs(
         mock_coefs, coef_name,
         reference_category = "reference_category"
       )
@@ -375,13 +374,13 @@ test_that("get_summed_coefficients with_interactions FALSE", {
 })
 
 
-test_that("get_summed_coefficients_all with_interaction TRUE", {
+test_that("get_summed_coefs_all with_interaction TRUE", {
   dists <- get_supported_distributions()
   for (i in 1:length(dists)) {
     dist <- dists[i]
 
     mock_coefs <- get_mock_coefs(dist, with_interaction = TRUE)
-    coef_names <- get_default_coefficient_names(dists[i])
+    coef_names <- get_default_coef_names(dists[i])
     expected_tibble <- tibble::tibble()
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
@@ -393,35 +392,35 @@ test_that("get_summed_coefficients_all with_interaction TRUE", {
               habitat == "forest", habitat, str_interp("habitat${habitat}")
             )
           })),
-          coefficient_name = coef_name,
-          coefficient_value_sum = get_expected_coefficient_sums(
+          coef_name = coef_name,
+          coef_value_sum = get_expected_coef_sums(
             distribution = dist,
             coef_index = j
           )
         )
       ) %>%
-        arrange(coefficient_value_sum)
+        arrange(coef_value_sum)
     }
 
-    actual_tibble <- get_summed_coefficients_all(
+    actual_tibble <- get_summed_coefs_all(
       coefs = mock_coefs,
-      coefficient_names = coef_names,
+      coef_names = coef_names,
       reference_category = REFERENCE_CATEGORY
     ) %>%
-      arrange(coefficient_value_sum)
+      arrange(coef_value_sum)
 
     expect_equal(actual_tibble, expected_tibble)
   }
 })
 
 
-test_that("get_summed_coefficients_all with_interaction FALSE", {
+test_that("get_summed_coefs_all with_interaction FALSE", {
   dists <- get_supported_distributions()
   for (i in 1:length(dists)) {
     dist <- dists[i]
 
     mock_coefs <- get_mock_coefs(dist, with_interaction = FALSE)
-    coef_names <- get_default_coefficient_names(dists[i])
+    coef_names <- get_default_coef_names(dists[i])
     expected_tibble <- tibble::tibble()
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
@@ -430,19 +429,19 @@ test_that("get_summed_coefficients_all with_interaction FALSE", {
         expected_tibble,
         tibble::tibble(
           category = c("reference_category"),
-          coefficient_name = c(coef_name),
-          coefficient_value_sum = c(j + 1)
+          coef_name = c(coef_name),
+          coef_value_sum = c(j + 1)
         )
       ) %>%
-        arrange(coefficient_value_sum)
+        arrange(coef_value_sum)
     }
 
-    actual_tibble <- get_summed_coefficients_all(
+    actual_tibble <- get_summed_coefs_all(
       coefs = mock_coefs,
-      coefficient_names = coef_names,
+      coef_names = coef_names,
       reference_category = "reference_category"
     ) %>%
-      arrange(coefficient_value_sum)
+      arrange(coef_value_sum)
 
     expect_equal(actual_tibble, expected_tibble)
   }
@@ -450,9 +449,37 @@ test_that("get_summed_coefficients_all with_interaction FALSE", {
 
 
 
-test_that("get_updated_parameters", {
+test_that("get_updated_parameters with interactions", {
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data()
 
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
 
+    coefs <- get_sample_coefs(
+      dist_name = dist_name,
+      with_interaction = TRUE
+    )
+    coef_names <- get_default_coef_names(dist_name = dist_name)
+
+    summed_coef_tibble <- get_summed_coefs_all(
+      coefs = coefs,
+      coef_names = coef_names,
+      reference_category = REFERENCE_CATEGORY
+    )
+
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+    actual_updated_parameters_tibble <- get_updated_parameters(
+      data = data[[column]],
+      dist_name = dist_name,
+      summed_coefs_tibble = summed_coef_tibble
+    )
+
+    file_path <- here(str_interp("tests/testthat/data/expected_updated_parameters_tibbles/${dist_name}.rds"))
+    expected_updated_parameters_tibble <- readRDS(file_path)
+    expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
+  }
 })
 
 
@@ -468,7 +495,7 @@ test_that("update_distributions_by_categorical_var with interaction", {
 })
 
 
-test_that("update_distributions_by_categorical_var with custom coefficient names", {
+test_that("update_distributions_by_categorical_var with custom coef names", {
 
 
 })

@@ -3,7 +3,7 @@
 # - continuous updating distributions:
 #     - 5, 50, 95%
 # - add unif distribution support
-# - constants
+# - what is a normal amount to round to?
 
 GAMMA <- "gamma"
 EXP <- "exp"
@@ -15,8 +15,8 @@ SUPPORTED_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM, VONMISES)
 
 #' @import amt
 #' @import methods
-get_update_distribution_function_and_args <- function(distribution) {
-  update_fn <- methods::getFunction(str_interp("update_${distribution}"))
+get_update_distribution_function_and_args <- function(dist_name) {
+  update_fn <- methods::getFunction(str_interp("update_${dist_name}"))
   update_fn_args <- methods::formalArgs(update_fn)
   return(list(
     fn = update_fn,
@@ -39,8 +39,8 @@ update_parameters <- function(args_tibble_row, dist, update_fn) {
 }
 
 
-get_default_coefficient_names <- function(distribution) {
-  update_fn_args <- get_update_distribution_function_and_args(distribution)$args
+get_default_coef_names <- function(dist_name) {
+  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
   variable_args <- update_fn_args[2:length(update_fn_args)]
   return(sapply(variable_args, function(variable_arg) {
     variable <- str_interp(
@@ -51,21 +51,21 @@ get_default_coefficient_names <- function(distribution) {
 }
 
 
-validate_coefficient_names <- function(model, distribution, coefficient_names) {
-  nvar_names <- length(get_default_coefficient_names(distribution))
-  npassed_var_names <- length(coefficient_names)
+validate_coef_names <- function(model, dist_name, coef_names) {
+  nvar_names <- length(get_default_coef_names(dist_name))
+  npassed_var_names <- length(coef_names)
 
   if (npassed_var_names != nvar_names) {
     param_string <- ifelse(nvar_names == 1, "parameter", "parameters")
-    stop(str_interp("distribution ${distribution} expects ${nvar_names} ${param_string} to be passed, not ${npassed_var_names}."))
+    stop(str_interp("distribution ${dist_name} expects ${nvar_names} ${param_string} to be passed, not ${npassed_var_names}."))
   }
 
-  coef_names <- names(glmmTMB::fixef(model)$cond)
+  actual_coef_names <- names(glmmTMB::fixef(model)$cond)
   for (i in 1:npassed_var_names) {
-    coefficient_name <- coefficient_names[i]
-    if (!coefficient_name %in% coef_names) {
+    coef_name <- coef_names[i]
+    if (!coef_name %in% actual_coef_names) {
       stop(str_interp(
-        "argument 'coefficient_names' not valid. Variable name ${coefficient_name} not found in model with coefficient names ${coef_names}"
+        "argument 'coef_names' not valid. Variable name ${coef_name} not found in model with coef names ${coef_names}"
       ))
     }
   }
@@ -75,7 +75,7 @@ validate_coefficient_names <- function(model, distribution, coefficient_names) {
 #' @import stringr
 #' @import assertive
 #' @import glmmTMB
-validate_args <- function(data, model, distribution, coefficient_names, reference_category) {
+validate_args <- function(data, model, dist_name, coef_names, reference_category) {
   if (!assertive::is_numeric(data)) {
     stop("argument 'data' must be a vector of type numeric. Make sure you are passing either the step lengths column (e.g. sl_) or turn angles (e.g. cos_ta_).")
   }
@@ -84,12 +84,12 @@ validate_args <- function(data, model, distribution, coefficient_names, referenc
     stop("argument 'model' must be of class 'glmmTMB'")
   }
 
-  if (!distribution %in% SUPPORTED_DISTRIBUTIONS) {
-    stop(stringr::str_interp("argument 'distribution' must be one of ${valid_distributions}"))
+  if (!dist_name %in% SUPPORTED_DISTRIBUTIONS) {
+    stop(stringr::str_interp("argument 'distribution' must be one of ${SUPPORTED_DISTRIBUTIONS}"))
   }
 
-  if (!is.null(coefficient_names)) {
-    validate_coefficient_names(model, distribution, coefficient_names)
+  if (!is.null(coef_names)) {
+    validate_coef_names(model, dist_name, coef_names)
   }
 
   if (!assertive::is_a_string(reference_category)) {
@@ -98,10 +98,10 @@ validate_args <- function(data, model, distribution, coefficient_names, referenc
 }
 
 
-get_categories_from_coefficients <- function(interaction_coefficients) {
-  interaction_coefficient_names <- names(interaction_coefficients)
+get_categories_from_coefs <- function(interaction_coefs) {
+  interaction_coef_names <- names(interaction_coefs)
 
-  categories <- sapply(interaction_coefficient_names, function(name) {
+  categories <- sapply(interaction_coef_names, function(name) {
     return(str_extract(name, regex("(?<=:).*")))
   })
 
@@ -109,26 +109,36 @@ get_categories_from_coefficients <- function(interaction_coefficients) {
 }
 
 
+fit_distribution <- function(data, dist_name, na_rm) {
+  return(amt::fit_distr(data,
+                        dist_name = dist_name,
+                        na.rm = na_rm))
+}
+
 #' @import stringr
-get_updated_parameters <- function(distribution, summed_coefficients_tibble) {
-  # use group_by here instead
-  pivoted_args_tibble <- summed_coefficients_tibble |>
-    mutate(
-      coefficient_value_sum = as.numeric(coefficient_value_sum)
-    ) |>
+#' @import tidyr
+#' @import data.table
+get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
+
+  pivoted_args_tibble <- summed_coefs_tibble |>
     pivot_wider(
-      names_from = coefficient_name,
-      values_from = coefficient_value_sum
-    ) |>
-    group_by(category) |>
-    summarize(across(coefficient_names, mean, na.rm = TRUE))
+      names_from = coef_name,
+      values_from = coef_value_sum
+    )
 
-  colnames(pivoted_args_tibble) <- c("category", update_fn_and_args$args[2:length(update_fn_and_args$args)])
+  observed_fitted_distribution <- fit_distribution(data = data,
+                                            dist_name = dist_name,
+                                            na_rm = TRUE)
 
-  observed_fitted_distribution <- amt::fit_distr(data, distribution, na.rm = TRUE)
-  update_fn_and_args <- get_update_distribution_function_and_args(distribution)
+  update_fn_and_args <- get_update_distribution_function_and_args(
+    dist_name = dist_name)
   update_fn <- update_fn_and_args$fn
   update_fn_arg_names <- update_fn_and_args$args
+
+  # rename the column headers to match the amt arg names
+  colnames(pivoted_args_tibble) <- c(
+    "category",
+    update_fn_arg_names[2:length(update_fn_arg_names)])
 
   all_updated_parameters <- apply(pivoted_args_tibble,
     1, update_parameters,
@@ -137,7 +147,9 @@ get_updated_parameters <- function(distribution, summed_coefficients_tibble) {
   )
 
   observed_params <- observed_fitted_distribution$params
-  observed_row <- c("observed", NA, NA, unlist(observed_params))
+  observed_row <- c("observed",
+                    rep(NA, ncol(pivoted_args_tibble) - 1),
+                    unlist(observed_params))
 
   updated_parameters_tibble <- rbind(
     observed_row,
@@ -149,28 +161,28 @@ get_updated_parameters <- function(distribution, summed_coefficients_tibble) {
 
 
 #' @import purrr
-get_summed_coefficients <- function(coefs, coefficient_name, reference_category) {
-  interaction_coefficients <- names(coefs) %>%
-    str_detect(pattern = str_interp("^${coefficient_name}:")) %>%
+get_summed_coefs <- function(coefs, coef_name, reference_category) {
+  interaction_coefs <- names(coefs) %>%
+    str_detect(pattern = str_interp("^${coef_name}:")) %>%
     purrr::keep(coefs, .)
 
-  categories <- get_categories_from_coefficients(interaction_coefficients)
-  interaction_coefficient_values <- unname(interaction_coefficients)
-  nrows <- length(interaction_coefficient_values)
+  categories <- get_categories_from_coefs(interaction_coefs)
+  interaction_coef_values <- unname(interaction_coefs)
+  nrows <- length(interaction_coef_values)
 
-  coefficient_name_vector <- rep(coefficient_name, nrows)
-  coefficient_value_vector <- rep(coefs[coefficient_name], nrows)
+  coef_name_vector <- rep(coef_name, nrows)
+  coef_value_vector <- rep(coefs[coef_name], nrows)
 
   reference_category_row <- tibble::tibble(
     category = reference_category,
-    coefficient_name = coefficient_name,
-    coefficient_value_sum = unname(coefs[coefficient_name])
+    coef_name = coef_name,
+    coef_value_sum = unname(coefs[coef_name])
   )
 
   non_reference_category_rows <- tibble::tibble(
     category = categories,
-    coefficient_name = coefficient_name_vector,
-    coefficient_value_sum = unname(interaction_coefficient_values + coefficient_value_vector)
+    coef_name = coef_name_vector,
+    coef_value_sum = unname(interaction_coef_values + coef_value_vector)
   )
 
   args_tibble <- rbind(
@@ -185,22 +197,22 @@ get_summed_coefficients <- function(coefs, coefficient_name, reference_category)
 
 
 
-get_summed_coefficients_all <- function(coefs, coefficient_names, reference_category) {
-  summed_coefficients_tibble <- tibble::tibble()
+get_summed_coefs_all <- function(coefs, coef_names, reference_category) {
+  summed_coefs_tibble <- tibble::tibble()
 
-  for (i in 1:length(coefficient_names)) {
-    coefficient_name <- coefficient_names[i]
-    summed_coefficients_tibble <- rbind(
-      summed_coefficients_tibble,
-      get_summed_coefficients(
+  for (i in 1:length(coef_names)) {
+    coef_name <- coef_names[i]
+    summed_coefs_tibble <- rbind(
+      summed_coefs_tibble,
+      get_summed_coefs(
         coefs = coefs,
-        coefficient_name = coefficient_name,
+        coef_name = coef_name,
         reference_category = reference_category
       )
     )
   }
 
-  return(summed_coefficients_tibble)
+  return(summed_coefs_tibble)
 }
 
 
@@ -213,22 +225,25 @@ get_summed_coefficients_all <- function(coefs, coefficient_names, reference_cate
 #' @import amt
 #' @import glmmTMB
 update_distributions_by_categorical_var <- function(data, model,
-                                                    distribution,
-                                                    coefficient_names = NULL,
+                                                    dist_name,
+                                                    coef_names = NULL,
                                                     reference_category = "reference_category") {
   validate_args(
     data = data,
     model = model,
-    distribution = distribution,
-    coefficient_names = coefficient_names,
+    dist_name = dist_name,
+    coef_names = coef_names,
     reference_category = reference_category
   )
 
   coefs <- glmmTMB::fixef(model)$cond
-  coefficient_names <- if (is.null(coefficient_names)) get_default_coefficient_names(distribution) else coefficient_names
+  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
-  summed_coefficients_tibble <- get_summed_coefficients_all(coefs, coefficient_names)
-  updated_parameters_tibble <- get_updated_parameters(distribution, summed_coefficients_tibble)
+  summed_coefs_tibble <- get_summed_coefs_all(coefs = coefs,
+                                              coef_name = coef_names)
+  updated_parameters_tibble <- get_updated_parameters(data = data,
+                                                      dist_name = dist_name,
+                                                      summed_coefs_tibble = summed_coefs_tibble)
 
   return(updated_parameters_tibble)
 }
