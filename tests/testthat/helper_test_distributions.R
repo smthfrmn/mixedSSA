@@ -17,7 +17,7 @@ get_sample_deer_data <- function() {
   #     cos_ta_ = cos(ta_)
   #   )
   # deer_data <- set_sample_habitat(deer_amt_data)
-  file_path = here(str_interp("tests/testthat/helper_data/deer_data.rds"))
+  file_path = here(str_interp("${testthat::test_path()}/helper_data/deer_data.rds"))
   return(readRDS(file_path))
 }
 
@@ -80,7 +80,7 @@ get_default_coef_names_by_dist <- function(distribution) {
 
 
 get_cached_distribution <- function(dist_name) {
-  file_path <- here(str_interp("tests/testthat/helper_data/distributions/${dist_name}.rds"))
+  file_path <- here(str_interp("${testthat::test_path()}/helper_data/distributions/${dist_name}.rds"))
   if(file.exists(file_path)) {
     return(readRDS(file_path))
   }
@@ -93,7 +93,7 @@ get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_"
     print("NOT GETTING CACHED")
     data <- get_sample_deer_data()[[column]]
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
-    file_path <- here(str_interp("tests/testthat/helper_data/distributions/${dist_name}.rds"))
+    file_path <- here(str_interp("${testthat::test_path()}/helper_data/distributions/${dist_name}.rds"))
     saveRDS(distribution, file = file_path)
   }
 

@@ -474,7 +474,7 @@ test_that("get_updated_parameters with interactions", {
       summed_coefs_tibble = summed_coef_tibble
     )
 
-    file_path <- here(str_interp("tests/testthat/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"))
+    file_path <- here(str_interp("${testthat::test_path()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"))
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
   }
