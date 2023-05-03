@@ -4,6 +4,7 @@
 #     - 5, 50, 95%
 # - add unif distribution support
 # - what is a normal amount to round to?
+# - delta method
 
 GAMMA <- "gamma"
 EXP <- "exp"
