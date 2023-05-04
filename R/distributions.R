@@ -15,8 +15,10 @@ VONMISES <- "vonmises"
 TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES)
 STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
 
-SUPPORTED_DISTRIBUTIONS <- c(STEP_LENGTH_DISTRIBUTIONS,
-                             TURN_ANGLE_DISTRIBUTIONS)
+SUPPORTED_DISTRIBUTIONS <- c(
+  STEP_LENGTH_DISTRIBUTIONS,
+  TURN_ANGLE_DISTRIBUTIONS
+)
 
 #' @import amt
 #' @import methods
@@ -36,7 +38,7 @@ update_parameters <- function(args_tibble_row, dist, update_fn) {
   response <- do.call(update_fn, args)
   updated_parameters <- response$params
 
-  if(response$name == VONMISES){
+  if (response$name == VONMISES) {
     updated_parameters$mu <- updated_parameters$mu[[1]]
   }
 
@@ -116,33 +118,37 @@ get_categories_from_coefs <- function(interaction_coefs) {
 
 fit_distribution <- function(data, dist_name, na_rm) {
   return(amt::fit_distr(data,
-                        dist_name = dist_name,
-                        na.rm = na_rm))
+    dist_name = dist_name,
+    na.rm = na_rm
+  ))
 }
 
 #' @import stringr
 #' @import tidyr
 get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
-
   pivoted_args_tibble <- summed_coefs_tibble |>
     pivot_wider(
       names_from = "coef_name",
       values_from = "coef_value_sum"
     )
 
-  observed_fitted_distribution <- fit_distribution(data = data,
-                                            dist_name = dist_name,
-                                            na_rm = TRUE)
+  observed_fitted_distribution <- fit_distribution(
+    data = data,
+    dist_name = dist_name,
+    na_rm = TRUE
+  )
 
   update_fn_and_args <- get_update_distribution_function_and_args(
-    dist_name = dist_name)
+    dist_name = dist_name
+  )
   update_fn <- update_fn_and_args$fn
   update_fn_arg_names <- update_fn_and_args$args
 
   # rename the column headers to match the amt arg names
   colnames(pivoted_args_tibble) <- c(
     "category",
-    update_fn_arg_names[2:length(update_fn_arg_names)])
+    update_fn_arg_names[2:length(update_fn_arg_names)]
+  )
 
   all_updated_parameters <- apply(pivoted_args_tibble,
     1, update_parameters,
@@ -151,14 +157,18 @@ get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
   )
 
   observed_params <- observed_fitted_distribution$params
-  observed_row <- c("observed",
-                    rep(NA, ncol(pivoted_args_tibble) - 1),
-                    unlist(observed_params))
+  observed_row <- c(
+    "observed",
+    rep(NA, ncol(pivoted_args_tibble) - 1),
+    unlist(observed_params)
+  )
 
   updated_parameters_tibble <- rbind(
     observed_row,
-    cbind(pivoted_args_tibble,
-          dplyr::bind_rows(all_updated_parameters))
+    cbind(
+      pivoted_args_tibble,
+      dplyr::bind_rows(all_updated_parameters)
+    )
   )
 
   return(updated_parameters_tibble)
@@ -242,13 +252,17 @@ update_distributions_by_categorical_var <- function(data, model,
   coefs <- glmmTMB::fixef(model)$cond
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
-  summed_coefs_tibble <- get_summed_coefs_all(coefs = coefs,
-                                              coef_names = coef_names,
-                                              reference_category = reference_category)
+  summed_coefs_tibble <- get_summed_coefs_all(
+    coefs = coefs,
+    coef_names = coef_names,
+    reference_category = reference_category
+  )
 
-  updated_parameters_tibble <- get_updated_parameters(data = data,
-                                                      dist_name = dist_name,
-                                                      summed_coefs_tibble = summed_coefs_tibble)
+  updated_parameters_tibble <- get_updated_parameters(
+    data = data,
+    dist_name = dist_name,
+    summed_coefs_tibble = summed_coefs_tibble
+  )
 
   return(updated_parameters_tibble)
 }

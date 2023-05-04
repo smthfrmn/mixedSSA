@@ -477,7 +477,7 @@ test_that("get_updated_parameters with interactions", {
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_interactions/${dist_name}.rds"
     ))
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
@@ -510,7 +510,7 @@ test_that("update_distributions_by_categorical_var no interaction and default co
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
     expect_equal(results, expected_results)
@@ -541,7 +541,7 @@ test_that("update_distributions_by_categorical_var with default reference catego
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
 
@@ -573,7 +573,8 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     # amt::fit_distribution is not deterministic, mocking to force it to be
     # TODO: check this is actually what is happening...
     mockr::local_mock(
-      fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
+      fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name)
+    )
 
     results <- update_distributions_by_categorical_var(
       data = column_data,
@@ -583,7 +584,7 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_interactions/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
 
@@ -619,13 +620,15 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
       data = column_data,
       model = model,
       dist_name = dist_name,
-      coef_names = get_sample_coef_names_by_dist(dist_name = dist_name,
-                                    custom_coefs = TRUE),
+      coef_names = get_sample_coef_names_by_dist(
+        dist_name = dist_name,
+        custom_coefs = TRUE
+      ),
       reference_category = REFERENCE_CATEGORY
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_interactions/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
     expect_equal(results, expected_results)
@@ -634,7 +637,6 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
 
 
 test_that("update_distributions_by_categorical_var with no interaction and custom coef names", {
-
   dists <- get_supported_distributions()
   data <- get_sample_deer_data(custom_coefs = TRUE)
 
@@ -657,13 +659,15 @@ test_that("update_distributions_by_categorical_var with no interaction and custo
       data = column_data,
       model = model,
       dist_name = dist_name,
-      coef_names = get_sample_coef_names_by_dist(dist_name = dist_name,
-                                                 custom_coefs = TRUE),
+      coef_names = get_sample_coef_names_by_dist(
+        dist_name = dist_name,
+        custom_coefs = TRUE
+      ),
       reference_category = "updated"
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
     expect_equal(results, expected_results)
