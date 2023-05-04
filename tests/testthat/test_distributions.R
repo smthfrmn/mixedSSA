@@ -502,6 +502,9 @@ test_that("update_distributions_by_categorical_var no interaction and default co
     } else {
       column_data <- data$sl_
     }
+
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+
     results <- update_distributions_by_categorical_var(
       data = column_data,
       model = model,
@@ -534,6 +537,9 @@ test_that("update_distributions_by_categorical_var with default reference catego
     } else {
       column_data <- data$sl_
     }
+
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+
     results <- update_distributions_by_categorical_var(
       data = column_data,
       model = model,
@@ -654,6 +660,8 @@ test_that("update_distributions_by_categorical_var with no interaction and custo
       column_data <- data$step_length
       column_name <- "step_length"
     }
+
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
 
     results <- update_distributions_by_categorical_var(
       data = column_data,
