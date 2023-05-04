@@ -476,6 +476,8 @@ test_that("get_updated_parameters with interactions", {
       summed_coefs_tibble = summed_coef_tibble
     )
 
+
+
     file_path <- here(str_interp(
       "${get_data_path_root()}/helper_data/expected/updated_params_interactions/${dist_name}.rds"
     ))
@@ -511,6 +513,7 @@ test_that("update_distributions_by_categorical_var no interaction and default co
       dist_name = dist_name,
       reference_category = "updated"
     )
+
 
     file_path <- here(str_interp(
       "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
