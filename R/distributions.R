@@ -12,7 +12,11 @@ HNORM <- "hnorm"
 LNORM <- "lnorm"
 VONMISES <- "vonmises"
 
-SUPPORTED_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM, VONMISES)
+TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES)
+STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
+
+SUPPORTED_DISTRIBUTIONS <- c(STEP_LENGTH_DISTRIBUTIONS,
+                             TURN_ANGLE_DISTRIBUTIONS)
 
 #' @import amt
 #' @import methods
@@ -239,7 +243,9 @@ update_distributions_by_categorical_var <- function(data, model,
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
   summed_coefs_tibble <- get_summed_coefs_all(coefs = coefs,
-                                              coef_names = coef_names)
+                                              coef_names = coef_names,
+                                              reference_category = reference_category)
+
   updated_parameters_tibble <- get_updated_parameters(data = data,
                                                       dist_name = dist_name,
                                                       summed_coefs_tibble = summed_coefs_tibble)

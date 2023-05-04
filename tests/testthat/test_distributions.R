@@ -467,33 +467,205 @@ test_that("get_updated_parameters with interactions", {
       reference_category = REFERENCE_CATEGORY
     )
 
+    # amt::fit_distribution is not deterministic, mocking to force it to be
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+
     actual_updated_parameters_tibble <- get_updated_parameters(
       data = data[[column]],
       dist_name = dist_name,
       summed_coefs_tibble = summed_coef_tibble
     )
 
-    file_path <- here(str_interp("${testthat::test_path()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"))
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+    ))
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
   }
 })
 
 
-test_that("update_distributions_by_categorical_var no interaction", {
 
+test_that("update_distributions_by_categorical_var no interaction and default coef names", {
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data()
 
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- get_sample_models(
+      data = data,
+      with_interaction = FALSE
+    )[[dist_name]]
+
+    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
+      column_data <- data$cos_ta_
+    } else {
+      column_data <- data$sl_
+    }
+    results <- update_distributions_by_categorical_var(
+      data = column_data,
+      model = model,
+      dist_name = dist_name,
+      reference_category = "updated"
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+    ))
+    expected_results <- readRDS(file_path)
+    expect_equal(results, expected_results)
+  }
 })
 
 
-test_that("update_distributions_by_categorical_var with interaction", {
+test_that("update_distributions_by_categorical_var with default reference category and default coef names", {
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data()
+
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- get_sample_models(
+      data = data,
+      with_interaction = FALSE
+    )[[dist_name]]
+
+    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
+      column_data <- data$cos_ta_
+    } else {
+      column_data <- data$sl_
+    }
+    results <- update_distributions_by_categorical_var(
+      data = column_data,
+      model = model,
+      dist_name = dist_name
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+    ))
+    expected_results <- readRDS(file_path)
+
+    expected_results$category <- c("observed", "reference_category")
+    expect_equal(results, expected_results)
+  }
+})
 
 
+test_that("update_distributions_by_categorical_var with interaction and default coef names", {
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data()
+
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- get_sample_models(
+      data = data,
+      with_interaction = TRUE
+    )[[dist_name]]
+
+    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
+      column_data <- data$cos_ta_
+      column_name <- "cos_ta_"
+    } else {
+      column_data <- data$sl_
+      column_name <- "sl_"
+    }
+
+    # amt::fit_distribution is not deterministic, mocking to force it to be
+    # TODO: check this is actually what is happening...
+    mockr::local_mock(
+      fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
+
+    results <- update_distributions_by_categorical_var(
+      data = column_data,
+      model = model,
+      dist_name = dist_name,
+      reference_category = REFERENCE_CATEGORY
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+    ))
+    expected_results <- readRDS(file_path)
+
+    expect_equal(results, expected_results)
+  }
 })
 
 
 test_that("update_distributions_by_categorical_var with custom coef names", {
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data(custom_coefs = TRUE)
+
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- get_sample_models_custom_coefficients(
+      data = data,
+      with_interaction = TRUE
+    )[[dist_name]]
+
+    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
+      column_data <- data$turn_angle_cos
+      column_name <- "turn_angle_cos"
+    } else {
+      column_data <- data$step_length
+      column_name <- "step_length"
+    }
+
+    # amt::fit_distribution is not deterministic, mocking to force it to be
+    # TODO: check this is actually what is happening...
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
+
+    results <- update_distributions_by_categorical_var(
+      data = column_data,
+      model = model,
+      dist_name = dist_name,
+      coef_names = get_sample_coef_names_by_dist(dist_name = dist_name,
+                                    custom_coefs = TRUE),
+      reference_category = REFERENCE_CATEGORY
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles/${dist_name}.rds"
+    ))
+    expected_results <- readRDS(file_path)
+    expect_equal(results, expected_results)
+  }
+})
 
 
+test_that("update_distributions_by_categorical_var with no interaction and custom coef names", {
+
+  dists <- get_supported_distributions()
+  data <- get_sample_deer_data(custom_coefs = TRUE)
+
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- get_sample_models_custom_coefficients(
+      data = data,
+      with_interaction = FALSE
+    )[[dist_name]]
+
+    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
+      column_data <- data$turn_angle_cos
+      column_name <- "turn_angle_cos"
+    } else {
+      column_data <- data$step_length
+      column_name <- "step_length"
+    }
+
+    results <- update_distributions_by_categorical_var(
+      data = column_data,
+      model = model,
+      dist_name = dist_name,
+      coef_names = get_sample_coef_names_by_dist(dist_name = dist_name,
+                                                 custom_coefs = TRUE),
+      reference_category = "updated"
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/helper_data/expected_updated_parameters_tibbles_without_interactions/${dist_name}.rds"
+    ))
+    expected_results <- readRDS(file_path)
+    expect_equal(results, expected_results)
+  }
 })
