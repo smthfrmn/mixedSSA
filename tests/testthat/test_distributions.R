@@ -467,7 +467,6 @@ test_that("get_updated_parameters with interactions", {
       reference_category = REFERENCE_CATEGORY
     )
 
-    # amt::fit_distribution is not deterministic, mocking to force it to be
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
 
     actual_updated_parameters_tibble <- get_updated_parameters(
@@ -475,7 +474,6 @@ test_that("get_updated_parameters with interactions", {
       dist_name = dist_name,
       summed_coefs_tibble = summed_coef_tibble
     )
-
 
 
     file_path <- here(str_interp(
@@ -518,6 +516,7 @@ test_that("update_distributions_by_categorical_var no interaction and default co
     file_path <- here(str_interp(
       "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
     ))
+
     expected_results <- readRDS(file_path)
     expect_equal(results, expected_results)
   }
@@ -552,6 +551,7 @@ test_that("update_distributions_by_categorical_var with default reference catego
     file_path <- here(str_interp(
       "${get_data_path_root()}/helper_data/expected/updated_params_no_interactions/${dist_name}.rds"
     ))
+
     expected_results <- readRDS(file_path)
 
     expected_results$category <- c("observed", "reference_category")
@@ -579,8 +579,7 @@ test_that("update_distributions_by_categorical_var with interaction and default 
       column_name <- "sl_"
     }
 
-    # amt::fit_distribution is not deterministic, mocking to force it to be
-    # TODO: check this is actually what is happening...
+
     mockr::local_mock(
       fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name)
     )
@@ -621,8 +620,6 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
       column_name <- "step_length"
     }
 
-    # amt::fit_distribution is not deterministic, mocking to force it to be
-    # TODO: check this is actually what is happening...
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
 
     results <- update_distributions_by_categorical_var(

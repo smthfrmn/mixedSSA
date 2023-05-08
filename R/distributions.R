@@ -169,8 +169,13 @@ get_updated_parameters <- function(data, dist_name, summed_coefs_tibble) {
       pivoted_args_tibble,
       dplyr::bind_rows(all_updated_parameters)
     )
-  )
-
+  ) %>%
+    mutate(across(
+      -category,
+      function(x) {
+        round(as.numeric(x), 6)
+      }
+    ))
   return(updated_parameters_tibble)
 }
 
