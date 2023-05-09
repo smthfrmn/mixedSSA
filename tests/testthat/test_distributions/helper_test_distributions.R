@@ -1,6 +1,8 @@
 library(hash)
 library(amt)
 library(here)
+library(glmmTMB)
+library(stringr)
 
 REFERENCE_CATEGORY <- "forest"
 HABITATS <- c(REFERENCE_CATEGORY, "desert", "lake", "mountain")
@@ -12,7 +14,7 @@ get_data_path_root <- function() {
     current_path <- "tests/testthat"
   }
 
-  return(current_path)
+  return(stringr::str_interp("${current_path}/helper_data/distributions"))
 }
 
 get_sample_deer_data <- function(custom_coefs = FALSE) {
@@ -27,7 +29,7 @@ get_sample_deer_data <- function(custom_coefs = FALSE) {
   #     cos_ta_ = cos(ta_)
   #   )
   # deer_data <- set_sample_habitat(deer_amt_data)
-  file_path <- here(str_interp("${get_data_path_root()}/helper_data/deer_data.rds"))
+  file_path <- here(str_interp("${get_data_path_root()}/deer_data.rds"))
   data <- readRDS(file_path)
 
   if (custom_coefs) {
@@ -58,7 +60,7 @@ set_sample_habitat <- function(data, reference_category = REFERENCE_CATEGORY) {
 }
 
 
-get_sample_models <- function(data = get_sample_deer_data(), with_interaction = FALSE) {
+get_sample_models <- function(data = get_sample_deer_data(), with_interaction = TRUE) {
   if (!with_interaction) {
     models <- hash(
       "gamma" = glmmTMB(case_ ~ sl_ + log_sl_, data = data),
@@ -83,7 +85,7 @@ get_sample_models <- function(data = get_sample_deer_data(), with_interaction = 
 
 get_sample_models_custom_coefficients <- function(
     data = get_sample_deer_data(custom_coefs = TRUE),
-    with_interaction = FALSE) {
+    with_interaction = TRUE) {
   if (!with_interaction) {
     models <- hash(
       "gamma" = glmmTMB(case_ ~ step_length + step_length_log, data = data),
@@ -107,7 +109,7 @@ get_sample_models_custom_coefficients <- function(
 
 
 get_sample_coefs <- function(dist_name, data = get_sample_deer_data(),
-                             with_interaction = FALSE, custom_coefs = FALSE) {
+                             with_interaction = TRUE, custom_coefs = FALSE) {
   if (!custom_coefs) {
     model <- get_sample_models(with_interaction = with_interaction)[[dist_name]]
   } else {
@@ -146,7 +148,7 @@ get_sample_coef_names_by_dist <- function(dist_name, custom_coefs = FALSE) {
 
 
 get_cached_distribution <- function(dist_name) {
-  file_path <- here(str_interp("${get_data_path_root()}/helper_data/distributions/${dist_name}.rds"))
+  file_path <- here::here(stringr::str_interp("${get_data_path_root()}/fitted_dists/${dist_name}.rds"))
   if (file.exists(file_path)) {
     return(readRDS(file_path))
   }
@@ -158,7 +160,7 @@ get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_"
   if (is.null(distribution)) {
     data <- get_sample_deer_data()[[column]]
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
-    file_path <- here(str_interp("${get_data_path_root()}/helper_data/distributions/${dist_name}.rds"))
+    file_path <- here(str_interp("${get_data_path_root()}/fitted_dists/${dist_name}.rds"))
     saveRDS(distribution, file = file_path)
   }
 
