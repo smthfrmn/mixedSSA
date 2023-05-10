@@ -31,7 +31,7 @@ validate_continuous_args <- function(data, model, dist_name, interaction_var_nam
   validate_base_args(data, model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_numeric(model$frame[[interaction_var_name]])) {
-    stop(str_interp("argument 'interaction_var_name' with value ${interaction_var_name} must be a numeric (i.e. continuous) variable."))
+    stop(str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a numeric (i.e. continuous) variable."))
   }
 
 

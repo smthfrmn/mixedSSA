@@ -61,21 +61,21 @@ test_that("update_parameters for all distributions", {
 
   expected_params <- hash(
     "gamma" = list(
-      shape = 0.77641408,
-      scale = -1157.7153
+      shape = 0.62691709,
+      scale = -5483.4104
     ),
     "exp" = list(
-      rate = -0.00022153185
+      rate = 0.001508273
     ),
     "hnorm" = list(
       sd = 0 # TODO: not working
     ),
     "lnorm" = list(
-      meanlog = 5.2112948,
-      sdlog = 1.56059986
+      meanlog = 4.5511495,
+      sdlog = 1.9637997
     ),
     "vonmises" = list(
-      kappa = 2.5005742,
+      kappa = 2.4857535,
       mu = 0
     )
   )
@@ -203,7 +203,7 @@ test_that("validate_coef_names succeeds", {
 
 
 test_that("validate_base_args fails non-numeric data", {
-  sample_data <- get_sample_deer_data()
+  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
@@ -214,7 +214,7 @@ test_that("validate_base_args fails non-numeric data", {
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
-    interaction_var_name = "habitat"
+    interaction_var_name = "sex"
   ))
 
   expect_equal(error$message, error_msg)
@@ -222,7 +222,7 @@ test_that("validate_base_args fails non-numeric data", {
 
 
 test_that("validate_base_args fails non-glmmTMB model", {
-  sample_data <- get_sample_deer_data()
+  sample_data <- get_sample_fisher_data()
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
 
@@ -231,13 +231,13 @@ test_that("validate_base_args fails non-glmmTMB model", {
     model = "I am not a model",
     dist_name = dist_name,
     coef_names = coef_names,
-    interaction_var_name = "habitat"
+    interaction_var_name = "sex"
   ), "argument 'model' must be of class 'glmmTMB'")
 })
 
 
 test_that("validate_base_args fails non-string interaction_var_name", {
-  sample_data <- get_sample_deer_data()
+  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
@@ -253,7 +253,7 @@ test_that("validate_base_args fails non-string interaction_var_name", {
 
 
 test_that("validate_base_args fails interaction_var_name not in model", {
-  sample_data <- get_sample_deer_data()
+  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
@@ -263,30 +263,30 @@ test_that("validate_base_args fails interaction_var_name not in model", {
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
-    interaction_var_name = "foo-habitat"
-  ), "argument 'interaction_var_name' with value foo-habitat does not appear to be part of an interaction coefficient in the provided model.")
+    interaction_var_name = "foo-sex"
+  ), "argument 'interaction_var_name' with value foo-sex does not appear to be part of an interaction coefficient in the provided model.")
 })
 
 
 
 test_that("validate_base_args succeeds with user-passed coef names", {
-  sample_data <- get_sample_deer_data()
-  model <- get_sample_models()[["gamma"]]
+  sample_data <- get_sample_fisher_data()
+  model <- get_sample_models_custom_coefficients()[["gamma"]]
   dist_name <- "gamma"
-  coef_names <- c("sl_", "log_sl_")
+  coef_names <- c("step_length", "step_length_log")
 
   expect_no_error(validate_base_args(
     data = sample_data$sl_,
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
-    interaction_var_name = "habitat"
+    interaction_var_name = "sex"
   ))
 })
 
 
 test_that("validate_base_args succeeds with null coef names", {
-  sample_data <- get_sample_deer_data()
+  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
 
@@ -295,29 +295,28 @@ test_that("validate_base_args succeeds with null coef names", {
     model = model,
     dist_name = dist_name,
     coef_names = NULL,
-    interaction_var_name = "habitat"
+    interaction_var_name = "sex"
   ))
 })
 
 
 test_that("get_updated_parameters with categorical interactions", {
   dists <- get_supported_distributions()
-  data <- get_sample_deer_data()
+  data <- get_sample_fisher_data()
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
     column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
 
     coefs <- get_sample_coefs(
-      dist_name = dist_name,
-      with_interaction = TRUE
-    )
+      dist_name = dist_name
+      )
     coef_names <- get_default_coef_names(dist_name = dist_name)
 
     summed_coef_tibble <- get_summed_coefs_all(
       coefs = coefs,
       coef_names = coef_names,
-      interaction_var_name = "habitat",
+      interaction_var_name = "sex",
       reference_category = REFERENCE_CATEGORY
     )
 
@@ -340,7 +339,7 @@ test_that("get_updated_parameters with categorical interactions", {
 
 test_that("get_updated_parameters with continuous interactions", {
   # dists <- get_supported_distributions()
-  # data <- get_sample_deer_data()
+  # data <- get_sample_fisher_data()
   #
   # for (i in 1:length(dists)) {
   #   dist_name <- dists[i]
@@ -348,14 +347,14 @@ test_that("get_updated_parameters with continuous interactions", {
   #
   #   coefs <- get_sample_coefs(
   #     dist_name = dist_name,
-  #     with_interaction = TRUE
+  #     interaction_var_name = "elevation"
   #   )
   #   coef_names <- get_default_coef_names(dist_name = dist_name)
   #
   #   summed_coef_tibble <- get_summed_coefs_all(
   #     coefs = coefs,
   #     coef_names = coef_names,
-  #     interaction_var_name = "habitat",
+  #     interaction_var_name = "sex",
   #     reference_category = REFERENCE_CATEGORY
   #   )
   #
@@ -366,6 +365,8 @@ test_that("get_updated_parameters with continuous interactions", {
   #     dist_name = dist_name,
   #     coefs_tibble = summed_coef_tibble
   #   )
+  #
+  #   browser()
   #
   #   file_path <- here(str_interp(
   #     "${get_data_path_root()}/expected/updated_params_interactions/${dist_name}.rds"
