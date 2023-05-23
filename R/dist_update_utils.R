@@ -25,24 +25,15 @@ get_update_distribution_function_and_args <- function(dist_name) {
 }
 
 
-validate_coef_names <- function(model, dist_name, coef_names) {
-  nvar_names <- length(get_default_coef_names(dist_name))
-  npassed_var_names <- length(coef_names)
-
-  if (npassed_var_names != nvar_names) {
-    param_string <- ifelse(nvar_names == 1, "parameter", "parameters")
-    stop(stringr::str_interp("distribution ${dist_name} expects ${nvar_names} ${param_string} to be passed, not ${npassed_var_names}."))
-  }
-
-  actual_coef_names <- names(glmmTMB::fixef(model)$cond)
-  for (i in 1:npassed_var_names) {
-    coef_name <- coef_names[i]
-    if (!coef_name %in% actual_coef_names) {
-      stop(stringr::str_interp(
-        "argument 'coef_names' not valid. Variable name ${coef_name} not found in model with coef names ${coef_names}."
-      ))
-    }
-  }
+get_default_coef_names <- function(dist_name) {
+  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
+  variable_args <- update_fn_args[2:length(update_fn_args)]
+  return(sapply(variable_args, function(variable_arg) {
+    variable <- stringr::str_interp(
+      '${stringr::str_extract(variable_arg, stringr::regex("(?<=beta_).*"))}_'
+    )
+    return(variable)
+  }, USE.NAMES = FALSE))
 }
 
 
@@ -60,19 +51,42 @@ update_parameters <- function(args_tibble_row, dist, update_fn) {
 }
 
 
-get_default_coef_names <- function(dist_name) {
-  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
-  variable_args <- update_fn_args[2:length(update_fn_args)]
-  return(sapply(variable_args, function(variable_arg) {
-    variable <- stringr::str_interp(
-      '${stringr::str_extract(variable_arg, stringr::regex("(?<=beta_).*"))}_'
-    )
-    return(variable)
-  }, USE.NAMES = FALSE))
+validate_coef_names <- function(model, dist_name, coef_names) {
+  if (!assertive::is_character(coef_names)) {
+    stop(stringr::str_interp("argument 'coef_names' must be a vector of characters."))
+  }
+
+  nvar_names <- length(get_default_coef_names(dist_name))
+  npassed_var_names <- length(coef_names)
+
+  if (npassed_var_names != nvar_names) {
+    param_string <- ifelse(nvar_names == 1, "parameter", "parameters")
+    stop(stringr::str_interp("distribution ${dist_name} expects ${nvar_names} ${param_string} to be passed, not ${npassed_var_names}."))
+  }
+
+  actual_coef_names <- names(glmmTMB::fixef(model)$cond)
+  for (i in 1:npassed_var_names) {
+    coef_name <- coef_names[i]
+    if (!coef_name %in% actual_coef_names) {
+      stop(stringr::str_interp(
+        "argument 'coef_names' not valid. Variable name ${coef_name} not found in model with coef names ${coef_names}."
+      ))
+    }
+  }
+
+  sapply(coef_names, function(coef_name) {
+    if (!assertive::is_numeric(model$frame[[coef_name]])) {
+      stop("argument 'coef_names' must contain names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the argument 'coef_names'.")
+    }
+  })
 }
 
 
 validate_interaction_coefficients <- function(model, interaction_var_name) {
+  if (!assertive::is_a_string(interaction_var_name)) {
+    stop(stringr::str_interp("argument 'interaction_var_name' must be a string."))
+  }
+
   actual_coef_names <- names(glmmTMB::fixef(model)$cond)
   valid_var_name <- any(grepl(stringr::str_interp(":${interaction_var_name}"), actual_coef_names))
 
@@ -82,11 +96,131 @@ validate_interaction_coefficients <- function(model, interaction_var_name) {
 }
 
 
-validate_base_args <- function(data, model, dist_name, coef_names, interaction_var_name) {
-  if (!assertive::is_numeric(data)) {
-    stop("argument 'data' must be a vector of type numeric. Make sure you are passing either the step lengths column (e.g. sl_) or turn angles (e.g. cos_ta_).")
-  }
+validate_gamma <- function(data, coef_names) {
+  actual_sl_ <- data[[coef_names[1]]]
+  actual_log_sl_ <- data[[coef_names[2]]]
 
+  raise_error <- FALSE
+  tryCatch(
+    expr = {
+      if (any(log(actual_sl_) != actual_log_sl_)) {
+        raise_error <- TRUE
+      }
+    },
+    error = function(e) {
+      raise_error <- TRUE
+    },
+    finally = {
+      if (raise_error) {
+        stop(str_interp("To update the 'gamma' distribution you need to pass a model that is fit to step lengths and log step lengths. The passed arg 'coef_names' with value ${coef_names} are not valid variables for this distribution."))
+      }
+    }
+  )
+}
+
+
+validate_exp <- function(data, coef_names) {
+  actual_sl_ <- data[[coef_names[1]]]
+  raise_error <- FALSE
+  tryCatch(
+    exp = {
+      if (any(!actual_sl_ >= 0)) {
+        raise_error <- TRUE
+      }
+    },
+    error = function(e) {
+      raise_error <- TRUE
+    },
+    finally = {
+      if (raise_error) {
+        stop(str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths.
+                    The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
+      }
+    }
+  )
+}
+
+
+validate_hnorm <- function(data, coef_names) {
+  actual_sl_sq_ <- data[[coef_names[1]]]
+
+  raise_error <- FALSE
+  tryCatch(
+    exp = {
+      if (any(!actual_sl_sq >= 0)) {
+        raise_error <- TRUE
+      }
+    },
+    error = function(e) {
+      raise_error <- TRUE
+    },
+    finally = {
+      if (raise_error) {
+        stop(str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths squared.
+                    The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
+      }
+    }
+  )
+}
+
+
+validate_lnorm <- function(data, coef_names) {
+  actual_log_sl_ <- data[[coef_names[1]]]
+  actual_log_sl_sq_ <- data[[coef_names[2]]]
+
+  raise_error <- FALSE
+  tryCatch(
+    exp = {
+      if (any(actual_log_sl_^2 != actual_log_sl_sq_)) {
+        raise_error <- TRUE
+      }
+    },
+    error = function(e) {
+      raise_error <- TRUE
+    },
+    finally = {
+      if (raise_error) {
+        stop(str_interp("To update the 'lnorm' distribution you need to pass a model that is fit to log step lengths and log step lengths squared.
+                    The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
+      }
+    }
+  )
+}
+
+
+validate_vonmises <- function(data, coef_names) {
+  actual_cos_ta_ <- data[[coef_names[1]]]
+
+  raise_error <- FALSE
+  tryCatch(
+    exp = {
+      if (any(!actual_cos_ta_ <= 1 | !actual_cos_ta_ >= -1)) {
+        raise_error <- TRUE
+      }
+    },
+    error = function(e) {
+      raise_error <- TRUE
+    },
+    finally = {
+      if (raise_error) {
+        stop(str_interp("To update the 'vonmises' distribution you need to pass a model that is fit to cosine of turn angles.
+                    The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
+      }
+    }
+  )
+}
+
+
+validate_movement_data <- function(model, dist_name, coef_names) {
+  validate_fn <- str_interp("validate_${dist_name}")
+  do.call(validate_fn, args = list(
+    data = model$frame,
+    coef_names = coef_names
+  ))
+}
+
+
+validate_base_args <- function(model, dist_name, coef_names, interaction_var_name) {
   if (!is(model, "glmmTMB")) {
     stop("argument 'model' must be of class 'glmmTMB'.")
   }
@@ -95,16 +229,11 @@ validate_base_args <- function(data, model, dist_name, coef_names, interaction_v
     stop(stringr::str_interp("argument 'dist_name' must be one of ${SUPPORTED_DISTRIBUTIONS}."))
   }
 
-  if (!is.null(coef_names)) {
-    validate_coef_names(model, dist_name, coef_names)
-  }
-
-  if (!assertive::is_a_string(interaction_var_name)) {
-    stop(stringr::str_interp("argument 'interaction_var_name' must be a string."))
-  }
-
+  validate_coef_names(model, dist_name, coef_names)
   validate_interaction_coefficients(model, interaction_var_name)
+  validate_movement_data(model, dist_name, coef_names)
 }
+
 
 #' @export
 fit_distribution <- function(data, dist_name, na_rm) {
@@ -162,9 +291,7 @@ get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "ca
   ) %>%
     mutate(across(
       -grouping,
-      function(x) {
-        round(as.numeric(x), 6)
-      }
+      function(x) round(as.numeric(x), 6)
     ))
   return(updated_parameters_tibble)
 }

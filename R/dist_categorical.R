@@ -18,10 +18,12 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 
 
 #' @import tibble
-get_summed_coefs <- function(coefs, coef_name, interaction_var_name, reference_category) {
+get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
   interaction_coefs <- coefs[grepl(stringr::str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
 
   categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
+  reference_category <- levels(model$frame[[interaction_var_name]])[1]
+
   interaction_coef_values <- unname(interaction_coefs)
   nrows <- length(interaction_coef_values)
 
@@ -52,7 +54,7 @@ get_summed_coefs <- function(coefs, coef_name, interaction_var_name, reference_c
 
 
 #' @import tibble
-get_summed_coefs_all <- function(coefs, coef_names, interaction_var_name, reference_category) {
+get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name) {
   summed_coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
@@ -60,10 +62,10 @@ get_summed_coefs_all <- function(coefs, coef_names, interaction_var_name, refere
     summed_coefs_tibble <- rbind(
       summed_coefs_tibble,
       get_summed_coefs(
+        model = model,
         coefs = coefs,
         coef_name = coef_name,
-        interaction_var_name = interaction_var_name,
-        reference_category = reference_category
+        interaction_var_name = interaction_var_name
       )
     )
   }
@@ -73,15 +75,11 @@ get_summed_coefs_all <- function(coefs, coef_names, interaction_var_name, refere
 
 
 #' @import assertive
-validate_categorical_args <- function(data, model, dist_name, coef_names, interaction_var_name, reference_category) {
-  validate_base_args(data, model, dist_name, coef_names, interaction_var_name)
+validate_categorical_args <- function(model, dist_name, coef_names, interaction_var_name) {
+  validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_factor(model$frame[[interaction_var_name]])) {
     stop(str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
-  }
-
-  if (!assertive::is_a_string(reference_category)) {
-    stop("argument 'reference_category' must be a string")
   }
 }
 
@@ -93,28 +91,26 @@ validate_categorical_args <- function(data, model, dist_name, coef_names, intera
 #' @import dplyr
 #' @import amt
 #' @import glmmTMB
-update_distributions_by_categorical_var <- function(data, model,
+update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
-                                                    coef_names = NULL,
-                                                    reference_category = "reference_category") {
+                                                    coef_names = NULL) {
+  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
+
   validate_categorical_args(
-    data = data,
     model = model,
     dist_name = dist_name,
     interaction_var_name = interaction_var_name,
-    coef_names = coef_names,
-    reference_category = reference_category
+    coef_names = coef_names
   )
 
   coefs <- glmmTMB::fixef(model)$cond
-  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
   summed_coefs_tibble <- get_summed_coefs_all(
+    mdoel = model,
     coefs = coefs,
     coef_names = coef_names,
-    interaction_var_name = interaction_var_name,
-    reference_category = reference_category
+    interaction_var_name = interaction_var_name
   )
 
   updated_parameters_tibble <- get_updated_parameters(

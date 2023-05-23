@@ -14,7 +14,7 @@ get_data_path_root <- function() {
     current_path <- "tests/testthat"
   }
 
-  return(stringr::str_interp("${current_path}/helper_data/distributions"))
+  return(stringr::str_interp("${current_path}/helper_data/dist"))
 }
 
 get_sample_fisher_data <- function(custom_coefs = FALSE) {
@@ -111,7 +111,7 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
     models <- hash(
       "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation, data = data),
       "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation, data = data),
-      "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data),  # convergence issues
+      "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
       "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
       "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
     )
@@ -135,7 +135,6 @@ get_sample_simpele_models_custom_coefficients <- function(data = get_sample_fish
 
 get_sample_models_custom_coefficients <- function(
     data = get_sample_fisher_data(custom_coefs = TRUE), interaction_var_name = "sex") {
-
   if (interaction_var_name == "sex") {
     models <- hash(
       "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:sex + step_length_log:sex, data = data),
@@ -198,7 +197,7 @@ get_sample_coef_names_by_dist <- function(dist_name, custom_coefs = FALSE) {
 
 
 get_cached_distribution <- function(dist_name) {
-  file_path <- here::here(stringr::str_interp("${get_data_path_root()}/fitted_dists/${dist_name}.rds"))
+  file_path <- here::here(stringr::str_interp("${get_data_path_root()}/fitted/${dist_name}.rds"))
   if (file.exists(file_path)) {
     return(readRDS(file_path))
   }
@@ -210,7 +209,7 @@ get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_"
   if (is.null(distribution)) {
     data <- get_sample_fisher_data()[[column]]
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
-    file_path <- here(str_interp("${get_data_path_root()}/fitted_dists/${dist_name}.rds"))
+    file_path <- here(str_interp("${get_data_path_root()}/fitted/${dist_name}.rds"))
     saveRDS(distribution, file = file_path)
   }
 

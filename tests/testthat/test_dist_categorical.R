@@ -26,7 +26,6 @@ test_that("validate_categorical_args fails non-categorical interaction var type"
 
   error <- expect_error(
     validate_categorical_args(
-      data = sample_data$sl_,
       model = model,
       dist_name = dist_name,
       coef_names = c("sl_", "log_sl_"),
@@ -35,7 +34,6 @@ test_that("validate_categorical_args fails non-categorical interaction var type"
   )
 
   expect_equal(error$message, expected_error_msg)
-
 })
 
 

@@ -1,30 +1,6 @@
-get_quantiles_coef_values <- function(quantilees, interaction_coef_values, coef_value_vector) {
-  # TODO: todo...
-  return(quantiles)
-}
-
-
-#' @import tibble
-get_quantile_coefs <- function(coefs, coef_name, interaction_var_name, quantiles) {
-  interaction_coefs <- coefs[grepl(str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
-
-  interaction_coef_values <- unname(interaction_coefs)
-  nrows <- length(interaction_coef_values)
-
-  coef_name_vector <- rep(coef_name, nrows)
-  coef_value_vector <- rep(coefs[coef_name], nrows)
-
-  args_tibble <- tibble(
-    quantile = quantiles,
-    coef_name = coef_name_vector,
-    coef_value = get_quantiles_coef_values(quantiles, interaction_coef_values, coef_value_vector)
-  )
-
-  row.names(args_tibble) <- NULL
-
-  return(args_tibble)
-}
-
+# TODO:
+# - add validation that passed coefs
+# - is there a word for interaciton var that is multiplied...
 
 #' @import assertive
 validate_continuous_args <- function(data, model, dist_name, interaction_var_name, coef_names, quantiles) {
@@ -45,8 +21,45 @@ validate_continuous_args <- function(data, model, dist_name, interaction_var_nam
 }
 
 
+get_quantiles_coef_values <- function(interaction_data, quantiles,
+                                      interaction_coef_values,
+                                      coef_value_vector) {
+  # browser()
+  quantile_multipliers <- quantile(interaction_data, probs = quantiles, na.rm = T)
+  quantile_coef_values <- coef_value_vector + (interaction_coef_values * quantile_multipliers)
+  return(quantile_coef_values)
+}
+
+
 #' @import tibble
-get_quantile_coefs_all <- function(coefs, coef_names, interaction_var_name, quantiles) {
+get_quantile_coefs <- function(interaction_data, coefs, coef_name, interaction_var_name, quantiles) {
+  interaction_coefs <- coefs[grepl(str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
+
+  interaction_coef_values <- unname(interaction_coefs)
+  nrows <- length(interaction_coef_values)
+
+  coef_name_vector <- rep(coef_name, nrows)
+  coef_value_vector <- rep(coefs[coef_name], nrows)
+
+  args_tibble <- tibble(
+    quantile = quantiles,
+    coef_name = coef_name_vector,
+    coef_value = get_quantiles_coef_values(
+      interaction_data, quantiles,
+      interaction_coef_values,
+      coef_value_vector
+    )
+  )
+
+  row.names(args_tibble) <- NULL
+
+  return(args_tibble)
+}
+
+
+#' @import tibble
+get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
+                                   interaction_var_name, quantiles) {
   quantile_coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
@@ -54,6 +67,7 @@ get_quantile_coefs_all <- function(coefs, coef_names, interaction_var_name, quan
     quantile_coefs_tibble <- rbind(
       quantile_coefs_tibble,
       get_quantile_coefs(
+        interaction_data = interaction_data,
         coefs = coefs,
         coef_name = coef_name,
         interaction_var_name = interaction_var_name,
@@ -74,34 +88,38 @@ get_quantile_coefs_all <- function(coefs, coef_names, interaction_var_name, quan
 #' @import dplyr
 #' @import amt
 #' @import glmmTMB
-update_distributions_by_continuous_var <- function(data, model,
+update_distributions_by_continuous_var <- function(model,
                                                    dist_name,
                                                    interaction_var_name,
-                                                   quantiles = c(0.5, 0.5, 0.95),
+                                                   quantiles = c(0.05, 0.5, 0.75, 0.95),
                                                    coef_names = NULL) {
+  data <- model$frame[[movement_coef_name]]
   validate_continuous_args(
     data = data,
     model = model,
     dist_name = dist_name,
-    coef_names = coef_names,
     interaction_var_name = interaction_var_name,
-    quantiles = quantiles
+    quantiles = quantiles,
+    coef_names = coef_names
   )
 
   coefs <- glmmTMB::fixef(model)$cond
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
   quantile_coefs_tibble <- get_quantile_coefs_all(
+    interaction_data = model$frame[[interaction_var_name]],
     coefs = coefs,
     coef_names = coef_names,
     interaction_var_name = interaction_var_name,
     quantiles = quantiles
   )
 
+
   updated_parameters_tibble <- get_updated_parameters(
     data = data,
     dist_name = dist_name,
-    quantile_coefs_tibble = quantile_coefs_tibble
+    coefs_tibble = quantile_coefs_tibble,
+    grouping = "quantile"
   )
 
   return(updated_parameters_tibble)

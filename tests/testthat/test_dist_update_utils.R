@@ -120,6 +120,13 @@ test_that("get_default_coef_names", {
 })
 
 
+
+test_that("validate_coef_names fails non-character coef_names", {
+
+})
+
+
+
 test_that("validate_coef_names fails number of args", {
   distributions <- get_supported_distributions()
   expected_number_params <- c(2, 1, 1, 2, 1)
@@ -177,7 +184,22 @@ test_that("validate_coef_names fails unmatching coef names", {
 })
 
 
+test_that("validate_coef_names fails non-numeric coef data", {
+  model <- get_sample_models()[["gamma"]]
+
+  # artificially make non-numeric for check
+  model$frame$sl_ <- as.character(model$frame$sl_)
+
+  expect_error(validate_coef_names(
+    model = model,
+    dist_name = "gamma",
+    coef_names = c("sl_", "log_sl_")
+  ))
+})
+
+
 test_that("validate_coef_names succeeds", {
+
   distributions <- get_supported_distributions()
   expected_params_list <- list(
     c("sl_", "log_sl_"),
@@ -202,32 +224,12 @@ test_that("validate_coef_names succeeds", {
 })
 
 
-test_that("validate_base_args fails non-numeric data", {
-  sample_data <- get_sample_fisher_data()
-  model <- get_sample_models()[["gamma"]]
-  dist_name <- "gamma"
-  coef_names <- c("sl_", "log_sl_")
-  error_msg <- "argument 'data' must be a vector of type numeric. Make sure you are passing either the step lengths column (e.g. sl_) or turn angles (e.g. cos_ta_)."
-
-  error <- expect_error(validate_base_args(
-    data = as.character(sample_data$sl_),
-    model = model,
-    dist_name = dist_name,
-    coef_names = coef_names,
-    interaction_var_name = "sex"
-  ))
-
-  expect_equal(error$message, error_msg)
-})
-
-
 test_that("validate_base_args fails non-glmmTMB model", {
   sample_data <- get_sample_fisher_data()
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
 
   error <- expect_error(validate_base_args(
-    data = sample_data$sl_,
     model = "I am not a model",
     dist_name = dist_name,
     coef_names = coef_names,
@@ -243,7 +245,6 @@ test_that("validate_base_args fails non-string interaction_var_name", {
   coef_names <- c("sl_", "log_sl_")
 
   error <- expect_error(validate_base_args(
-    data = sample_data$sl_,
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
@@ -259,7 +260,6 @@ test_that("validate_base_args fails interaction_var_name not in model", {
   coef_names <- c("sl_", "log_sl_")
 
   error <- expect_error(validate_base_args(
-    data = sample_data$sl_,
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
@@ -276,7 +276,6 @@ test_that("validate_base_args succeeds with user-passed coef names", {
   coef_names <- c("step_length", "step_length_log")
 
   expect_no_error(validate_base_args(
-    data = sample_data$sl_,
     model = model,
     dist_name = dist_name,
     coef_names = coef_names,
@@ -285,18 +284,148 @@ test_that("validate_base_args succeeds with user-passed coef names", {
 })
 
 
-test_that("validate_base_args succeeds with null coef names", {
-  sample_data <- get_sample_fisher_data()
-  model <- get_sample_models()[["gamma"]]
-  dist_name <- "gamma"
 
-  expect_no_error(validate_base_args(
-    data = sample_data$sl_,
+test_that("validate_interaction_coefficients fails when not present in model", {
+  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  expect_error(validate_interaction_coefficients(
     model = model,
-    dist_name = dist_name,
-    coef_names = NULL,
+    interaction_var_name = 3
+  ), "argument 'interaction_var_name' must be a string.")
+})
+
+
+
+test_that("validate_interaction_coefficients fails when not a string", {
+  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  expect_error(validate_interaction_coefficients(
+    model = model,
+    interaction_var_name = "foo-sex"
+  ), "argument 'interaction_var_name' with value foo-sex does not appear to be part of an interaction coefficient in the provided model.")
+})
+
+
+
+
+test_that("validate_interaction_coefficients succeeds", {
+  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  expect_no_error(validate_interaction_coefficients(
+    model = model,
     interaction_var_name = "sex"
   ))
+})
+
+
+
+test_that("validate_gamma fails", {
+  model <- get_sample_models()[["lnorm"]]
+  data <- model$frame
+  expect_error(
+    validate_gamma(data = data, coef_names = c("log_sl_", "log_sl_sq_"))
+  )
+})
+
+
+test_that("validate_gamma succeeds", {
+  model <- get_sample_models()[["gamma"]]
+  data <- model$frame
+  expect_no_error(
+    validate_gamma(data = data, coef_names = c("sl_", "log_sl_"))
+  )
+})
+
+
+test_that("validate_exp fails", {
+  model <- get_sample_models()[["hnorm"]]
+  data <- model$frame
+  data$sl_sq_ <- data$sl_sq_ * -1
+  expect_error(
+    validate_exp(data = data, coef_names = c("sl_sq_"))
+  )
+})
+
+
+test_that("validate_exp succeeds", {
+  model <- get_sample_models()[["exp"]]
+  data <- model$frame
+  expect_no_error(
+    validate_exp(data = data, coef_names = c("sl_"))
+  )
+})
+
+
+test_that("validate_hnorm fails", {
+  model <- get_sample_models()[["exp"]]
+  data <- model$frame
+  data$sl_ <- data$sl_ * -1
+  expect_error(
+    validate_exp(data = data, coef_names = c("sl_"))
+  )
+})
+
+
+test_that("validate_hnorm succeeds", {
+  model <- get_sample_models()[["exp"]]
+  data <- model$frame
+  expect_no_error(
+    validate_exp(data = data, coef_names = c("sl_sq_"))
+  )
+})
+
+
+test_that("validate_lnorm fails", {
+  model <- get_sample_models()[["gamma"]]
+  data <- model$frame
+  expect_error(
+    validate_lnorm(data = data, coef_names = c("sl_", "log_sl_"))
+  )
+})
+
+
+test_that("validate_lnorm succeeds", {
+  model <- get_sample_models()[["lnorm"]]
+  data <- model$frame
+  expect_no_error(
+    validate_lnorm(data = data, coef_names = c("log_sl_", "log_sl_sq_"))
+  )
+})
+
+
+test_that("validate_vonmises fails", {
+  model <- get_sample_models()[["exp"]]
+  data <- model$frame
+  expect_error(
+    validate_vonmises(data = data, coef_names = c("sl_"))
+  )
+})
+
+
+test_that("validate_vonmises succeeds", {
+  model <- get_sample_models()[["vonmises"]]
+  data <- model$frame
+  expect_no_error(
+    validate_vonmises(data = data, coef_names = c("cos_ta_"))
+  )
+})
+
+
+
+test_that("validate_movement_data fails", {
+  model <- get_sample_models()[["exp"]]
+  expect_error(
+    validate_movement_data(model = model,
+                           dist_name = "vonmises",
+                           coef_names = c("sl_"))
+  )
+})
+
+
+test_that("validate_movement_var_data succeeds", {
+  model <- get_sample_models()[["gamma"]]
+  expect_no_error(
+    validate_movement_data(model = model,
+                           dist_name = "gamma",
+                           coef_names = c("sl_"))
+  )
 })
 
 
@@ -310,14 +439,14 @@ test_that("get_updated_parameters with categorical interactions", {
 
     coefs <- get_sample_coefs(
       dist_name = dist_name
-      )
+    )
     coef_names <- get_default_coef_names(dist_name = dist_name)
 
     summed_coef_tibble <- get_summed_coefs_all(
+      model = get_sample_models()[[dist_name]],
       coefs = coefs,
       coef_names = coef_names,
-      interaction_var_name = "sex",
-      reference_category = REFERENCE_CATEGORY
+      interaction_var_name = "sex"
     )
 
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
@@ -329,7 +458,7 @@ test_that("get_updated_parameters with categorical interactions", {
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/updated_params_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
@@ -338,40 +467,40 @@ test_that("get_updated_parameters with categorical interactions", {
 
 
 test_that("get_updated_parameters with continuous interactions", {
-  # dists <- get_supported_distributions()
-  # data <- get_sample_fisher_data()
-  #
-  # for (i in 1:length(dists)) {
-  #   dist_name <- dists[i]
-  #   column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
-  #
-  #   coefs <- get_sample_coefs(
-  #     dist_name = dist_name,
-  #     interaction_var_name = "elevation"
-  #   )
-  #   coef_names <- get_default_coef_names(dist_name = dist_name)
-  #
-  #   summed_coef_tibble <- get_summed_coefs_all(
-  #     coefs = coefs,
-  #     coef_names = coef_names,
-  #     interaction_var_name = "sex",
-  #     reference_category = REFERENCE_CATEGORY
-  #   )
-  #
-  #   mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
-  #
-  #   actual_updated_parameters_tibble <- get_updated_parameters(
-  #     data = data[[column]],
-  #     dist_name = dist_name,
-  #     coefs_tibble = summed_coef_tibble
-  #   )
-  #
-  #   browser()
-  #
-  #   file_path <- here(str_interp(
-  #     "${get_data_path_root()}/expected/updated_params_interactions/${dist_name}.rds"
-  #   ))
-  #   expected_updated_parameters_tibble <- readRDS(file_path)
-  #   expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
-  # }
+  dists <- get_supported_distributions()
+  data <- get_sample_fisher_data()
+
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
+
+    coefs <- get_sample_coefs(
+      dist_name = dist_name,
+      interaction_var_name = "elevation"
+    )
+    coef_names <- get_default_coef_names(dist_name = dist_name)
+
+    quantile_coef_tibble <- get_quantile_coefs_all(
+      interaction_data = data$elevation,
+      coefs = coefs,
+      coef_names = coef_names,
+      interaction_var_name = "elevation",
+      quantiles = c(0.05, 0.5, 0.75, 0.95)
+    )
+
+    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+
+    actual_updated_parameters_tibble <- get_updated_parameters(
+      data = data[[column]],
+      dist_name = dist_name,
+      coefs_tibble = quantile_coef_tibble,
+      grouping = "quantile"
+    )
+
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
+    ))
+    expected_updated_parameters_tibble <- readRDS(file_path)
+    expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
+  }
 })
