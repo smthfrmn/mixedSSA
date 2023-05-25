@@ -6,6 +6,7 @@ library(stringr)
 
 REFERENCE_CATEGORY <- "M"
 SEXES <- c(REFERENCE_CATEGORY, "F")
+TEST_QUANTILES <- c(0.25, 0.5, 0.75)
 
 # A hack to make local tests and github actions work :(
 get_data_path_root <- function() {
@@ -82,6 +83,11 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
 }
 
 
+get_fisher_data_quantiles <- function() {
+  data <- get_sample_fisher_data()
+  return(quantile(data$elevation, probs = TEST_QUANTILES, na.rm = TRUE))
+}
+
 
 get_sample_simple_models <- function(data = get_sample_fisher_data()) {
   models <- hash(
@@ -97,31 +103,35 @@ get_sample_simple_models <- function(data = get_sample_fisher_data()) {
 
 
 get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_name = "sex") {
-  if (interaction_var_name == "sex") {
-    models <- hash(
-      "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data),
-      "exp" = glmmTMB(case_ ~ sl_ + sl_:sex, data = data),
-      "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex, data = data),
-      "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex, data = data),
-      "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
-    )
-  }
 
-  if (interaction_var_name == "elevation") {
-    models <- hash(
-      "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation, data = data),
-      "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation, data = data),
-      "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
-      "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
-      "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
-    )
-  }
+  # suppress model convergence warnings :/
+  suppressWarnings({
+    if (interaction_var_name == "sex") {
+      models <- hash(
+        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data),
+        "exp" = glmmTMB(case_ ~ sl_ + sl_:sex, data = data),
+        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex, data = data),
+        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex, data = data),
+        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
+      )
+    }
+
+    if (interaction_var_name == "elevation") {
+      models <- hash(
+        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation, data = data),
+        "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation, data = data),
+        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
+        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
+        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
+      )
+    }
+  })
 
   return(models)
 }
 
 
-get_sample_simpele_models_custom_coefficients <- function(data = get_sample_fisher_data(custom_coefs = TRUE)) {
+get_sample_simple_models_custom_coefficients <- function(data = get_sample_fisher_data(custom_coefs = TRUE)) {
   models <- hash(
     "gamma" = glmmTMB(case_ ~ step_length + step_length_log, data = data),
     "exp" = glmmTMB(case_ ~ step_length, data = data),
@@ -135,6 +145,8 @@ get_sample_simpele_models_custom_coefficients <- function(data = get_sample_fish
 
 get_sample_models_custom_coefficients <- function(
     data = get_sample_fisher_data(custom_coefs = TRUE), interaction_var_name = "sex") {
+
+  suppressWarnings({
   if (interaction_var_name == "sex") {
     models <- hash(
       "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:sex + step_length_log:sex, data = data),
@@ -152,6 +164,8 @@ get_sample_models_custom_coefficients <- function(
       "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
     )
   }
+
+  })
 
   return(models)
 }
@@ -219,13 +233,14 @@ get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_"
 
 get_mock_coefs <- function(dist_name, interaction_var_name = "sex") {
   model <- get_sample_models(interaction_var_name = interaction_var_name)[[dist_name]]
+
   coefs <- glmmTMB::fixef(model)$cond
   mock_coefs <- coefs * 0 + c(1:length(coefs))
   return(mock_coefs)
 }
 
 
-get_expected_coef_sums <- function(distribution, coef_index) {
+get_expected_coef_sums <- function(distribution, coef_index, quantiles = NULL) {
   expected_coef_sums <- hash(
     "gamma" = hash(
       "1" = c(2, 6), # sl_
@@ -249,5 +264,15 @@ get_expected_coef_sums <- function(distribution, coef_index) {
     )
   )
 
-  return(as.vector(expected_coef_sums[[distribution]][[as.character(coef_index)]]))
+  expected_values <- as.vector(expected_coef_sums[[distribution]][[as.character(coef_index)]])
+
+  if (!is.null(quantiles) & !is.null(expected_values)) {
+    quantile_data <- get_fisher_data_quantiles()
+    interaction_coef_value <- expected_values[2] - expected_values[1]
+    expected_values <- expected_values[1] + (quantile_data * interaction_coef_value)
+  }
+
+  names(expected_values) <- NULL
+
+  return(expected_values)
 }

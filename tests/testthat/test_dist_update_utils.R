@@ -199,7 +199,6 @@ test_that("validate_coef_names fails non-numeric coef data", {
 
 
 test_that("validate_coef_names succeeds", {
-
   distributions <- get_supported_distributions()
   expected_params_list <- list(
     c("sl_", "log_sl_"),
@@ -412,9 +411,11 @@ test_that("validate_vonmises succeeds", {
 test_that("validate_movement_data fails", {
   model <- get_sample_models()[["exp"]]
   expect_error(
-    validate_movement_data(model = model,
-                           dist_name = "vonmises",
-                           coef_names = c("sl_"))
+    validate_movement_data(
+      model = model,
+      dist_name = "vonmises",
+      coef_names = c("sl_")
+    )
   )
 })
 
@@ -422,9 +423,11 @@ test_that("validate_movement_data fails", {
 test_that("validate_movement_var_data succeeds", {
   model <- get_sample_models()[["gamma"]]
   expect_no_error(
-    validate_movement_data(model = model,
-                           dist_name = "gamma",
-                           coef_names = c("sl_"))
+    validate_movement_data(
+      model = model,
+      dist_name = "gamma",
+      coef_names = c("sl_")
+    )
   )
 })
 
@@ -485,7 +488,7 @@ test_that("get_updated_parameters with continuous interactions", {
       coefs = coefs,
       coef_names = coef_names,
       interaction_var_name = "elevation",
-      quantiles = c(0.05, 0.5, 0.75, 0.95)
+      quantiles = TEST_QUANTILES
     )
 
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))

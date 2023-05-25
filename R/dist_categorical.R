@@ -95,7 +95,10 @@ update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
                                                     coef_names = NULL) {
+
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
+  movement_coef_name <- coef_names[1]
+  data <- model$frame[[movement_coef_name]]
 
   validate_categorical_args(
     model = model,
@@ -107,14 +110,14 @@ update_distributions_by_categorical_var <- function(model,
   coefs <- glmmTMB::fixef(model)$cond
 
   summed_coefs_tibble <- get_summed_coefs_all(
-    mdoel = model,
+    model = model,
     coefs = coefs,
     coef_names = coef_names,
     interaction_var_name = interaction_var_name
   )
 
   updated_parameters_tibble <- get_updated_parameters(
-    data = data,
+    data = model$frame,
     dist_name = dist_name,
     coefs_tibble = summed_coefs_tibble
   )

@@ -2,9 +2,12 @@
 # - add validation that passed coefs
 # - is there a word for interaciton var that is multiplied...
 
+DEFAULT_QUANTILES <- c(0.05, 0.5, 0.75, 0.95)
+
+
 #' @import assertive
 validate_continuous_args <- function(data, model, dist_name, interaction_var_name, coef_names, quantiles) {
-  validate_base_args(data, model, dist_name, coef_names, interaction_var_name)
+  validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_numeric(model$frame[[interaction_var_name]])) {
     stop(str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a numeric (i.e. continuous) variable."))
@@ -24,8 +27,9 @@ validate_continuous_args <- function(data, model, dist_name, interaction_var_nam
 get_quantiles_coef_values <- function(interaction_data, quantiles,
                                       interaction_coef_values,
                                       coef_value_vector) {
-  # browser()
   quantile_multipliers <- quantile(interaction_data, probs = quantiles, na.rm = T)
+  names(quantile_multipliers) <- NULL
+
   quantile_coef_values <- coef_value_vector + (interaction_coef_values * quantile_multipliers)
   return(quantile_coef_values)
 }
@@ -91,9 +95,13 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 update_distributions_by_continuous_var <- function(model,
                                                    dist_name,
                                                    interaction_var_name,
-                                                   quantiles = c(0.05, 0.5, 0.75, 0.95),
+                                                   quantiles = DEFAULT_QUANTILES,
                                                    coef_names = NULL) {
+
+  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
+  movement_coef_name <- coef_names[1]
   data <- model$frame[[movement_coef_name]]
+
   validate_continuous_args(
     data = data,
     model = model,
@@ -104,7 +112,6 @@ update_distributions_by_continuous_var <- function(model,
   )
 
   coefs <- glmmTMB::fixef(model)$cond
-  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
 
   quantile_coefs_tibble <- get_quantile_coefs_all(
     interaction_data = model$frame[[interaction_var_name]],

@@ -290,7 +290,7 @@ get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "ca
     )
   ) %>%
     mutate(across(
-      -grouping,
+      -as.character(grouping),
       function(x) round(as.numeric(x), 6)
     ))
   return(updated_parameters_tibble)
