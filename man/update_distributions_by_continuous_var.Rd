@@ -5,11 +5,10 @@
 \title{Update movement distributions based on fitted models}
 \usage{
 update_distributions_by_continuous_var(
-  data,
   model,
   dist_name,
   interaction_var_name,
-  quantiles = c(0.5, 0.5, 0.95),
+  quantiles = DEFAULT_QUANTILES,
   coef_names = NULL
 )
 }

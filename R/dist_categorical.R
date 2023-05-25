@@ -1,7 +1,5 @@
 # TODO:
 # - include random effects in update functions
-# - continuous updating distributions:
-#     - 5, 50, 95%
 # - add unif distribution support
 # - delta method
 
@@ -9,8 +7,8 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
   interaction_coef_names <- names(interaction_coefs)
 
   categories <- sapply(interaction_coef_names, function(name) {
-    regex_str <- str_interp("(?<=:${interaction_var_name}).*")
-    return(str_extract(name, stringr::regex(regex_str)))
+    regex_str <- stringr::str_interp("(?<=:${interaction_var_name}).*")
+    return(stringr::str_extract(name, stringr::regex(regex_str)))
   })
 
   return(unname(categories))
@@ -79,7 +77,7 @@ validate_categorical_args <- function(model, dist_name, coef_names, interaction_
   validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_factor(model$frame[[interaction_var_name]])) {
-    stop(str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
+    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
   }
 }
 
@@ -95,7 +93,6 @@ update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
                                                     coef_names = NULL) {
-
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
   movement_coef_name <- coef_names[1]
   data <- model$frame[[movement_coef_name]]

@@ -10,7 +10,7 @@ validate_continuous_args <- function(data, model, dist_name, interaction_var_nam
   validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_numeric(model$frame[[interaction_var_name]])) {
-    stop(str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a numeric (i.e. continuous) variable."))
+    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a numeric (i.e. continuous) variable."))
   }
 
 
@@ -27,7 +27,7 @@ validate_continuous_args <- function(data, model, dist_name, interaction_var_nam
 get_quantiles_coef_values <- function(interaction_data, quantiles,
                                       interaction_coef_values,
                                       coef_value_vector) {
-  quantile_multipliers <- quantile(interaction_data, probs = quantiles, na.rm = T)
+  quantile_multipliers <- stats::quantile(interaction_data, probs = quantiles, na.rm = T)
   names(quantile_multipliers) <- NULL
 
   quantile_coef_values <- coef_value_vector + (interaction_coef_values * quantile_multipliers)
@@ -37,7 +37,7 @@ get_quantiles_coef_values <- function(interaction_data, quantiles,
 
 #' @import tibble
 get_quantile_coefs <- function(interaction_data, coefs, coef_name, interaction_var_name, quantiles) {
-  interaction_coefs <- coefs[grepl(str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
+  interaction_coefs <- coefs[grepl(stringr::str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
 
   interaction_coef_values <- unname(interaction_coefs)
   nrows <- length(interaction_coef_values)
@@ -97,7 +97,6 @@ update_distributions_by_continuous_var <- function(model,
                                                    interaction_var_name,
                                                    quantiles = DEFAULT_QUANTILES,
                                                    coef_names = NULL) {
-
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
   movement_coef_name <- coef_names[1]
   data <- model$frame[[movement_coef_name]]

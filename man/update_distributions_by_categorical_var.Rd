@@ -5,12 +5,10 @@
 \title{Update movement distributions based on fitted models}
 \usage{
 update_distributions_by_categorical_var(
-  data,
   model,
   dist_name,
   interaction_var_name,
-  coef_names = NULL,
-  reference_category = "reference_category"
+  coef_names = NULL
 )
 }
 \description{

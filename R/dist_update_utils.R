@@ -112,7 +112,7 @@ validate_gamma <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(str_interp("To update the 'gamma' distribution you need to pass a model that is fit to step lengths and log step lengths. The passed arg 'coef_names' with value ${coef_names} are not valid variables for this distribution."))
+        stop(stringr::str_interp("To update the 'gamma' distribution you need to pass a model that is fit to step lengths and log step lengths. The passed arg 'coef_names' with value ${coef_names} are not valid variables for this distribution."))
       }
     }
   )
@@ -123,7 +123,7 @@ validate_exp <- function(data, coef_names) {
   actual_sl_ <- data[[coef_names[1]]]
   raise_error <- FALSE
   tryCatch(
-    exp = {
+    expr = {
       if (any(!actual_sl_ >= 0)) {
         raise_error <- TRUE
       }
@@ -133,7 +133,7 @@ validate_exp <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths.
+        stop(stringr::str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths.
                     The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
@@ -146,8 +146,8 @@ validate_hnorm <- function(data, coef_names) {
 
   raise_error <- FALSE
   tryCatch(
-    exp = {
-      if (any(!actual_sl_sq >= 0)) {
+    expr = {
+      if (any(!actual_sl_sq_ >= 0)) {
         raise_error <- TRUE
       }
     },
@@ -156,7 +156,7 @@ validate_hnorm <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths squared.
+        stop(stringr::str_interp("To update the 'hnorm' distribution you need to pass a model that is fit to step lengths squared.
                     The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
@@ -170,7 +170,7 @@ validate_lnorm <- function(data, coef_names) {
 
   raise_error <- FALSE
   tryCatch(
-    exp = {
+    expr = {
       if (any(actual_log_sl_^2 != actual_log_sl_sq_)) {
         raise_error <- TRUE
       }
@@ -180,7 +180,7 @@ validate_lnorm <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(str_interp("To update the 'lnorm' distribution you need to pass a model that is fit to log step lengths and log step lengths squared.
+        stop(stringr::str_interp("To update the 'lnorm' distribution you need to pass a model that is fit to log step lengths and log step lengths squared.
                     The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
@@ -193,7 +193,7 @@ validate_vonmises <- function(data, coef_names) {
 
   raise_error <- FALSE
   tryCatch(
-    exp = {
+    expr = {
       if (any(!actual_cos_ta_ <= 1 | !actual_cos_ta_ >= -1)) {
         raise_error <- TRUE
       }
@@ -203,7 +203,7 @@ validate_vonmises <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(str_interp("To update the 'vonmises' distribution you need to pass a model that is fit to cosine of turn angles.
+        stop(stringr::str_interp("To update the 'vonmises' distribution you need to pass a model that is fit to cosine of turn angles.
                     The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
@@ -212,7 +212,7 @@ validate_vonmises <- function(data, coef_names) {
 
 
 validate_movement_data <- function(model, dist_name, coef_names) {
-  validate_fn <- str_interp("validate_${dist_name}")
+  validate_fn <- stringr::str_interp("validate_${dist_name}")
   do.call(validate_fn, args = list(
     data = model$frame,
     coef_names = coef_names

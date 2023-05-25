@@ -10,12 +10,17 @@ TEST_QUANTILES <- c(0.25, 0.5, 0.75)
 
 # A hack to make local tests and github actions work :(
 get_data_path_root <- function() {
-  current_path <- testthat::test_path()
-  if (current_path == ".") {
-    current_path <- "tests/testthat"
-  }
+  # current_path <- testthat::test_path()
+  # if (current_path == ".") {
+  #   current_path <- "tests/testthat"
+  # }
+  #
+  # return(stringr::str_interp("${current_path}/helper_data/dist"))
+  root_path <- R.utils::getAbsolutePath("tests/testthat/helper_data/dist")
 
-  return(stringr::str_interp("${current_path}/helper_data/dist"))
+  # hack
+  root_path <- gsub("tests/testthat/tests/testthat", "tests/testthat", root_path)
+  return(root_path)
 }
 
 get_sample_fisher_data <- function(custom_coefs = FALSE) {
@@ -64,7 +69,8 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
   #   ) %>%
   #   extract_covariates(terra::unwrap(amt_fisher_covar$elevation))
 
-  file_path <- here(str_interp("${get_data_path_root()}/fisher_data.rds"))
+  file_path <- str_interp("${get_data_path_root()}/fisher_data.rds")
+  print(file_path)
   data <- readRDS(file_path)
   if (custom_coefs) {
     # If the user isn't using the amt nomenclature
@@ -103,7 +109,6 @@ get_sample_simple_models <- function(data = get_sample_fisher_data()) {
 
 
 get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_name = "sex") {
-
   # suppress model convergence warnings :/
   suppressWarnings({
     if (interaction_var_name == "sex") {
@@ -145,26 +150,24 @@ get_sample_simple_models_custom_coefficients <- function(data = get_sample_fishe
 
 get_sample_models_custom_coefficients <- function(
     data = get_sample_fisher_data(custom_coefs = TRUE), interaction_var_name = "sex") {
-
   suppressWarnings({
-  if (interaction_var_name == "sex") {
-    models <- hash(
-      "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:sex + step_length_log:sex, data = data),
-      "exp" = glmmTMB(case_ ~ step_length + step_length:sex, data = data),
-      "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:sex, data = data),
-      "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:sex + step_length_log_sq:sex, data = data),
-      "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data)
-    )
-  } else {
-    models <- hash(
-      "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:elevation + step_length_log:elevation, data = data),
-      "exp" = glmmTMB(case_ ~ step_length + step_length:elevation, data = data),
-      "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:elevation, data = data),
-      "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:elevation + step_length_log_sq:elevation, data = data),
-      "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
-    )
-  }
-
+    if (interaction_var_name == "sex") {
+      models <- hash(
+        "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:sex + step_length_log:sex, data = data),
+        "exp" = glmmTMB(case_ ~ step_length + step_length:sex, data = data),
+        "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:sex, data = data),
+        "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:sex + step_length_log_sq:sex, data = data),
+        "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data)
+      )
+    } else {
+      models <- hash(
+        "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:elevation + step_length_log:elevation, data = data),
+        "exp" = glmmTMB(case_ ~ step_length + step_length:elevation, data = data),
+        "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:elevation, data = data),
+        "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:elevation + step_length_log_sq:elevation, data = data),
+        "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
+      )
+    }
   })
 
   return(models)
