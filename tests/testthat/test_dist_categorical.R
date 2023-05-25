@@ -41,9 +41,12 @@ test_that("get_summed_coefs", {
   dists <- get_supported_distributions()
 
   for (i in 1:length(dists)) {
-    dist <- dists[i]
-    mock_coefs <- get_mock_coefs(dist)
-    coef_names <- get_default_coef_names(dists[i])
+    dist_name <- dists[i]
+    mock_coefs <- get_mock_coefs(dist_name)
+    coef_names <- get_default_coef_names(dist_name)
+    model <- get_sample_models(
+      interaction_var_name = "sex"
+    )[[dist_name]]
 
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
@@ -52,16 +55,17 @@ test_that("get_summed_coefs", {
         category = SEXES,
         coef_name = coef_name,
         coef_value = get_expected_coef_sums(
-          distribution = dist,
+          distribution = dist_name,
           coef_index = j
         )
       ) %>%
         arrange(coef_value)
 
       actual_tibble <- get_summed_coefs(
-        mock_coefs, coef_name,
-        interaction_var_name = "sex",
-        reference_category = REFERENCE_CATEGORY
+        model = model,
+        coefs = mock_coefs,
+        coef_name = coef_name,
+        interaction_var_name = "sex"
       ) %>%
         arrange(coef_value)
 
@@ -77,11 +81,15 @@ test_that("get_summed_coefs", {
 test_that("get_summed_coefs_all", {
   dists <- get_supported_distributions()
   for (i in 1:length(dists)) {
-    dist <- dists[i]
+    dist_name <- dists[i]
 
-    mock_coefs <- get_mock_coefs(dist)
-    coef_names <- get_default_coef_names(dists[i])
+    mock_coefs <- get_mock_coefs(dist_name)
+    coef_names <- get_default_coef_names(dist_name)
     expected_tibble <- tibble::tibble()
+    model <- get_sample_models(
+      interaction_var_name = "sex"
+    )[[dist_name]]
+
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
       expected_tibble <- rbind(
@@ -90,7 +98,7 @@ test_that("get_summed_coefs_all", {
           category = SEXES,
           coef_name = coef_name,
           coef_value = get_expected_coef_sums(
-            distribution = dist,
+            distribution = dist_name,
             coef_index = j
           )
         )
@@ -99,10 +107,10 @@ test_that("get_summed_coefs_all", {
     }
 
     actual_tibble <- get_summed_coefs_all(
+      model = model,
       coefs = mock_coefs,
       coef_names = coef_names,
-      interaction_var_name = "sex",
-      reference_category = REFERENCE_CATEGORY
+      interaction_var_name = "sex"
     ) %>%
       arrange(coef_value)
 
@@ -135,15 +143,13 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     )
 
     results <- update_distributions_by_categorical_var(
-      data = column_data,
       model = model,
       dist_name = dist_name,
-      interaction_var_name = "sex",
-      reference_category = REFERENCE_CATEGORY
+      interaction_var_name = "sex"
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/updated_params_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
 
@@ -173,19 +179,17 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
 
     results <- update_distributions_by_categorical_var(
-      data = column_data,
       model = model,
       dist_name = dist_name,
       interaction_var_name = "sex",
       coef_names = get_sample_coef_names_by_dist(
         dist_name = dist_name,
         custom_coefs = TRUE
-      ),
-      reference_category = REFERENCE_CATEGORY
+      )
     )
 
     file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/updated_params_interactions/${dist_name}.rds"
+      "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
     expected_results <- readRDS(file_path)
     expect_equal(results, expected_results)
