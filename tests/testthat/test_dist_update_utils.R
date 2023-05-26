@@ -1,3 +1,5 @@
+# TODO: test special characters in coef names doesn't mess everything up
+
 test_that("get_update_distribution_function_and_args returns correct values", {
   distributions <- get_supported_distributions()
   expected_fns <- list(

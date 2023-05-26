@@ -103,7 +103,11 @@ validate_gamma <- function(data, coef_names) {
   raise_error <- FALSE
   tryCatch(
     expr = {
-      if (any(log(actual_sl_) != actual_log_sl_)) {
+      all_equal <- all(
+        berryFunctions::almost.equal(log(actual_sl_),
+                                     actual_log_sl_,
+                                     tolerance = 0.001))
+      if (!all_equal) {
         raise_error <- TRUE
       }
     },
@@ -171,7 +175,11 @@ validate_lnorm <- function(data, coef_names) {
   raise_error <- FALSE
   tryCatch(
     expr = {
-      if (any(actual_log_sl_^2 != actual_log_sl_sq_)) {
+      all_equal <- all(
+        berryFunctions::almost.equal(actual_log_sl_ ^ 2,
+                                     actual_log_sl_sq_,
+                                     tolerance = 0.001))
+      if (!all_equal) {
         raise_error <- TRUE
       }
     },

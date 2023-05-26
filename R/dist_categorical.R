@@ -1,7 +1,6 @@
 # TODO:
 # - include random effects in update functions
 # - add unif distribution support
-# - delta method
 
 get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
   interaction_coef_names <- names(interaction_coefs)
@@ -17,7 +16,12 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 
 #' @import tibble
 get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
-  interaction_coefs <- coefs[grepl(stringr::str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
+  regex_str <- gsub("([.|()\\^{}+$*?]|\\[|\\])",
+                    "\\\\\\1",
+                    stringr::str_interp("${coef_name}:${interaction_var_name}"))
+
+  interaction_coefs <- coefs[grepl(
+    stringr::str_interp("^${regex_str}"), names(coefs))]
 
   categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
   reference_category <- levels(model$frame[[interaction_var_name]])[1]
@@ -76,8 +80,13 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name)
 validate_categorical_args <- function(model, dist_name, coef_names, interaction_var_name) {
   validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
-  if (!assertive::is_factor(model$frame[[interaction_var_name]])) {
-    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
+  interaction_var <- model$frame[[interaction_var_name]]
+
+  # TODO: check if necessary
+  factor_or_char <- assertive::is_factor(interaction_var) | assertive::is_character(interaction_var_name)
+
+  if (!factor_or_char) {
+    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor or character (i.e. categorical) variable."))
   }
 }
 
@@ -93,9 +102,9 @@ update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
                                                     coef_names = NULL) {
+
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
   movement_coef_name <- coef_names[1]
-  data <- model$frame[[movement_coef_name]]
 
   validate_categorical_args(
     model = model,
@@ -113,8 +122,10 @@ update_distributions_by_categorical_var <- function(model,
     interaction_var_name = interaction_var_name
   )
 
+  data <- model$frame[[movement_coef_name]]
+
   updated_parameters_tibble <- get_updated_parameters(
-    data = model$frame,
+    data = data,
     dist_name = dist_name,
     coefs_tibble = summed_coefs_tibble
   )
