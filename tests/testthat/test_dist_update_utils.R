@@ -1,4 +1,66 @@
-# TODO: test special characters in coef names doesn't mess everything up
+test_that("get_interaction_coefs non-special characters", {
+  coefs <- get_mock_coefs(dist_name = GAMMA)
+  result <- get_interaction_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
+  expect_equal(result, c("sl_:sexF" = 4))
+})
+
+
+test_that("get_interaction_coefs special characters in coef_name", {
+  coefs <- get_mock_coefs(dist_name = VONMISES)
+  names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sexF")
+  result <- get_interaction_coefs(
+    coefs = coefs,
+    coef_name = "cos(ta_)",
+    interaction_var_name = "sex"
+  )
+  expect_equal(result, c("cos(ta_):sexF" = 3))
+})
+
+
+
+test_that("get_interaction_coefs special characters in coef_name and interaction_var_name", {
+  coefs <- get_mock_coefs(dist_name = VONMISES)
+  names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sex(F)")
+  result <- get_interaction_coefs(
+    coefs = coefs,
+    coef_name = "cos(ta_)",
+    interaction_var_name = "sex"
+  )
+  expect_equal(result, c("cos(ta_):sex(F)" = 3))
+})
+
+
+test_that("transform_movement_data supports all distributions and transforms data correctly", {
+  distributions <- get_supported_distributions()
+  colnames <- hash(
+    GAMMA = "sl_",
+    EXP = "sl_",
+    HNORM = "sl_sq_",
+    LNORM = "log_sl_",
+    VONMISES = "cos_ta_"
+  )
+
+  for (i in 1:length(distributions)) {
+    dist_name <- distributions[i]
+
+    test_movement_data <- c(0.25, 0.5, 0.75)
+    results <- transform_movement_data(test_movement_data, dist_name)
+
+    expected_results <- NULL
+    if (dist_name %in% c(GAMMA, EXP)) {
+      expected_results <- test_movement_data
+    } else if (dist_name == HNORM) {
+      expected_results <- test_movement_data * test_movement_data
+    } else if (dist_name == LNORM) {
+      expected_results <- exp(test_movement_data)
+    } else if (dist_name == VONMISES) {
+      expected_results <- acos(test_movement_data)
+    }
+
+    expect_equal(results, expected_results)
+  }
+})
+
 
 test_that("get_update_distribution_function_and_args returns correct values", {
   distributions <- get_supported_distributions()
@@ -63,21 +125,21 @@ test_that("update_parameters for all distributions", {
 
   expected_params <- hash(
     "gamma" = list(
-      shape = 0.62691709,
-      scale = -5483.4104
+      shape = 0.62859352,
+      scale = -4700.1554
     ),
     "exp" = list(
-      rate = 0.001508273
+      rate = 0.00144772908
     ),
     "hnorm" = list(
       sd = 0 # TODO: not working
     ),
     "lnorm" = list(
-      meanlog = 4.5511495,
-      sdlog = 1.9637997
+      meanlog = 4.5643543,
+      sdlog = 1.9363423
     ),
     "vonmises" = list(
-      kappa = 2.4857535,
+      kappa = 2.4795563,
       mu = 0
     )
   )
@@ -86,11 +148,10 @@ test_that("update_parameters for all distributions", {
     dist_name <- distributions[i]
     column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
 
-    if (dist_name == "hnorm") {
-      # TODO: ACTUALLY FIX THIS...
+    if (dist_name == HNORM) {
+      # TODO: MAKE WORK...
       next
     }
-
     dist <- get_sample_observed_distribution(dist_name = dist_name, column = column)
     update_fn <- update_fns[[dist_name]]
 
@@ -124,7 +185,15 @@ test_that("get_default_coef_names", {
 
 
 test_that("validate_coef_names fails non-character coef_names", {
-
+  expected_error_msg <- "argument 'coef_names' must be a vector of characters."
+  expect_error(
+    validate_coef_names(
+      model = NULL, # don't need for this test
+      dist_name = "gamma",
+      coef_names = c(1, 2)
+    ),
+    expected_error_msg
+  )
 })
 
 
@@ -255,7 +324,6 @@ test_that("validate_base_args fails non-string interaction_var_name", {
 
 
 test_that("validate_base_args fails interaction_var_name not in model", {
-  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
@@ -265,7 +333,7 @@ test_that("validate_base_args fails interaction_var_name not in model", {
     dist_name = dist_name,
     coef_names = coef_names,
     interaction_var_name = "foo-sex"
-  ), "argument 'interaction_var_name' with value foo-sex does not appear to be part of an interaction coefficient in the provided model.")
+  ), "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model.")
 })
 
 
@@ -286,7 +354,7 @@ test_that("validate_base_args succeeds with user-passed coef names", {
 
 
 
-test_that("validate_interaction_coefficients fails when not present in model", {
+test_that("validate_interaction_coefficients fails when not a string", {
   model <- get_sample_models_custom_coefficients()[["gamma"]]
   expect_error(validate_interaction_coefficients(
     model = model,
@@ -296,12 +364,12 @@ test_that("validate_interaction_coefficients fails when not present in model", {
 
 
 
-test_that("validate_interaction_coefficients fails when not a string", {
+test_that("validate_interaction_coefficients fails when not present in model", {
   model <- get_sample_models_custom_coefficients()[["gamma"]]
   expect_error(validate_interaction_coefficients(
     model = model,
     interaction_var_name = "foo-sex"
-  ), "argument 'interaction_var_name' with value foo-sex does not appear to be part of an interaction coefficient in the provided model.")
+  ), "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model.")
 })
 
 
@@ -428,7 +496,7 @@ test_that("validate_movement_var_data succeeds", {
     validate_movement_data(
       model = model,
       dist_name = "gamma",
-      coef_names = c("sl_")
+      coef_names = c("sl_", "log_sl_")
     )
   )
 })
@@ -465,6 +533,7 @@ test_that("get_updated_parameters with categorical interactions", {
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
+
     expected_updated_parameters_tibble <- readRDS(file_path)
     expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
   }

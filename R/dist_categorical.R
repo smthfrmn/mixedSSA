@@ -16,12 +16,11 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 
 #' @import tibble
 get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
-  regex_str <- gsub("([.|()\\^{}+$*?]|\\[|\\])",
-                    "\\\\\\1",
-                    stringr::str_interp("${coef_name}:${interaction_var_name}"))
-
-  interaction_coefs <- coefs[grepl(
-    stringr::str_interp("^${regex_str}"), names(coefs))]
+  interaction_coefs <- get_interaction_coefs(
+    coefs = coefs,
+    coef_name = coef_name,
+    interaction_var_name = interaction_var_name
+  )
 
   categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
   reference_category <- levels(model$frame[[interaction_var_name]])[1]
@@ -102,7 +101,6 @@ update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
                                                     coef_names = NULL) {
-
   coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
   movement_coef_name <- coef_names[1]
 

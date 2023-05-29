@@ -37,7 +37,11 @@ get_quantiles_coef_values <- function(interaction_data, quantiles,
 
 #' @import tibble
 get_quantile_coefs <- function(interaction_data, coefs, coef_name, interaction_var_name, quantiles) {
-  interaction_coefs <- coefs[grepl(stringr::str_interp("^${coef_name}:${interaction_var_name}"), names(coefs))]
+  interaction_coefs <- get_interaction_coefs(
+    coefs = coefs,
+    coef_name = coef_name,
+    interaction_var_name = interaction_var_name
+  )
 
   interaction_coef_values <- unname(interaction_coefs)
   nrows <- length(interaction_coef_values)

@@ -69,7 +69,7 @@ validate_coef_names <- function(model, dist_name, coef_names) {
     coef_name <- coef_names[i]
     if (!coef_name %in% actual_coef_names) {
       stop(stringr::str_interp(
-        "argument 'coef_names' not valid. Variable name ${coef_name} not found in model with coef names ${coef_names}."
+        "argument 'coef_names' not valid. Variable name '${coef_name}' not found in model with coef names '${coef_names}'."
       ))
     }
   }
@@ -91,7 +91,7 @@ validate_interaction_coefficients <- function(model, interaction_var_name) {
   valid_var_name <- any(grepl(stringr::str_interp(":${interaction_var_name}"), actual_coef_names))
 
   if (!valid_var_name) {
-    stop(stringr::str_interp("argument 'interaction_var_name' with value ${interaction_var_name} does not appear to be part of an interaction coefficient in the provided model."))
+    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' does not appear to be part of an interaction coefficient in the provided model."))
   }
 }
 
@@ -103,20 +103,25 @@ validate_gamma <- function(data, coef_names) {
   raise_error <- FALSE
   tryCatch(
     expr = {
-      all_equal <- all(
+      all_equal <- suppressWarnings(all(
         berryFunctions::almost.equal(log(actual_sl_),
-                                     actual_log_sl_,
-                                     tolerance = 0.001))
+          actual_log_sl_,
+          tolerance = 0.001
+        )
+      ))
       if (!all_equal) {
         raise_error <- TRUE
       }
+    },
+    warning = function(w) {
+      print(w)
     },
     error = function(e) {
       raise_error <- TRUE
     },
     finally = {
       if (raise_error) {
-        stop(stringr::str_interp("To update the 'gamma' distribution you need to pass a model that is fit to step lengths and log step lengths. The passed arg 'coef_names' with value ${coef_names} are not valid variables for this distribution."))
+        stop(stringr::str_interp("To update the 'gamma' distribution you need to pass a model that is fit to step lengths and log step lengths. The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
   )
@@ -131,6 +136,9 @@ validate_exp <- function(data, coef_names) {
       if (any(!actual_sl_ >= 0)) {
         raise_error <- TRUE
       }
+    },
+    warning = function(w) {
+      print(w)
     },
     error = function(e) {
       raise_error <- TRUE
@@ -155,6 +163,9 @@ validate_hnorm <- function(data, coef_names) {
         raise_error <- TRUE
       }
     },
+    warning = function(w) {
+      print(w)
+    },
     error = function(e) {
       raise_error <- TRUE
     },
@@ -176,12 +187,17 @@ validate_lnorm <- function(data, coef_names) {
   tryCatch(
     expr = {
       all_equal <- all(
-        berryFunctions::almost.equal(actual_log_sl_ ^ 2,
-                                     actual_log_sl_sq_,
-                                     tolerance = 0.001))
+        berryFunctions::almost.equal(actual_log_sl_^2,
+          actual_log_sl_sq_,
+          tolerance = 0.001
+        )
+      )
       if (!all_equal) {
         raise_error <- TRUE
       }
+    },
+    warning = function(w) {
+      print(w)
     },
     error = function(e) {
       raise_error <- TRUE
@@ -205,6 +221,9 @@ validate_vonmises <- function(data, coef_names) {
       if (any(!actual_cos_ta_ <= 1 | !actual_cos_ta_ >= -1)) {
         raise_error <- TRUE
       }
+    },
+    warning = function(w) {
+      print(w)
     },
     error = function(e) {
       raise_error <- TRUE
@@ -243,9 +262,36 @@ validate_base_args <- function(model, dist_name, coef_names, interaction_var_nam
 }
 
 
+transform_movement_data <- function(data, dist_name) {
+  transformation_fns <- hash::hash(
+    "gamma" = function(x) {
+      return(x)
+    },
+    "exp" = function(x) {
+      return(x)
+    },
+    "hnorm" = function(x) {
+      return(x^2)
+    },
+    "lnorm" = function(x) {
+      return(exp(x))
+    },
+    "vonmises" = function(x) {
+      return(acos(x))
+    }
+  )
+
+  transformation_fn <- transformation_fns[[dist_name]]
+  return(transformation_fn(data))
+}
+
+
 #' @export
 fit_distribution <- function(data, dist_name, na_rm) {
-  return(amt::fit_distr(data,
+  transformed_data <- transform_movement_data(data, dist_name)
+
+  return(amt::fit_distr(
+    transformed_data,
     dist_name = dist_name,
     na.rm = na_rm
   ))
@@ -302,4 +348,19 @@ get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "ca
       function(x) round(as.numeric(x), 6)
     ))
   return(updated_parameters_tibble)
+}
+
+
+get_interaction_coefs <- function(coefs, coef_name, interaction_var_name) {
+  regex_str <- gsub(
+    "([.|()\\^{}+$*?]|\\[|\\])",
+    "\\\\\\1",
+    stringr::str_interp("${coef_name}:${interaction_var_name}")
+  )
+
+  interaction_coefs <- coefs[grepl(
+    stringr::str_interp("^${regex_str}"), names(coefs)
+  )]
+
+  return(interaction_coefs)
 }

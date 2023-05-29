@@ -70,7 +70,6 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
   #   extract_covariates(terra::unwrap(amt_fisher_covar$elevation))
 
   file_path <- str_interp("${get_data_path_root()}/fisher_data.rds")
-  print(file_path)
   data <- readRDS(file_path)
   if (custom_coefs) {
     # If the user isn't using the amt nomenclature
@@ -224,6 +223,7 @@ get_cached_distribution <- function(dist_name) {
 get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_") {
   distribution <- get_cached_distribution(dist_name)
   if (is.null(distribution)) {
+    print("NOT CACHED")
     data <- get_sample_fisher_data()[[column]]
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
     file_path <- here(str_interp("${get_data_path_root()}/fitted/${dist_name}.rds"))

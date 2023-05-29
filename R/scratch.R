@@ -27,13 +27,17 @@ model$frame <- new_model_data
 
 
 # steps
-updated_steps_dist <- update_distributions_by_categorical_var(model = model,
-                                        dist_name = "gamma",
-                                        interaction_var_name = "reef",
-                                        coef_names = c("sl_", "log_sl_"))
+updated_steps_dist <- update_distributions_by_categorical_var(
+  model = model,
+  dist_name = "gamma",
+  interaction_var_name = "reef",
+  coef_names = c("sl_", "log_sl_")
+)
 
 # tas
-updated_tas_dist <- update_distributions_by_categorical_var(model = model,
-                                        dist_name = "vonmises",
-                                        interaction_var_name = "reef",
-                                        coef_names = c("cos(ta_)"))
+updated_tas_dist <- update_distributions_by_categorical_var(
+  model = model,
+  dist_name = "vonmises",
+  interaction_var_name = "reef",
+  coef_names = c("cos(ta_)")
+)
