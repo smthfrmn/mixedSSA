@@ -22,7 +22,7 @@ test_that("validate_categorical_args fails non-categorical interaction var type"
   # get continuous interaction model
   dist_name <- "gamma"
   model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
-  expected_error_msg <- "argument 'interaction_var_name' with value 'elevation' must be a factor (i.e. categorical) variable."
+  expected_error_msg <- "argument 'interaction_var_name' with value 'elevation' must be a factor or character (i.e. categorical) variable."
 
   error <- expect_error(
     validate_categorical_args(
