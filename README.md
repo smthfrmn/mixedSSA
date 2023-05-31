@@ -88,6 +88,14 @@ print(updated_ta_dist)
 ```
 
 ## Installing
+
+Since this is a private repo, there are two ways to install, using a github personal access token (PAT) or by downloading the package and installing locally.
+
+**Using a PAT (reccomended):**
+
+Follow this 30 second video for creating a PAT (if you don't know how) and then run the code below: [VIDEO]
 ```r
-devtools::install_github("smthfrmn/movement-utilities")
+devtools::install_github("smthfrmn/movement-utilities", auth_token = "<PAT>")
 ```
+
+**Installing Locally (less recommended but still totally okay if the PAT way feels too heavy-handed):**
