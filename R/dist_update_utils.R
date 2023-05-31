@@ -16,11 +16,13 @@ SUPPORTED_DISTRIBUTIONS <- c(
 
 UPDATED_DISTRIBUTION_PARAMETERS <- "updatedDistributionParameters"
 
-# updatedDistributionParameters <- setClass(Class = UPDATED_DISTRIBUTION_PARAMETERS, slots = list(
-#   updated_parameters = "data.frame",
-#   distribution_name = "character",
-#   grouping = "character"
-# ))
+updatedDistributionParameters <- setClass(
+  Class = UPDATED_DISTRIBUTION_PARAMETERS,
+  slots = list(
+  updated_parameters = "data.frame",
+  distribution_name = "character",
+  grouping = "character"
+))
 
 
 get_update_distribution_function_and_args <- function(dist_name) {

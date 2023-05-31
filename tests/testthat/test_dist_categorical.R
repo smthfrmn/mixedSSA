@@ -151,7 +151,12 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path)
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "category"
+    )
 
     expect_equal(results, expected_results)
   }
@@ -191,7 +196,14 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+
+    expected_results_tibble <- readRDS(file_path)
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "category"
+    )
+
     expect_equal(results, expected_results)
   }
 })

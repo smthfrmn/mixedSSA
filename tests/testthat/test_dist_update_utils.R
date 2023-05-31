@@ -524,7 +524,7 @@ test_that("get_updated_parameters with categorical interactions", {
 
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
 
-    actual_updated_parameters_tibble <- get_updated_parameters(
+    actual_updated_parameters <- get_updated_parameters(
       data = data[[column]],
       dist_name = dist_name,
       coefs_tibble = summed_coef_tibble
@@ -535,7 +535,13 @@ test_that("get_updated_parameters with categorical interactions", {
     ))
 
     expected_updated_parameters_tibble <- readRDS(file_path)
-    expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
+    expected_updated_parameters <- updatedDistributionParameters(
+      updated_parameters = expected_updated_parameters_tibble,
+      distribution_name = dist_name,
+      grouping = "category"
+    )
+
+    expect_equal(actual_updated_parameters, expected_updated_parameters)
   }
 })
 
@@ -564,7 +570,7 @@ test_that("get_updated_parameters with continuous interactions", {
 
     mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
 
-    actual_updated_parameters_tibble <- get_updated_parameters(
+    actual_updated_parameters <- get_updated_parameters(
       data = data[[column]],
       dist_name = dist_name,
       coefs_tibble = quantile_coef_tibble,
@@ -575,6 +581,12 @@ test_that("get_updated_parameters with continuous interactions", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
     expected_updated_parameters_tibble <- readRDS(file_path)
-    expect_equal(actual_updated_parameters_tibble, expected_updated_parameters_tibble)
+    expected_updated_parameters <- updatedDistributionParameters(
+      updated_parameters = expected_updated_parameters_tibble,
+      distribution_name = dist_name,
+      grouping = "quantile"
+    )
+
+    expect_equal(actual_updated_parameters, expected_updated_parameters)
   }
 })
