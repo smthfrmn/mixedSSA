@@ -90,13 +90,13 @@ print(updated_ta_dist)
 ## Installing
 Since this is a private repo, we need to do a little extra legwork to install it, sorry :(.
 
-1. Create a personal access token in GitHub with the following steps:
-  a. Go to Settings > Developer settings > Personal access tokens > Fine-grained tokens by clicking this link: https://github.com/settings/tokens?type=beta
-  b. Click button "Generate new token"
-  c. Name the token whatever you want and select a custom expiration to expire like a year in the future (doesn't really matter, just nice to not have to re-generate)
-  d. Under "Repository access" select "Only select repositories" and then select this repo (`movement-utilities`) from the dropdown.
-  e. Under "Repository permissions > contents" select "Read-only" 
-  f. Click button "Generate token" at the bottom of the page and the copy and save the token somewhere! Once github hides it, you won't be able to see it again.
+1. Create a personal access token in GitHub with the following steps (should take 5 min):
+    - Go to Settings > Developer settings > Personal access tokens > Fine-grained tokens by clicking this link: https://github.com/settings/tokens?type=beta
+    - Click button "Generate new token"
+    - Name the token whatever you want and select a custom expiration to expire like a year in the future (doesn't really matter, just nice to not have to re-generate)
+    - Under "Repository access" select "Only select repositories" and then select this repo (`movement-utilities`) from the dropdown.
+    - Under "Repository permissions > contents" select "Read-only" 
+    - Click button "Generate token" at the bottom of the page and the copy and save the token somewhere! Once github hides it, you won't be able to see it again.
 2. Install the package in RStudio:
 ```r
 devtools::install_github("smthfrmn/movement-utilities", auth_token = "<PAT from step 1>")
