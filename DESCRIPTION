@@ -17,7 +17,8 @@ Imports:
     tibble,
     stats,
     berryFunctions,
-    hash
+    hash,
+    extraDistr
 Suggests: 
     testthat (>= 3.0.0),
     usethis,
