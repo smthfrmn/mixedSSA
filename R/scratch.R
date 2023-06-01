@@ -34,6 +34,9 @@ updated_steps_dist <- update_distributions_by_categorical_var(
   coef_names = c("sl_", "log_sl_")
 )
 
+plot_movement_distributions(updated_steps_dist)
+
+
 # tas
 updated_tas_dist <- update_distributions_by_categorical_var(
   model = model,
@@ -42,4 +45,5 @@ updated_tas_dist <- update_distributions_by_categorical_var(
   coef_names = c("cos(ta_)")
 )
 
-#plot_movement_distributions(updated_tas_dist)
+plot_movement_distributions(updated_tas_dist)
+

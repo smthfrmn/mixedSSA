@@ -21,7 +21,8 @@ updatedDistributionParameters <- setClass(
   slots = list(
   updated_parameters = "data.frame",
   distribution_name = "character",
-  grouping = "character"
+  grouping = "character",
+  movement_data = "numeric"
 ))
 
 
@@ -361,7 +362,8 @@ get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "ca
   updated_parameters <- updatedDistributionParameters(
     updated_parameters = updated_parameters_tibble,
     distribution_name = dist_name,
-    grouping = grouping
+    grouping = grouping,
+    movement_data = transform_movement_data(data, dist_name)
   )
   return(updated_parameters)
 }
