@@ -1,13 +1,12 @@
-# TODO: add support for uniform dist
-
 GAMMA <- "gamma"
 EXP <- "exp"
 HNORM <- "hnorm"
 LNORM <- "lnorm"
 VONMISES <- "vonmises"
+UNIFORM <- "uniform"
 
-TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES)
 STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
+TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIFORM)
 
 SUPPORTED_DISTRIBUTIONS <- c(
   STEP_LENGTH_DISTRIBUTIONS,
@@ -27,14 +26,23 @@ updatedDistributionParameters <- setClass(
 )
 
 
+update_uniform <- function(dist, beta_cos_ta) {
+  new_dist <- update_vonmises(make_vonmises_distr(kappa = 0),
+                              beta_cos_ta = beta_cos_ta)
+  return(new_dist)
+}
+
+
 get_update_distribution_function_and_args <- function(dist_name) {
   update_fn <- methods::getFunction(stringr::str_interp("update_${dist_name}"))
   update_fn_args <- methods::formalArgs(update_fn)
+
   return(list(
     fn = update_fn,
     args = update_fn_args
   ))
 }
+
 
 
 get_default_coef_names <- function(dist_name) {
@@ -289,6 +297,9 @@ transform_movement_data <- function(data, dist_name) {
       return(exp(x))
     },
     "vonmises" = function(x) {
+      return(acos(x))
+    },
+    "uniform" = function(x) {
       return(acos(x))
     }
   )

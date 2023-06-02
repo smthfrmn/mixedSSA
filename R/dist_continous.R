@@ -1,7 +1,3 @@
-# TODO:
-# - add validation that passed coefs
-# - is there a word for interaciton var that is multiplied...
-
 DEFAULT_QUANTILES <- c(0.05, 0.5, 0.75, 0.95)
 
 
