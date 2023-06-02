@@ -122,11 +122,11 @@ update_distributions_by_categorical_var <- function(model,
 
   data <- model$frame[[movement_coef_name]]
 
-  updated_parameters_tibble <- get_updated_parameters(
+  updated_parameters <- get_updated_parameters(
     data = data,
     dist_name = dist_name,
     coefs_tibble = summed_coefs_tibble
   )
 
-  return(updated_parameters_tibble)
+  return(updated_parameters)
 }

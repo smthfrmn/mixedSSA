@@ -130,10 +130,8 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     )[[dist_name]]
 
     if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_data <- data$cos_ta_
       column_name <- "cos_ta_"
     } else {
-      column_data <- data$sl_
       column_name <- "sl_"
     }
 
@@ -151,7 +149,14 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+
+    expected_results_tibble <- readRDS(file_path)
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "category",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+    )
 
     expect_equal(results, expected_results)
   }
@@ -169,10 +174,8 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
     )[[dist_name]]
 
     if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_data <- data$turn_angle_cos
       column_name <- "turn_angle_cos"
     } else {
-      column_data <- data$step_length
       column_name <- "step_length"
     }
 
@@ -191,7 +194,16 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+
+    expected_results_tibble <- readRDS(file_path)
+
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "category",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+    )
+
     expect_equal(results, expected_results)
   }
 })

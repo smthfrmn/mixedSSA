@@ -14,6 +14,18 @@ SUPPORTED_DISTRIBUTIONS <- c(
   TURN_ANGLE_DISTRIBUTIONS
 )
 
+UPDATED_DISTRIBUTION_PARAMETERS <- "updatedDistributionParameters"
+
+updatedDistributionParameters <- setClass(
+  Class = UPDATED_DISTRIBUTION_PARAMETERS,
+  slots = list(
+    updated_parameters = "data.frame",
+    distribution_name = "character",
+    grouping = "character",
+    movement_data = "numeric"
+  )
+)
+
 
 get_update_distribution_function_and_args <- function(dist_name) {
   update_fn <- methods::getFunction(stringr::str_interp("update_${dist_name}"))
@@ -298,7 +310,8 @@ fit_distribution <- function(data, dist_name, na_rm) {
 }
 
 
-get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "category") {
+get_updated_parameters <- function(data, dist_name,
+                                   coefs_tibble, grouping = "category") {
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
       names_from = "coef_name",
@@ -347,7 +360,14 @@ get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "ca
       -as.character(grouping),
       function(x) round(as.numeric(x), 6)
     ))
-  return(updated_parameters_tibble)
+
+  updated_parameters <- updatedDistributionParameters(
+    updated_parameters = updated_parameters_tibble,
+    distribution_name = dist_name,
+    grouping = grouping,
+    movement_data = transform_movement_data(data, dist_name)
+  )
+  return(updated_parameters)
 }
 
 

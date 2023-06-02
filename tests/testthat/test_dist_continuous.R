@@ -202,7 +202,14 @@ test_that("update_distributions_by_continuous_var with interaction and default c
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+
+    expected_results_tibble <- readRDS(file_path)
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "quantile",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+    )
 
     expect_equal(results, expected_results)
   }
@@ -243,7 +250,14 @@ test_that("update_distributions_by_continuous_var with custom coef names", {
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
-    expected_results <- readRDS(file_path)
+
+    expected_results_tibble <- readRDS(file_path)
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping = "quantile",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+    )
 
     expect_equal(results, expected_results)
   }

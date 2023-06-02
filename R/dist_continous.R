@@ -125,12 +125,12 @@ update_distributions_by_continuous_var <- function(model,
   )
 
 
-  updated_parameters_tibble <- get_updated_parameters(
+  updated_parameters <- get_updated_parameters(
     data = data,
     dist_name = dist_name,
     coefs_tibble = quantile_coefs_tibble,
     grouping = "quantile"
   )
 
-  return(updated_parameters_tibble)
+  return(updated_parameters)
 }
