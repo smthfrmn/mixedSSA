@@ -1,5 +1,3 @@
-# TODO: plotting
-
 get_row_density_data <- function(dist_name, params_row, grouping, xs) {
   if (dist_name == GAMMA) {
     ys <- stats::dgamma(
@@ -8,11 +6,15 @@ get_row_density_data <- function(dist_name, params_row, grouping, xs) {
       scale = as.numeric(params_row[["scale"]])
     )
   } else if (dist_name == EXP) {
-    ys <- stats::dexp(x = xs,
-                      rate = as.numeric(params_row[["rate"]]))
+    ys <- stats::dexp(
+      x = xs,
+      rate = as.numeric(params_row[["rate"]])
+    )
   } else if (dist_name == HNORM) {
-    ys <- extraDistr::dhnorm(x = xs,
-                             sigma = as.numeric(params_row[["sd"]]))
+    ys <- extraDistr::dhnorm(
+      x = xs,
+      sigma = as.numeric(params_row[["sd"]])
+    )
   } else if (dist_name == LNORM) {
     ys <- stats::dlnorm(
       x = xs,
@@ -26,7 +28,11 @@ get_row_density_data <- function(dist_name, params_row, grouping, xs) {
       kappa = as.numeric(params_row[["kappa"]])
     )
   } else {
-    stop(stringr::str_interp("argument dist_name with value '${dist_name}' is not supported by plotting currently."))
+    stop(
+      stringr::str_interp(
+        "argument dist_name with value '${dist_name}' is not supported by plotting currently."
+      )
+    )
   }
 
   density_data <- cbind(xs, ys, params_row[[grouping]])
@@ -35,10 +41,16 @@ get_row_density_data <- function(dist_name, params_row, grouping, xs) {
   return(density_data)
 }
 
-get_xs <- function(movement_data) {
-  xs <- seq(from = min(movement_data), to = max(movement_data), length.out = 200)
+
+get_xs <- function(dist_name, movement_data) {
+  if (dist_name == VONMISES) {
+    xs <- seq(from = -pi, to = pi, length.out = 200)
+  } else {
+    xs <- seq(from = min(movement_data), to = max(movement_data), length.out = 200)
+  }
   return(xs)
 }
+
 
 get_density_data <- function(updated_distribution_parameters, xs, include_observed) {
   dist_name <- updated_distribution_parameters@distribution_name
@@ -65,7 +77,10 @@ get_density_data <- function(updated_distribution_parameters, xs, include_observ
 
 
 get_plot_data <- function(updated_distribution_parameters, include_observed) {
-  xs <- get_xs(updated_distribution_parameters@movement_data)
+  xs <- get_xs(
+    updated_distribution_parameters@distribution_name,
+    updated_distribution_parameters@movement_data
+  )
 
   plot_data <- get_density_data(updated_distribution_parameters, xs, include_observed)
   plot_data <- plot_data %>%
@@ -92,13 +107,16 @@ plot_movement_distributions <- function(updated_distribution_parameters,
   movement_characteristic <- ifelse(
     updated_distribution_parameters@distribution_name %in% STEP_LENGTH_DISTRIBUTIONS,
     "Step Length",
-    "Turn Angle")
+    "Turn Angle"
+  )
 
   plot_data <- get_plot_data(updated_distribution_parameters, include_observed)
   plot <- ggplot2::ggplot() +
-    ggplot2::geom_line(data = plot_data,
-                       aes(x = x, y = y, color = grouping),
-                       linewidth = 1) +
+    ggplot2::geom_line(
+      data = plot_data,
+      aes(x = x, y = y, color = grouping),
+      linewidth = 1
+    ) +
     labs(x = movement_characteristic, y = "Density") +
     theme(
       axis.title = element_text(size = 12),

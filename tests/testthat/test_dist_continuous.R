@@ -207,7 +207,8 @@ test_that("update_distributions_by_continuous_var with interaction and default c
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile"
+      grouping = "quantile",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
     )
 
     expect_equal(results, expected_results)
@@ -254,7 +255,8 @@ test_that("update_distributions_by_continuous_var with custom coef names", {
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile"
+      grouping = "quantile",
+      movement_data = transform_movement_data(model$frame[, 2], dist_name)
     )
 
     expect_equal(results, expected_results)

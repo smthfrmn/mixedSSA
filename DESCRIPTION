@@ -18,7 +18,8 @@ Imports:
     stats,
     berryFunctions,
     hash,
-    extraDistr
+    extraDistr,
+    ggplot2
 Suggests: 
     testthat (>= 3.0.0),
     usethis,

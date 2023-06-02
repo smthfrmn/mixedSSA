@@ -46,4 +46,3 @@ updated_tas_dist <- update_distributions_by_categorical_var(
 )
 
 plot_movement_distributions(updated_tas_dist)
-

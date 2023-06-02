@@ -19,11 +19,12 @@ UPDATED_DISTRIBUTION_PARAMETERS <- "updatedDistributionParameters"
 updatedDistributionParameters <- setClass(
   Class = UPDATED_DISTRIBUTION_PARAMETERS,
   slots = list(
-  updated_parameters = "data.frame",
-  distribution_name = "character",
-  grouping = "character",
-  movement_data = "numeric"
-))
+    updated_parameters = "data.frame",
+    distribution_name = "character",
+    grouping = "character",
+    movement_data = "numeric"
+  )
+)
 
 
 get_update_distribution_function_and_args <- function(dist_name) {
@@ -309,7 +310,8 @@ fit_distribution <- function(data, dist_name, na_rm) {
 }
 
 
-get_updated_parameters <- function(data, dist_name, coefs_tibble, grouping = "category") {
+get_updated_parameters <- function(data, dist_name,
+                                   coefs_tibble, grouping = "category") {
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
       names_from = "coef_name",

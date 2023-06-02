@@ -538,7 +538,8 @@ test_that("get_updated_parameters with categorical interactions", {
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
-      grouping = "category"
+      grouping = "category",
+      movement_data = transform_movement_data(data[[column]], dist_name)
     )
 
     expect_equal(actual_updated_parameters, expected_updated_parameters)
@@ -584,7 +585,8 @@ test_that("get_updated_parameters with continuous interactions", {
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
-      grouping = "quantile"
+      grouping = "quantile",
+      movement_data = transform_movement_data(data[[column]], dist_name)
     )
 
     expect_equal(actual_updated_parameters, expected_updated_parameters)
