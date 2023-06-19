@@ -170,23 +170,18 @@ test_that("get_quantile_coefs_all", {
 
 test_that("update_distributions_by_continuous_var with custom quantiles", {
   dists <- get_supported_distributions()
-  data <- get_sample_fisher_data(custom_coefs = TRUE)
+  data <- get_sample_fisher_data()
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    model <- get_sample_models_custom_coefficients(
+    model <- get_sample_models(
       data = data, interaction_var_name = "elevation"
     )[[dist_name]]
 
-    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_data <- data$turn_angle_cos
-      column_name <- "turn_angle_cos"
-    } else {
-      column_data <- data$step_length
-      column_name <- "step_length"
-    }
 
-    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
+    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
+
+    mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
     results <- update_distributions_by_continuous_var(
       model = model,
@@ -194,8 +189,7 @@ test_that("update_distributions_by_continuous_var with custom quantiles", {
       interaction_var_name = "elevation",
       quantiles = TEST_QUANTILES,
       coef_names = get_sample_coef_names_by_dist(
-        dist_name = dist_name,
-        custom_coefs = TRUE
+        dist_name = dist_name
       )
     )
 
@@ -203,12 +197,15 @@ test_that("update_distributions_by_continuous_var with custom quantiles", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
 
+    expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
+
     expected_results_tibble <- readRDS(file_path)
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "quantile",
-      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+      movement_data = expected_movement_data,
+      model = model
     )
 
     expect_equal(results, expected_results)

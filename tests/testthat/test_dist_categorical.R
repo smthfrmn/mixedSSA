@@ -22,7 +22,7 @@ test_that("validate_categorical_args fails non-categorical interaction var type"
   # get continuous interaction model
   dist_name <- "gamma"
   model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
-  expected_error_msg <- "argument 'interaction_var_name' with value 'elevation' must be a factor or character (i.e. categorical) variable."
+  expected_error_msg <- "argument 'interaction_var_name' with value 'elevation' must be a factor (i.e. categorical) variable."
 
   error <- expect_error(
     validate_categorical_args(
@@ -129,15 +129,10 @@ test_that("update_distributions_by_categorical_var with interaction", {
       data = data
     )[[dist_name]]
 
-    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_name <- "cos_ta_"
-    } else {
-      column_name <- "sl_"
-    }
-
+    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
 
     mockr::local_mock(
-      fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name)
+      fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
     results <- update_distributions_by_categorical_var(
@@ -151,12 +146,15 @@ test_that("update_distributions_by_categorical_var with interaction", {
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
 
+    expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
+
     expected_results_tibble <- readRDS(file_path)
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "category",
-      movement_data = transform_movement_data(model$frame[, 2], dist_name)
+      movement_data = expected_movement_data,
+      model = model
     )
 
     expect_equal(results, expected_results)

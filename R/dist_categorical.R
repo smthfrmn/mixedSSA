@@ -81,7 +81,7 @@ validate_categorical_args <- function(model, dist_name, coef_names, interaction_
 
   interaction_var <- model$frame[[interaction_var_name]]
 
-  if (assertive::is_factor(interaction_var)) {
+  if (!assertive::is_factor(interaction_var)) {
     stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
   }
 }

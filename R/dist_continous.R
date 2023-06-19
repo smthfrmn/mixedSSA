@@ -97,6 +97,8 @@ update_distributions_by_continuous_var <- function(model,
                                                    interaction_var_name,
                                                    coef_names,
                                                    quantiles = DEFAULT_QUANTILES) {
+
+  # TODO: update how this is handled
   movement_coef_name <- coef_names[1]
   data <- model$frame[[movement_coef_name]]
 
