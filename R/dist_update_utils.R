@@ -3,10 +3,10 @@ EXP <- "exp"
 HNORM <- "hnorm"
 LNORM <- "lnorm"
 VONMISES <- "vonmises"
-UNIFORM <- "uniform"
+UNIF <- "unif"
 
 STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
-TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIFORM)
+TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIF)
 
 SUPPORTED_DISTRIBUTIONS <- c(
   STEP_LENGTH_DISTRIBUTIONS,
@@ -21,14 +21,16 @@ updatedDistributionParameters <- setClass(
     updated_parameters = "data.frame",
     distribution_name = "character",
     grouping = "character",
-    movement_data = "numeric"
+    movement_data = "numeric",
+    model = "ANY"
   )
 )
 
 
-update_uniform <- function(dist, beta_cos_ta) {
+update_unif <- function(dist, beta_cos_ta) {
   new_dist <- update_vonmises(make_vonmises_distr(kappa = 0),
-                              beta_cos_ta = beta_cos_ta)
+    beta_cos_ta = beta_cos_ta
+  )
   return(new_dist)
 }
 
@@ -71,12 +73,20 @@ update_parameters <- function(args_tibble_row, dist, update_fn) {
 }
 
 
+get_update_fn_nvars <- function(dist_name) {
+  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
+  variable_args <- update_fn_args[2:length(update_fn_args)]
+  return(length(variable_args))
+}
+
+
 validate_coef_names <- function(model, dist_name, coef_names) {
   if (!assertive::is_character(coef_names)) {
     stop(stringr::str_interp("argument 'coef_names' must be a vector of characters."))
   }
 
-  nvar_names <- length(get_default_coef_names(dist_name))
+
+  nvar_names <- get_update_fn_nvars(dist_name)
   npassed_var_names <- length(coef_names)
 
   if (npassed_var_names != nvar_names) {
@@ -232,7 +242,7 @@ validate_lnorm <- function(data, coef_names) {
 }
 
 
-validate_vonmises <- function(data, coef_names) {
+validate_ta_dist <- function(data, coef_names, dist_name) {
   actual_cos_ta_ <- data[[coef_names[1]]]
 
   raise_error <- FALSE
@@ -250,11 +260,22 @@ validate_vonmises <- function(data, coef_names) {
     },
     finally = {
       if (raise_error) {
-        stop(stringr::str_interp("To update the 'vonmises' distribution you need to pass a model that is fit to cosine of turn angles.
+        stop(stringr::str_interp("To update the '${dist_name}' distribution you need to pass a model that is fit to cosine of turn angles.
                     The passed arg 'coef_names' with value '${coef_names}' are not valid variables for this distribution."))
       }
     }
   )
+
+}
+
+
+validate_vonmises <- function(data, coef_names) {
+  validate_ta_dist(data, coef_names, VONMISES)
+}
+
+
+validate_unif <- function(data, coef_names) {
+  validate_ta_dist(data, coef_names, UNIF)
 }
 
 
@@ -291,7 +312,7 @@ transform_movement_data <- function(data, dist_name) {
       return(x)
     },
     "hnorm" = function(x) {
-      return(x^2)
+      return(sqrt(x))
     },
     "lnorm" = function(x) {
       return(exp(x))
@@ -299,7 +320,7 @@ transform_movement_data <- function(data, dist_name) {
     "vonmises" = function(x) {
       return(acos(x))
     },
-    "uniform" = function(x) {
+    "unif" = function(x) {
       return(acos(x))
     }
   )
@@ -310,18 +331,30 @@ transform_movement_data <- function(data, dist_name) {
 
 
 #' @export
-fit_distribution <- function(data, dist_name, na_rm) {
-  transformed_data <- transform_movement_data(data, dist_name)
-
+fit_distribution <- function(movement_data, dist_name, na_rm) {
   return(amt::fit_distr(
-    transformed_data,
+    movement_data,
     dist_name = dist_name,
     na.rm = na_rm
   ))
 }
 
 
-get_updated_parameters <- function(data, dist_name,
+get_movement_data <- function(model, movement_coef_name, dist_name) {
+  data <- model$frame
+  case_var <- as.character(
+    attr(model$modelInfo$terms$cond$fixed, which = "variables")[2])
+
+  movement_data <- data %>%
+    dplyr::filter(!!sym(case_var) == TRUE) %>%
+    dplyr::pull(movement_coef_name)
+
+  transformed_data <- transform_movement_data(movement_data, dist_name)
+  return(transformed_data)
+}
+
+
+get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, grouping = "category") {
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
@@ -329,8 +362,13 @@ get_updated_parameters <- function(data, dist_name,
       values_from = "coef_value"
     )
 
-  observed_fitted_distribution <- fit_distribution(
-    data = data,
+
+  movement_data <- get_movement_data(model = model,
+                                     movement_coef_name = movement_coef_name,
+                                     dist_name = dist_name)
+
+  tentative_fitted_distribution <- fit_distribution(
+    movement_data = movement_data,
     dist_name = dist_name,
     na_rm = TRUE
   )
@@ -349,19 +387,19 @@ get_updated_parameters <- function(data, dist_name,
 
   all_updated_parameters <- apply(pivoted_args_tibble,
     1, update_parameters,
-    dist = observed_fitted_distribution,
+    dist = tentative_fitted_distribution,
     update_fn = update_fn
   )
 
-  observed_params <- observed_fitted_distribution$params
-  observed_row <- c(
-    "observed",
+  tentative_params <- tentative_fitted_distribution$params
+  tentative_row <- c(
+    "tentative",
     rep(NA, ncol(pivoted_args_tibble) - 1),
-    unlist(observed_params)
+    unlist(tentative_params)
   )
 
   updated_parameters_tibble <- rbind(
-    observed_row,
+    tentative_row,
     cbind(
       pivoted_args_tibble,
       dplyr::bind_rows(all_updated_parameters)
@@ -376,7 +414,8 @@ get_updated_parameters <- function(data, dist_name,
     updated_parameters = updated_parameters_tibble,
     distribution_name = dist_name,
     grouping = grouping,
-    movement_data = transform_movement_data(data, dist_name)
+    movement_data = movement_data,
+    model = model
   )
   return(updated_parameters)
 }

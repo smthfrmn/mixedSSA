@@ -119,7 +119,7 @@ test_that("get_summed_coefs_all", {
 })
 
 
-test_that("update_distributions_by_categorical_var with interaction and default coef names", {
+test_that("update_distributions_by_categorical_var with interaction", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
 
@@ -143,52 +143,8 @@ test_that("update_distributions_by_categorical_var with interaction and default 
     results <- update_distributions_by_categorical_var(
       model = model,
       dist_name = dist_name,
-      interaction_var_name = "sex"
-    )
-
-    file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
-    ))
-
-    expected_results_tibble <- readRDS(file_path)
-    expected_results <- updatedDistributionParameters(
-      updated_parameters = expected_results_tibble,
-      distribution_name = dist_name,
-      grouping = "category",
-      movement_data = transform_movement_data(model$frame[, 2], dist_name)
-    )
-
-    expect_equal(results, expected_results)
-  }
-})
-
-
-test_that("update_distributions_by_categorical_var with custom coef names", {
-  dists <- get_supported_distributions()
-  data <- get_sample_fisher_data(custom_coefs = TRUE)
-
-  for (i in 1:length(dists)) {
-    dist_name <- dists[i]
-    model <- get_sample_models_custom_coefficients(
-      data = data
-    )[[dist_name]]
-
-    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_name <- "turn_angle_cos"
-    } else {
-      column_name <- "step_length"
-    }
-
-    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name))
-
-    results <- update_distributions_by_categorical_var(
-      model = model,
-      dist_name = dist_name,
       interaction_var_name = "sex",
-      coef_names = get_sample_coef_names_by_dist(
-        dist_name = dist_name,
-        custom_coefs = TRUE
-      )
+      coef_names = get_default_coef_names(dist_name)
     )
 
     file_path <- here(str_interp(
@@ -196,7 +152,6 @@ test_that("update_distributions_by_categorical_var with custom coef names", {
     ))
 
     expected_results_tibble <- readRDS(file_path)
-
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,

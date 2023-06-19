@@ -95,9 +95,8 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 update_distributions_by_continuous_var <- function(model,
                                                    dist_name,
                                                    interaction_var_name,
-                                                   quantiles = DEFAULT_QUANTILES,
-                                                   coef_names = NULL) {
-  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
+                                                   coef_names,
+                                                   quantiles = DEFAULT_QUANTILES) {
   movement_coef_name <- coef_names[1]
   data <- model$frame[[movement_coef_name]]
 
@@ -120,9 +119,9 @@ update_distributions_by_continuous_var <- function(model,
     quantiles = quantiles
   )
 
-
   updated_parameters <- get_updated_parameters(
-    data = data,
+    model = model,
+    movement_coef_name = movement_coef_name,
     dist_name = dist_name,
     coefs_tibble = quantile_coefs_tibble,
     grouping = "quantile"

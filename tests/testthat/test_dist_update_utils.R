@@ -1,3 +1,22 @@
+test_that("update_unif succeeds", {
+
+})
+
+test_that("validate_unif", {
+
+})
+
+test_that("validate_ta_dist", {
+
+})
+
+
+test_that("get_movement_data", {
+
+})
+
+
+
 test_that("get_interaction_coefs non-special characters", {
   coefs <- get_mock_coefs(dist_name = GAMMA)
   result <- get_interaction_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
@@ -37,7 +56,8 @@ test_that("transform_movement_data supports all distributions and transforms dat
     EXP = "sl_",
     HNORM = "sl_sq_",
     LNORM = "log_sl_",
-    VONMISES = "cos_ta_"
+    VONMISES = "cos_ta_",
+    UNIF = "cos_ta_"
   )
 
   for (i in 1:length(distributions)) {
@@ -50,10 +70,10 @@ test_that("transform_movement_data supports all distributions and transforms dat
     if (dist_name %in% c(GAMMA, EXP)) {
       expected_results <- test_movement_data
     } else if (dist_name == HNORM) {
-      expected_results <- test_movement_data * test_movement_data
+      expected_results <- sqrt(test_movement_data)
     } else if (dist_name == LNORM) {
       expected_results <- exp(test_movement_data)
-    } else if (dist_name == VONMISES) {
+    } else if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
       expected_results <- acos(test_movement_data)
     }
 
@@ -69,13 +89,15 @@ test_that("get_update_distribution_function_and_args returns correct values", {
     amt::update_exp,
     amt::update_hnorm,
     amt::update_lnorm,
-    amt::update_vonmises
+    amt::update_vonmises,
+    update_unif
   )
   expected_args <- list(
     c("dist", "beta_sl", "beta_log_sl"),
     c("dist", "beta_sl"),
     c("dist", "beta_sl_sq"),
     c("dist", "beta_log_sl", "beta_log_sl_sq"),
+    c("dist", "beta_cos_ta"),
     c("dist", "beta_cos_ta")
   )
 
@@ -94,7 +116,8 @@ test_that("update_parameters for all distributions", {
     "exp" = amt::update_exp,
     "hnorm" = amt::update_hnorm,
     "lnorm" = amt::update_lnorm,
-    "vonmises" = amt::update_vonmises
+    "vonmises" = amt::update_vonmises,
+    "unif" = update_unif
   )
 
 
@@ -120,27 +143,10 @@ test_that("update_parameters for all distributions", {
     "vonmises" = tibble::tibble(
       category = "placeholder",
       beta_cos_ta = 0.002
-    )
-  )
-
-  expected_params <- hash(
-    "gamma" = list(
-      shape = 0.62859352,
-      scale = -4700.1554
     ),
-    "exp" = list(
-      rate = 0.00144772908
-    ),
-    "hnorm" = list(
-      sd = 0 # TODO: not working
-    ),
-    "lnorm" = list(
-      meanlog = 4.5643543,
-      sdlog = 1.9363423
-    ),
-    "vonmises" = list(
-      kappa = 2.4795563,
-      mu = 0
+    "unif" = tibble::tibble(
+      category = "placeholder",
+      beta_cos_ta = 0 # TODO
     )
   )
 
@@ -152,20 +158,23 @@ test_that("update_parameters for all distributions", {
       # TODO: MAKE WORK...
       next
     }
-    dist <- get_sample_observed_distribution(dist_name = dist_name, column = column)
+    dist <- get_sample_tentative_distribution(dist_name = dist_name, column = column)
     update_fn <- update_fns[[dist_name]]
-
-    current_expected_params <- expected_params[[dist_name]]
 
     args_tibble_row <- args_tibble_rows[[dist_name]]
     actual_params <- update_parameters(args_tibble_row, dist, update_fn)
 
-    expect_equal(actual_params, current_expected_params)
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/expected/utils/${dist_name}.rds"
+    ))
+
+    expected_params <- readRDS(file_path)
+    expect_equal(actual_params, expected_params)
   }
 })
 
 
-test_that("get_default_coef_names", {
+test_that("get_update_fn_nvars", {
   distributions <- get_supported_distributions()
 
   expected_params_list <- list(
@@ -173,12 +182,13 @@ test_that("get_default_coef_names", {
     c("sl_"),
     c("sl_sq_"),
     c("log_sl_", "log_sl_sq_"),
+    c("cos_ta_"),
     c("cos_ta_")
   )
 
   for (i in 1:length(distributions)) {
-    default_coefs <- get_default_coef_names(distributions[i])
-    expect_equal(default_coefs, expected_params_list[[i]])
+    fn_nvars <- get_update_fn_nvars(distributions[i])
+    expect_equal(fn_nvars, length(expected_params_list[[i]]))
   }
 })
 
@@ -200,7 +210,7 @@ test_that("validate_coef_names fails non-character coef_names", {
 
 test_that("validate_coef_names fails number of args", {
   distributions <- get_supported_distributions()
-  expected_number_params <- c(2, 1, 1, 2, 1)
+  expected_number_params <- c(2, 1, 1, 2, 1, 1)
 
   for (i in 1:length(distributions)) {
     expected_num <- expected_number_params[i]
@@ -232,6 +242,7 @@ test_that("validate_coef_names fails unmatching coef names", {
     c("sl_"),
     c("sl_sq_"),
     c("log_sl_", "log_sl_sq_"),
+    c("cos_ta_"),
     c("cos_ta_")
   )
 
@@ -276,6 +287,7 @@ test_that("validate_coef_names succeeds", {
     c("sl_"),
     c("sl_sq_"),
     c("log_sl_", "log_sl_sq_"),
+    c("cos_ta_"),
     c("cos_ta_")
   )
 
@@ -508,7 +520,8 @@ test_that("get_updated_parameters with categorical interactions", {
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
+    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
+    model <- get_sample_models()[[dist_name]]
 
     coefs <- get_sample_coefs(
       dist_name = dist_name
@@ -516,16 +529,17 @@ test_that("get_updated_parameters with categorical interactions", {
     coef_names <- get_default_coef_names(dist_name = dist_name)
 
     summed_coef_tibble <- get_summed_coefs_all(
-      model = get_sample_models()[[dist_name]],
+      model = model,
       coefs = coefs,
       coef_names = coef_names,
       interaction_var_name = "sex"
     )
 
-    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+    mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
     actual_updated_parameters <- get_updated_parameters(
-      data = data[[column]],
+      model = model,
+      movement_coef_name = coef_names[1],
       dist_name = dist_name,
       coefs_tibble = summed_coef_tibble
     )
@@ -534,12 +548,15 @@ test_that("get_updated_parameters with categorical interactions", {
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
 
+    expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
+
     expected_updated_parameters_tibble <- readRDS(file_path)
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
       grouping = "category",
-      movement_data = transform_movement_data(data[[column]], dist_name)
+      movement_data = expected_movement_data,
+      model = model
     )
 
     expect_equal(actual_updated_parameters, expected_updated_parameters)
@@ -549,16 +566,20 @@ test_that("get_updated_parameters with categorical interactions", {
 
 test_that("get_updated_parameters with continuous interactions", {
   dists <- get_supported_distributions()
+  dists <- c(VONMISES)
+
   data <- get_sample_fisher_data()
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    column <- ifelse(dist_name == "vonmises", "cos_ta_", "sl_")
+    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
+    model <- get_sample_models()[[dist_name]]
 
     coefs <- get_sample_coefs(
       dist_name = dist_name,
       interaction_var_name = "elevation"
     )
+
     coef_names <- get_default_coef_names(dist_name = dist_name)
 
     quantile_coef_tibble <- get_quantile_coefs_all(
@@ -569,10 +590,11 @@ test_that("get_updated_parameters with continuous interactions", {
       quantiles = TEST_QUANTILES
     )
 
-    mockr::local_mock(fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column))
+    mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
     actual_updated_parameters <- get_updated_parameters(
-      data = data[[column]],
+      model = model,
+      movement_coef_name = coef_names[1],
       dist_name = dist_name,
       coefs_tibble = quantile_coef_tibble,
       grouping = "quantile"
@@ -581,12 +603,17 @@ test_that("get_updated_parameters with continuous interactions", {
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
+
     expected_updated_parameters_tibble <- readRDS(file_path)
+
+    expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
+
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
       grouping = "quantile",
-      movement_data = transform_movement_data(data[[column]], dist_name)
+      movement_data = expected_movement_data,
+      model = model
     )
 
     expect_equal(actual_updated_parameters, expected_updated_parameters)

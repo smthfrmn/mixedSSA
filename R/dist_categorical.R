@@ -81,11 +81,8 @@ validate_categorical_args <- function(model, dist_name, coef_names, interaction_
 
   interaction_var <- model$frame[[interaction_var_name]]
 
-  # TODO: check if necessary
-  factor_or_char <- assertive::is_factor(interaction_var) | assertive::is_character(interaction_var)
-
-  if (!factor_or_char) {
-    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor or character (i.e. categorical) variable."))
+  if (assertive::is_factor(interaction_var)) {
+    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' must be a factor (i.e. categorical) variable."))
   }
 }
 
@@ -100,8 +97,7 @@ validate_categorical_args <- function(model, dist_name, coef_names, interaction_
 update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
-                                                    coef_names = NULL) {
-  coef_names <- if (is.null(coef_names)) get_default_coef_names(dist_name) else coef_names
+                                                    coef_names) {
   movement_coef_name <- coef_names[1]
 
   validate_categorical_args(
@@ -120,10 +116,9 @@ update_distributions_by_categorical_var <- function(model,
     interaction_var_name = interaction_var_name
   )
 
-  data <- model$frame[[movement_coef_name]]
-
   updated_parameters <- get_updated_parameters(
-    data = data,
+    model = model,
+    movement_coef_name = movement_coef_name,
     dist_name = dist_name,
     coefs_tibble = summed_coefs_tibble
   )

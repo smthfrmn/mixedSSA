@@ -101,7 +101,7 @@ get_sample_simple_models <- function(data = get_sample_fisher_data()) {
     "hnorm" = glmmTMB(case_ ~ sl_sq_, data = data),
     "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_, data = data),
     "vonmises" = glmmTMB(case_ ~ cos_ta_, data = data),
-    "uniform" = glmmTMB(case_ ~ cos_ta_, data = data)
+    "unif" = glmmTMB(case_ ~ cos_ta_, data = data)
   )
 
   return(models)
@@ -118,7 +118,7 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
         "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex, data = data),
         "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex, data = data),
         "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data),
-        "uniform" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
+        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
       )
     }
 
@@ -129,7 +129,7 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
         "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
         "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
         "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data),
-        "uniform" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
+        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
       )
     }
   })
@@ -145,7 +145,7 @@ get_sample_simple_models_custom_coefficients <- function(data = get_sample_fishe
     "hnorm" = glmmTMB(case_ ~ step_length_sq, data = data),
     "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq, data = data),
     "vonmises" = glmmTMB(case_ ~ turn_angle_cos, data = data),
-    "uniform" = glmmTMB(case_ ~ turn_angle_cos, data = data)
+    "unif" = glmmTMB(case_ ~ turn_angle_cos, data = data)
   )
 
   return(models)
@@ -161,7 +161,7 @@ get_sample_models_custom_coefficients <- function(
         "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:sex, data = data),
         "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:sex + step_length_log_sq:sex, data = data),
         "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data),
-        "uniform" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data)
+        "unif" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data)
       )
     } else {
       models <- hash(
@@ -170,7 +170,7 @@ get_sample_models_custom_coefficients <- function(
         "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:elevation, data = data),
         "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:elevation + step_length_log_sq:elevation, data = data),
         "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data),
-        "uniform" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
+        "unif" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
       )
     }
   })
@@ -195,6 +195,18 @@ get_supported_distributions <- function() {
 }
 
 
+get_default_coef_names <- function(dist_name) {
+  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
+  variable_args <- update_fn_args[2:length(update_fn_args)]
+  return(sapply(variable_args, function(variable_arg) {
+    variable <- stringr::str_interp(
+      '${stringr::str_extract(variable_arg, stringr::regex("(?<=beta_).*"))}_'
+    )
+    return(variable)
+  }, USE.NAMES = FALSE))
+}
+
+
 get_sample_coef_names_by_dist <- function(dist_name, custom_coefs = FALSE) {
   if (!custom_coefs) {
     coef_names <- hash(
@@ -203,7 +215,7 @@ get_sample_coef_names_by_dist <- function(dist_name, custom_coefs = FALSE) {
       "hnorm" = c("sl_sq_"),
       "lnorm" = c("log_sl_", "log_sl_sq_"),
       "vonmises" = c("cos_ta_"),
-      "uniform" = c("cos_ta_"),
+      "unif" = c("cos_ta_")
     )[[dist_name]]
   } else {
     coef_names <- hash(
@@ -212,7 +224,7 @@ get_sample_coef_names_by_dist <- function(dist_name, custom_coefs = FALSE) {
       "hnorm" = c("step_length_sq"),
       "lnorm" = c("step_length_log", "step_length_log_sq"),
       "vonmises" = c("turn_angle_cos"),
-      "uniform" = c("turn_angle_cos"),
+      "unif" = c("turn_angle_cos")
     )[[dist_name]]
   }
 
@@ -228,10 +240,13 @@ get_cached_distribution <- function(dist_name) {
   return(NULL)
 }
 
-get_sample_observed_distribution <- function(dist_name = "gamma", column = "sl_") {
+
+get_sample_tentative_distribution <- function(dist_name = "gamma", column = "sl_") {
   distribution <- get_cached_distribution(dist_name)
   if (is.null(distribution)) {
-    data <- get_sample_fisher_data()[[column]]
+    data <- get_sample_fisher_data() %>%
+      dplyr::filter(case_ == TRUE) %>%
+      dplyr::pull(column)
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
     file_path <- here(str_interp("${get_data_path_root()}/fitted/${dist_name}.rds"))
     saveRDS(distribution, file = file_path)
@@ -273,8 +288,8 @@ get_expected_coef_sums <- function(distribution, coef_index, quantiles = NULL) {
       "2" = NULL
     ),
     # TODO
-    "uniform" = hash(
-      "1" = NULL,
+    "unif" = hash(
+      "1" = c(2, 5),
       "2" = NULL
     )
   )

@@ -168,55 +168,7 @@ test_that("get_quantile_coefs_all", {
 })
 
 
-test_that("update_distributions_by_continuous_var with interaction and default coef names and custom quantiles", {
-  dists <- get_supported_distributions()
-  data <- get_sample_fisher_data()
-
-  for (i in 1:length(dists)) {
-    dist_name <- dists[i]
-    model <- get_sample_models(
-      data = data,
-      interaction_var_name = "elevation"
-    )[[dist_name]]
-
-    if (dist_name %in% TURN_ANGLE_DISTRIBUTIONS) {
-      column_data <- data$cos_ta_
-      column_name <- "cos_ta_"
-    } else {
-      column_data <- data$sl_
-      column_name <- "sl_"
-    }
-
-
-    mockr::local_mock(
-      fit_distribution = function(data, dist_name, na_rm) get_sample_observed_distribution(dist_name = dist_name, column = column_name)
-    )
-
-    results <- update_distributions_by_continuous_var(
-      model = model,
-      dist_name = dist_name,
-      interaction_var_name = "elevation",
-      quantiles = TEST_QUANTILES
-    )
-
-    file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
-    ))
-
-    expected_results_tibble <- readRDS(file_path)
-    expected_results <- updatedDistributionParameters(
-      updated_parameters = expected_results_tibble,
-      distribution_name = dist_name,
-      grouping = "quantile",
-      movement_data = transform_movement_data(model$frame[, 2], dist_name)
-    )
-
-    expect_equal(results, expected_results)
-  }
-})
-
-
-test_that("update_distributions_by_continuous_var with custom coef names", {
+test_that("update_distributions_by_continuous_var with custom quantiles", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data(custom_coefs = TRUE)
 

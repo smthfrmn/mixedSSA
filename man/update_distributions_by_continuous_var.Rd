@@ -8,8 +8,8 @@ update_distributions_by_continuous_var(
   model,
   dist_name,
   interaction_var_name,
-  quantiles = DEFAULT_QUANTILES,
-  coef_names = NULL
+  coef_names,
+  quantiles = DEFAULT_QUANTILES
 )
 }
 \description{

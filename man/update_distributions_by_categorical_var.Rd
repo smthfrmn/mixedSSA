@@ -8,7 +8,7 @@ update_distributions_by_categorical_var(
   model,
   dist_name,
   interaction_var_name,
-  coef_names = NULL
+  coef_names
 )
 }
 \description{
