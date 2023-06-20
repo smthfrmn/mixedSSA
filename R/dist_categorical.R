@@ -98,8 +98,6 @@ update_distributions_by_categorical_var <- function(model,
                                                     dist_name,
                                                     interaction_var_name,
                                                     coef_names) {
-  movement_coef_name <- coef_names[1]
-
   validate_categorical_args(
     model = model,
     dist_name = dist_name,

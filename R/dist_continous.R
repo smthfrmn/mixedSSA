@@ -2,7 +2,7 @@ DEFAULT_QUANTILES <- c(0.05, 0.5, 0.75, 0.95)
 
 
 #' @import assertive
-validate_continuous_args <- function(data, model, dist_name, interaction_var_name, coef_names, quantiles) {
+validate_continuous_args <- function(model, dist_name, interaction_var_name, coef_names, quantiles) {
   validate_base_args(model, dist_name, coef_names, interaction_var_name)
 
   if (!assertive::is_numeric(model$frame[[interaction_var_name]])) {
@@ -98,12 +98,8 @@ update_distributions_by_continuous_var <- function(model,
                                                    coef_names,
                                                    quantiles = DEFAULT_QUANTILES) {
 
-  # TODO: update how this is handled
-  movement_coef_name <- coef_names[1]
-  data <- model$frame[[movement_coef_name]]
 
   validate_continuous_args(
-    data = data,
     model = model,
     dist_name = dist_name,
     interaction_var_name = interaction_var_name,
