@@ -119,7 +119,7 @@ test_that("get_summed_coefs_all", {
 })
 
 
-test_that("update_distributions_by_categorical_var with interaction", {
+test_that("update_dist_by_categorical_var with interaction", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
 
@@ -135,7 +135,7 @@ test_that("update_distributions_by_categorical_var with interaction", {
       fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
-    results <- update_distributions_by_categorical_var(
+    results <- update_dist_by_categorical_var(
       model = model,
       dist_name = dist_name,
       interaction_var_name = "sex",

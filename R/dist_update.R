@@ -10,7 +10,7 @@ is_continuous <- function(model, interaction_var_name) {
 
 
 get_update_dist_fn <- function(model, interaction_var_name) {
-  if (is.null(interaction_var_name)){
+  if (is.null(interaction_var_name)) {
     # TODO: add support for non-interaction
     return(NULL)
   }
@@ -27,8 +27,7 @@ get_update_dist_fn <- function(model, interaction_var_name) {
 
 get_update_dist_args <- function(args) {
   dist_name <- args$dist_name
-  coef_names <- switch (
-    as.character(dist_name),
+  coef_names <- switch(as.character(dist_name),
     "gamma" = c(args$beta_sl, args$beta_log_sl),
     "exp" = c(args$beta_sl),
     "hnorm" = c(args$beta_sl_sq),
@@ -44,10 +43,10 @@ get_update_dist_args <- function(args) {
   )
 
 
-  if(!is.null(args$interaction_var_name)) {
+  if (!is.null(args$interaction_var_name)) {
     update_dist_args$interaction_var_name <- args$interaction_var_name
 
-    if(is_continuous(args$model, args$interaction_var_name)) {
+    if (is_continuous(args$model, args$interaction_var_name)) {
       update_dist_args$quantiles <- args$quantiles
     }
   }
@@ -72,8 +71,6 @@ update_dist <- function(model,
                         beta_cos_ta = NULL,
                         interaction_var_name = NULL,
                         quantiles = DEFAULT_QUANTILES) {
-
-
   args <- DesignLibrary::match.call.defaults()
   args$model <- model
   validate_base_args(args)

@@ -1,37 +1,8 @@
-test_that("validate_con_args fails non-continuous interaction var type", {
-  sample_data <- get_sample_fisher_data()
-  dist_name <- "gamma"
-  model <- get_sample_models(interaction_var_name = "sex")[[dist_name]]
-  expected_error_msg <- "argument 'interaction_var_name' with value 'sex' must be a numeric (i.e. continuous) variable."
-
-  error <- expect_error(
-    validate_continuous_args(
-      data = sample_data$sl_,
-      model = model,
-      dist_name = dist_name,
-      interaction_var_name = "sex",
-      coef_names = c("sl_", "log_sl_"),
-      quantiles = DEFAULT_QUANTILES
-    )
-  )
-
-  expect_equal(error$message, expected_error_msg)
-})
-
-
 test_that("validate_con_args fails non-numeric quantiles", {
-  sample_data <- get_sample_fisher_data()
-  dist_name <- "gamma"
-  model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
-  expected_error_msg <- "argument 'quantiles' must be a numeric vector"
+  expected_error_msg <- "argument 'quantiles' must be a numeric vector containing values between 0 and 1, e.g c(0.2, 0.4, 0.8)"
 
   error <- expect_error(
     validate_continuous_args(
-      data = sample_data$sl_,
-      model = model,
-      dist_name = dist_name,
-      interaction_var_name = "elevation",
-      coef_names = c("sl_", "log_sl_"),
       quantiles = c("dog", "cat")
     )
   )
@@ -41,26 +12,16 @@ test_that("validate_con_args fails non-numeric quantiles", {
 
 
 test_that("validate_con_args fails non-valid quantiles", {
-  sample_data <- get_sample_fisher_data()
-  dist_name <- "gamma"
-  model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
   expected_error_msg <- "argument 'quantiles' must be a numeric vector containing values between 0 and 1, e.g c(0.2, 0.4, 0.8)"
 
   error <- expect_error(
     validate_continuous_args(
-      data = sample_data$sl_,
-      model = model,
-      dist_name = dist_name,
-      interaction_var_name = "elevation",
-      coef_names = c("sl_", "log_sl_"),
       quantiles = c(-2, 1000, 3)
     )
   )
 
   expect_equal(error$message, expected_error_msg)
 })
-
-
 
 
 test_that("get_quantiles_coef_values", {
@@ -76,7 +37,6 @@ test_that("get_quantiles_coef_values", {
 
   expect_equal(result, c(5, 6, 7))
 })
-
 
 
 test_that("get_quantile_coefs", {
@@ -168,7 +128,7 @@ test_that("get_quantile_coefs_all", {
 })
 
 
-test_that("update_distributions_by_continuous_var with custom quantiles", {
+test_that("update_dist_by_continuous_var with custom quantiles", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
 
@@ -183,7 +143,7 @@ test_that("update_distributions_by_continuous_var with custom quantiles", {
 
     mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
-    results <- update_distributions_by_continuous_var(
+    results <- update_dist_by_continuous_var(
       model = model,
       dist_name = dist_name,
       interaction_var_name = "elevation",

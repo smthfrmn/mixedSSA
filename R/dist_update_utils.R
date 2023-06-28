@@ -6,7 +6,11 @@ VONMISES <- "vonmises"
 UNIF <- "unif"
 
 STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
-TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIF)
+
+# TODO: update support for UNIF
+# TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIF)
+TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES)
+
 
 SUPPORTED_DISTRIBUTIONS <- c(
   STEP_LENGTH_DISTRIBUTIONS,
@@ -268,7 +272,6 @@ validate_ta_dist <- function(data, coef_names, dist_name) {
       }
     }
   )
-
 }
 
 
@@ -289,7 +292,6 @@ validate_movement_data <- function(model, dist_name, coef_names) {
     coef_names = coef_names
   ))
 }
-
 
 validate_base_args <- function(args) {
   if (!is(args$model, "glmmTMB")) {
@@ -346,7 +348,8 @@ fit_distribution <- function(movement_data, dist_name, na_rm) {
 get_movement_data <- function(model, movement_coef_name, dist_name) {
   data <- model$frame
   case_var <- as.character(
-    attr(model$modelInfo$terms$cond$fixed, which = "variables")[2])
+    attr(model$modelInfo$terms$cond$fixed, which = "variables")[2]
+  )
 
   movement_data <- data %>%
     dplyr::filter(!!sym(case_var) == TRUE) %>%
@@ -366,9 +369,11 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     )
 
 
-  movement_data <- get_movement_data(model = model,
-                                     movement_coef_name = movement_coef_name,
-                                     dist_name = dist_name)
+  movement_data <- get_movement_data(
+    model = model,
+    movement_coef_name = movement_coef_name,
+    dist_name = dist_name
+  )
 
   tentative_fitted_distribution <- fit_distribution(
     movement_data = movement_data,
