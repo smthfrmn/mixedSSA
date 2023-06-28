@@ -80,20 +80,21 @@ get_update_fn_nvars <- function(dist_name) {
 }
 
 
-validate_coef_names <- function(model, dist_name, coef_names) {
-  if (!assertive::is_character(coef_names)) {
-    stop(stringr::str_interp("argument 'coef_names' must be a vector of characters."))
+
+validate_coef_names <- function(args) {
+  dist_name <- args$dist_name
+  update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
+  coef_names <- c()
+  for (i in 2:length(update_fn_args)) {
+    arg <- update_fn_args[i]
+    arg_val <- args[[arg]]
+    if (is.null(arg_val)) {
+      stop(stringr::str_interp("${arg} not present, must pass for dist ${dist_name}."))
+    }
+    coef_names[i - 1] <- arg_val
   }
 
-
-  nvar_names <- get_update_fn_nvars(dist_name)
   npassed_var_names <- length(coef_names)
-
-  if (npassed_var_names != nvar_names) {
-    param_string <- ifelse(nvar_names == 1, "parameter", "parameters")
-    stop(stringr::str_interp("distribution ${dist_name} expects ${nvar_names} ${param_string} to be passed, not ${npassed_var_names}."))
-  }
-
   actual_coef_names <- names(glmmTMB::fixef(model)$cond)
   for (i in 1:npassed_var_names) {
     coef_name <- coef_names[i]
@@ -109,6 +110,8 @@ validate_coef_names <- function(model, dist_name, coef_names) {
       stop("argument 'coef_names' must contain names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the argument 'coef_names'.")
     }
   })
+
+  return(coef_names)
 }
 
 
@@ -288,18 +291,18 @@ validate_movement_data <- function(model, dist_name, coef_names) {
 }
 
 
-validate_base_args <- function(model, dist_name, coef_names, interaction_var_name) {
-  if (!is(model, "glmmTMB")) {
+validate_base_args <- function(args) {
+  if (!is(args$model, "glmmTMB")) {
     stop("argument 'model' must be of class 'glmmTMB'.")
   }
 
-  if (!dist_name %in% SUPPORTED_DISTRIBUTIONS) {
+  if (!args$dist_name %in% SUPPORTED_DISTRIBUTIONS) {
     stop(stringr::str_interp("argument 'dist_name' must be one of ${SUPPORTED_DISTRIBUTIONS}."))
   }
 
-  validate_coef_names(model, dist_name, coef_names)
-  validate_interaction_coefficients(model, interaction_var_name)
-  validate_movement_data(model, dist_name, coef_names)
+  coef_names <- validate_coef_names(args)
+  validate_interaction_coefficients(args$model, args$interaction_var_name)
+  validate_movement_data(args$model, args$dist_name, coef_names)
 }
 
 

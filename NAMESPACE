@@ -2,8 +2,7 @@
 
 export(fit_distribution)
 export(plot_movement_distributions)
-export(update_distributions_by_categorical_var)
-export(update_distributions_by_continuous_var)
+export(update_dist)
 import(amt)
 import(assertive)
 import(dplyr)
