@@ -294,6 +294,7 @@ validate_movement_data <- function(model, dist_name, coef_names) {
 }
 
 validate_base_args <- function(args) {
+  # TODO: validate random effects far
   if (!is(args$model, "glmmTMB")) {
     stop("argument 'model' must be of class 'glmmTMB'.")
   }
@@ -362,6 +363,7 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, grouping = "category") {
+
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
       names_from = "coef_name",
@@ -429,16 +431,28 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 }
 
 
-get_interaction_coefs <- function(coefs, coef_name, interaction_var_name) {
+get_coefs <- function(coefs, coef_name, interaction_var_name) {
   regex_str <- gsub(
     "([.|()\\^{}+$*?]|\\[|\\])",
     "\\\\\\1",
     stringr::str_interp("${coef_name}:${interaction_var_name}")
   )
 
-  interaction_coefs <- coefs[grepl(
-    stringr::str_interp("^${regex_str}"), names(coefs)
-  )]
+  target_coefs <- coefs %>%
+    dplyr::select(
+      sym(coef_name) |
+      matches(stringr::str_interp("^${regex_str}")))
 
-  return(interaction_coefs)
+  return(target_coefs)
+}
+
+
+get_coefs_from_model <- function(model, random_effects_var_name) {
+  if (is.null(random_effects_var_name)) {
+    fixed_effects <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
+    return(fixed_effects)
+  }
+
+  random_effects <- coef(model)$cond[[random_effects_var_name]]
+  return(random_effects)
 }

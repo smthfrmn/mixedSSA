@@ -10,37 +10,35 @@ validate_continuous_args <- function(quantiles) {
 
 
 get_quantiles_coef_values <- function(interaction_data, quantiles,
-                                      interaction_coef_values,
-                                      coef_value_vector) {
+                                      target_coefs) {
+
   quantile_multipliers <- stats::quantile(interaction_data, probs = quantiles, na.rm = T)
   names(quantile_multipliers) <- NULL
 
-  quantile_coef_values <- coef_value_vector + (interaction_coef_values * quantile_multipliers)
+  quantile_coef_values <- target_coefs[,1] + (target_coefs[,2] * quantile_multipliers)
   return(quantile_coef_values)
 }
 
 
 #' @import tibble
 get_quantile_coefs <- function(interaction_data, coefs, coef_name, interaction_var_name, quantiles) {
-  interaction_coefs <- get_interaction_coefs(
+  target_coefs <- get_coefs(
     coefs = coefs,
     coef_name = coef_name,
     interaction_var_name = interaction_var_name
   )
 
-  interaction_coef_values <- unname(interaction_coefs)
-  nrows <- length(interaction_coef_values)
+
+  nrows <- length(quantiles)
 
   coef_name_vector <- rep(coef_name, nrows)
-  coef_value_vector <- rep(coefs[coef_name], nrows)
 
   args_tibble <- tibble(
     quantile = quantiles,
     coef_name = coef_name_vector,
     coef_value = get_quantiles_coef_values(
       interaction_data, quantiles,
-      interaction_coef_values,
-      coef_value_vector
+      target_coefs
     )
   )
 
@@ -82,6 +80,7 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 #' @import glmmTMB
 update_dist_by_continuous_var <- function(model,
                                           dist_name,
+                                          random_effects_var,
                                           interaction_var_name,
                                           coef_names,
                                           quantiles) {
@@ -89,7 +88,8 @@ update_dist_by_continuous_var <- function(model,
     quantiles = quantiles
   )
 
-  coefs <- glmmTMB::fixef(model)$cond
+  coefs <- get_coefs_from_model(model = model,
+                                random_effects_var_name = random_effects_var)
 
   quantile_coefs_tibble <- get_quantile_coefs_all(
     interaction_data = model$frame[[interaction_var_name]],

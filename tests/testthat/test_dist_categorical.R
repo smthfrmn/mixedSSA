@@ -42,7 +42,7 @@ test_that("get_summed_coefs", {
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    mock_coefs <- get_mock_coefs(dist_name)
+    mock_coefs <- as.data.frame(t(unlist(get_mock_coefs(dist_name))))
     coef_names <- get_default_coef_names(dist_name)
     model <- get_sample_models(
       interaction_var_name = "sex"
@@ -83,7 +83,7 @@ test_that("get_summed_coefs_all", {
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
 
-    mock_coefs <- get_mock_coefs(dist_name)
+    mock_coefs <- as.data.frame(t(unlist(get_mock_coefs(dist_name))))
     coef_names <- get_default_coef_names(dist_name)
     expected_tibble <- tibble::tibble()
     model <- get_sample_models(
@@ -138,6 +138,7 @@ test_that("update_dist_by_categorical_var with interaction", {
     results <- update_dist_by_categorical_var(
       model = model,
       dist_name = dist_name,
+      random_effects_var_name = NULL,
       interaction_var_name = "sex",
       coef_names = get_default_coef_names(dist_name)
     )

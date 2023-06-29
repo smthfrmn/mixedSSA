@@ -16,39 +16,35 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 
 #' @import tibble
 get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
-  interaction_coefs <- get_interaction_coefs(
+  target_coefs <- get_coefs(
     coefs = coefs,
     coef_name = coef_name,
     interaction_var_name = interaction_var_name
   )
 
-  categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
-  reference_category <- levels(model$frame[[interaction_var_name]])[1]
+  #categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
+  all_categories <- levels(model$frame[[interaction_var_name]])
+  reference_category <- all_categories[1]
+  non_ref_categories <- all_categories[2:length(all_categories)]
 
-  interaction_coef_values <- unname(interaction_coefs)
-  nrows <- length(interaction_coef_values)
-
-  coef_name_vector <- rep(coef_name, nrows)
-  coef_value_vector <- rep(coefs[coef_name], nrows)
+  nrows <- length(all_categories) * nrow(target_coefs)
 
   reference_category_row <- tibble(
     category = reference_category,
     coef_name = coef_name,
-    coef_value = unname(coefs[coef_name])
+    coef_value = target_coefs[[coef_name]]
   )
 
   non_reference_category_rows <- tibble(
-    category = categories,
-    coef_name = coef_name_vector,
-    coef_value = unname(interaction_coef_values + coef_value_vector)
+    category = non_ref_categories,
+    coef_name = rep(coef_name, length(non_ref_categories)),
+    coef_value = rowSums(target_coefs)
   )
 
   args_tibble <- rbind(
     non_reference_category_rows,
     reference_category_row
   )
-
-  row.names(args_tibble) <- NULL
 
   return(args_tibble)
 }
@@ -75,6 +71,17 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name)
 }
 
 
+get_coefs_from_model <- function(model, random_effects_var_name) {
+  if (is.null(random_effects_var_name)) {
+    fixed_effects <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
+    return(fixed_effects)
+  }
+
+  random_effects <- coef(model)$cond[[random_effects_var_name]]
+  return(random_effects)
+}
+
+
 #' Update movement distributions based on fitted models
 #'
 #' @import dplyr
@@ -82,9 +89,10 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name)
 #' @import glmmTMB
 update_dist_by_categorical_var <- function(model,
                                            dist_name,
+                                           random_effects_var_name,
                                            interaction_var_name,
                                            coef_names) {
-  coefs <- glmmTMB::fixef(model)$cond
+  coefs <- get_coefs_from_model(model, random_effects_var_name)
 
   summed_coefs_tibble <- get_summed_coefs_all(
     model = model,

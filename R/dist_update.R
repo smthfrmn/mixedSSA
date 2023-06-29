@@ -1,3 +1,7 @@
+# TODO:
+# - support non-interaction variable
+# - only allow quantiles to be passed if cont variable?
+
 is_categorical <- function(model, interaction_var_name) {
   interaction_var <- model$frame[[interaction_var_name]]
   return(is.factor(interaction_var))
@@ -69,6 +73,7 @@ update_dist <- function(model,
                         beta_sl_sq = NULL,
                         beta_log_sl_sq = NULL,
                         beta_cos_ta = NULL,
+                        random_effects_var_name = NULL,
                         interaction_var_name = NULL,
                         quantiles = DEFAULT_QUANTILES) {
   args <- DesignLibrary::match.call.defaults()
