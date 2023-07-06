@@ -138,39 +138,28 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
 }
 
 
-get_sample_simple_models_custom_coefficients <- function(data = get_sample_fisher_data(custom_coefs = TRUE)) {
-  models <- hash(
-    "gamma" = glmmTMB(case_ ~ step_length + step_length_log, data = data),
-    "exp" = glmmTMB(case_ ~ step_length, data = data),
-    "hnorm" = glmmTMB(case_ ~ step_length_sq, data = data),
-    "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq, data = data),
-    "vonmises" = glmmTMB(case_ ~ turn_angle_cos, data = data),
-    "unif" = glmmTMB(case_ ~ turn_angle_cos, data = data)
-  )
-
-  return(models)
-}
-
-get_sample_models_custom_coefficients <- function(
-    data = get_sample_fisher_data(custom_coefs = TRUE), interaction_var_name = "sex") {
+get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction_var_name = "sex") {
+  # suppress model convergence warnings :/
   suppressWarnings({
     if (interaction_var_name == "sex") {
       models <- hash(
-        "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:sex + step_length_log:sex, data = data),
-        "exp" = glmmTMB(case_ ~ step_length + step_length:sex, data = data),
-        "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:sex, data = data),
-        "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:sex + step_length_log_sq:sex, data = data),
-        "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data),
-        "unif" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:sex, data = data)
+        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex + (0 + sl_ + log_sl_ | id), data = data),
+        "exp" = glmmTMB(case_ ~ sl_ + sl_:sex + (0 + sl_ + log_sl_ | id), data = data),
+        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex + (0 + sl_ + log_sl_ | id), data = data),
+        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex + (0 + sl_ + log_sl_ | id), data = data),
+        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data),
+        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data)
       )
-    } else {
+    }
+
+    if (interaction_var_name == "elevation") {
       models <- hash(
-        "gamma" = glmmTMB(case_ ~ step_length + step_length_log + step_length:elevation + step_length_log:elevation, data = data),
-        "exp" = glmmTMB(case_ ~ step_length + step_length:elevation, data = data),
-        "hnorm" = glmmTMB(case_ ~ step_length_sq + step_length_sq:elevation, data = data),
-        "lnorm" = glmmTMB(case_ ~ step_length_log + step_length_log_sq + step_length_log:elevation + step_length_log_sq:elevation, data = data),
-        "vonmises" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data),
-        "unif" = glmmTMB(case_ ~ turn_angle_cos + turn_angle_cos:elevation, data = data)
+        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation + (0 + sl_ + log_sl_ | id), data = data),
+        "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation + (0 + sl_ + log_sl_ | id), data = data),
+        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation + (0 + sl_ + log_sl_ | id), data = data), # convergence issues
+        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation + (0 + sl_ + log_sl_ | id), data = data),
+        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data),
+        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data)
       )
     }
   })

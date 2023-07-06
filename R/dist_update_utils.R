@@ -64,7 +64,7 @@ get_default_coef_names <- function(dist_name) {
 
 
 update_parameters <- function(args_tibble_row, dist, update_fn) {
-  args <- c(list(dist = dist), sapply(args_tibble_row[2:length(args_tibble_row)], as.numeric))
+  args <- c(list(dist = dist), args_tibble_row)
 
   response <- do.call(update_fn, args)
   updated_parameters <- response$params
@@ -363,7 +363,6 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, grouping = "category") {
-
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
       names_from = "coef_name",
@@ -390,12 +389,14 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
   update_fn_arg_names <- update_fn_and_args$args
 
   # rename the column headers to match the amt arg names
-  colnames(pivoted_args_tibble) <- c(
-    grouping,
-    update_fn_arg_names[2:length(update_fn_arg_names)]
-  )
+  param_names <- update_fn_arg_names[2:length(update_fn_arg_names)]
+  col_names <- colnames(pivoted_args_tibble)
+  new_col_names <- c(col_names[1:(length(col_names) - length(param_names))], param_names)
+  colnames(pivoted_args_tibble) <- new_col_names
 
-  all_updated_parameters <- apply(pivoted_args_tibble,
+  all_updated_parameters <- apply(
+    pivoted_args_tibble %>%
+      dplyr::select(all_of(param_names)),
     1, update_parameters,
     dist = tentative_fitted_distribution,
     update_fn = update_fn
@@ -408,17 +409,14 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     unlist(tentative_params)
   )
 
-  updated_parameters_tibble <- rbind(
+  updated_parameters_tibble <- type.convert(rbind(
     tentative_row,
     cbind(
       pivoted_args_tibble,
       dplyr::bind_rows(all_updated_parameters)
     )
-  ) %>%
-    mutate(across(
-      -as.character(grouping),
-      function(x) round(as.numeric(x), 6)
-    ))
+  ), as.is = TRUE) %>%
+    mutate(across(where(is.numeric), function(x) round(x, 6)))
 
   updated_parameters <- updatedDistributionParameters(
     updated_parameters = updated_parameters_tibble,
@@ -441,7 +439,8 @@ get_coefs <- function(coefs, coef_name, interaction_var_name) {
   target_coefs <- coefs %>%
     dplyr::select(
       sym(coef_name) |
-      matches(stringr::str_interp("^${regex_str}")))
+        matches(stringr::str_interp("^${regex_str}"))
+    )
 
   return(target_coefs)
 }

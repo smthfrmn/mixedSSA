@@ -25,19 +25,22 @@ test_that("validate_con_args fails non-valid quantiles", {
 
 
 test_that("get_quantiles_coef_values", {
-  # mock_data <- data.frame(elevation = c(
-  #   2, 4, 6
-  # ))
-  # result <- get_quantiles_coef_values(
-  #   interaction_data = mock_data$elevation,
-  #   quantiles = c(0.25, 0.5, 0.75),
-  #   interaction_coef_values = 1,
-  #   coef_value_vector = c(2, 2, 2)
-  # )
-  #
-  # expect_equal(result, c(5, 6, 7))
+  mock_data <- data.frame(elevation = c(
+    2, 4, 6
+  ))
 
-  # TODO: todo
+  target_coefs <- data.frame(
+    "sl_" = c(2),
+    "sl_:elevation" = c(2)
+  )
+
+  result <- get_quantiles_coef_values(
+    interaction_data = mock_data$elevation,
+    quantiles = c(0.25, 0.5, 0.75),
+    target_coefs = target_coefs[1, ]
+  )
+
+  expect_equal(result, c(8, 10, 12))
 })
 
 

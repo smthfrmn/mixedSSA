@@ -15,35 +15,44 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 
 
 #' @import tibble
-get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
+get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name, random_effects_var_name) {
   target_coefs <- get_coefs(
     coefs = coefs,
     coef_name = coef_name,
     interaction_var_name = interaction_var_name
   )
 
-  #categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
+  # categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
   all_categories <- levels(model$frame[[interaction_var_name]])
   reference_category <- all_categories[1]
   non_ref_categories <- all_categories[2:length(all_categories)]
 
   nrows <- length(all_categories) * nrow(target_coefs)
 
-  reference_category_row <- tibble(
+  reference_category_rows <- tibble(
     category = reference_category,
     coef_name = coef_name,
     coef_value = target_coefs[[coef_name]]
   )
 
+  if(!is.null(random_effects_var_name)) {
+    reference_category_rows[[random_effects_var_name]] <- rownames(target_coefs)
+  }
+
+  target_coef_sums <- rowSums(target_coefs)
   non_reference_category_rows <- tibble(
     category = non_ref_categories,
-    coef_name = rep(coef_name, length(non_ref_categories)),
+    coef_name = coef_name,
     coef_value = rowSums(target_coefs)
   )
 
+  if(!is.null(random_effects_var_name)) {
+    non_reference_category_rows[[random_effects_var_name]] <- rownames(target_coefs)
+  }
+
   args_tibble <- rbind(
-    non_reference_category_rows,
-    reference_category_row
+    reference_category_rows,
+    non_reference_category_rows
   )
 
   return(args_tibble)
@@ -51,7 +60,7 @@ get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name) {
 
 
 #' @import tibble
-get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name) {
+get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
   summed_coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
@@ -62,7 +71,8 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name)
         model = model,
         coefs = coefs,
         coef_name = coef_name,
-        interaction_var_name = interaction_var_name
+        interaction_var_name = interaction_var_name,
+        random_effects_var_name = random_effects_var_name
       )
     )
   }
@@ -98,7 +108,8 @@ update_dist_by_categorical_var <- function(model,
     model = model,
     coefs = coefs,
     coef_names = coef_names,
-    interaction_var_name = interaction_var_name
+    interaction_var_name = interaction_var_name,
+    random_effects_var_name = random_effects_var_name
   )
 
   movement_coef_name <- coef_names[1]

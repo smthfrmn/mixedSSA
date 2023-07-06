@@ -7,6 +7,7 @@ is_categorical <- function(model, interaction_var_name) {
   return(is.factor(interaction_var))
 }
 
+
 is_continuous <- function(model, interaction_var_name) {
   interaction_var <- model$frame[[interaction_var_name]]
   return(is.numeric(interaction_var))
@@ -43,12 +44,13 @@ get_update_dist_args <- function(args) {
   update_dist_args <- list(
     model = args$model,
     dist_name = args$dist_name,
-    coef_names = coef_names
+    coef_names = coef_names,
+    random_effects_var_name = args$random_effects_var_name,
+    interaction_var_name = args$interaction_var_name
   )
 
 
   if (!is.null(args$interaction_var_name)) {
-    update_dist_args$interaction_var_name <- args$interaction_var_name
 
     if (is_continuous(args$model, args$interaction_var_name)) {
       update_dist_args$quantiles <- args$quantiles

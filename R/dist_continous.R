@@ -11,11 +11,10 @@ validate_continuous_args <- function(quantiles) {
 
 get_quantiles_coef_values <- function(interaction_data, quantiles,
                                       target_coefs) {
-
   quantile_multipliers <- stats::quantile(interaction_data, probs = quantiles, na.rm = T)
   names(quantile_multipliers) <- NULL
 
-  quantile_coef_values <- target_coefs[,1] + (target_coefs[,2] * quantile_multipliers)
+  quantile_coef_values <- target_coefs[, 1] + (target_coefs[, 2] * quantile_multipliers)
   return(quantile_coef_values)
 }
 
@@ -80,7 +79,7 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 #' @import glmmTMB
 update_dist_by_continuous_var <- function(model,
                                           dist_name,
-                                          random_effects_var,
+                                          random_effects_var_name,
                                           interaction_var_name,
                                           coef_names,
                                           quantiles) {
@@ -88,8 +87,10 @@ update_dist_by_continuous_var <- function(model,
     quantiles = quantiles
   )
 
-  coefs <- get_coefs_from_model(model = model,
-                                random_effects_var_name = random_effects_var)
+  coefs <- get_coefs_from_model(
+    model = model,
+    random_effects_var_name = random_effects_var_name
+  )
 
   quantile_coefs_tibble <- get_quantile_coefs_all(
     interaction_data = model$frame[[interaction_var_name]],

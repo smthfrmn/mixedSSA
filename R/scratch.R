@@ -49,17 +49,17 @@
 
 model <- get_sample_models()[["gamma"]]
 
-update_dist(model,
+updated_params <- update_dist(model,
   dist_name = "gamma",
   interaction_var_name = "sex",
-  beta_sl = "sl_"
-)
-
-model <- get_sample_models(interaction_var_name = "elevation")[["gamma"]]
-
-update_dist(model,
-  dist_name = "gamma",
-  interaction_var_name = "elevation",
   beta_sl = "sl_",
   beta_log_sl = "log_sl_"
+)
+
+model <- get_sample_models(interaction_var_name = "elevation")[["vonmises"]]
+
+updated_params <- update_dist(model,
+            dist_name = "vonmises",
+            interaction_var_name = "elevation",
+            beta_cos_ta = "cos_ta_"
 )
