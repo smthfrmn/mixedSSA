@@ -12,44 +12,47 @@ validate_continuous_args <- function(quantiles) {
 get_quantiles_coef_values <- function(interaction_data, quantiles,
                                       target_coefs) {
   quantile_multipliers <- stats::quantile(interaction_data, probs = quantiles, na.rm = T)
-  names(quantile_multipliers) <- NULL
-
-  quantile_coef_values <- target_coefs[, 1] + (target_coefs[, 2] * quantile_multipliers)
+  quantile_coef_values <- target_coefs[, 1] + sapply(quantile_multipliers, function(q) q * target_coefs[,2])
+  colnames(quantile_coef_values) <- quantiles
   return(quantile_coef_values)
 }
 
 
 #' @import tibble
-get_quantile_coefs <- function(interaction_data, coefs, coef_name, interaction_var_name, quantiles) {
+get_quantile_coefs <- function(interaction_data, coefs,
+                               coef_name, random_effects_var_name,
+                               interaction_var_name, quantiles) {
+
   target_coefs <- get_coefs(
     coefs = coefs,
     coef_name = coef_name,
     interaction_var_name = interaction_var_name
   )
 
+  args_tibble <- get_quantiles_coef_values(
+    interaction_data, quantiles,
+    target_coefs
+  ) %>%
+    tibble::as_tibble()
 
-  nrows <- length(quantiles)
+  args_tibble$coef_name <- coef_name
 
-  coef_name_vector <- rep(coef_name, nrows)
+  if(!is.null(random_effects_var_name)) {
+    args_tibble[[random_effects_var_name]] <- rownames(target_coefs)
+  }
 
-  args_tibble <- tibble(
-    quantile = quantiles,
-    coef_name = coef_name_vector,
-    coef_value = get_quantiles_coef_values(
-      interaction_data, quantiles,
-      target_coefs
-    )
-  )
+  args_tibble_pivoted <-  args_tibble %>%
+    tidyr::pivot_longer(cols = as.character(quantiles),
+                        names_to = "quantile",
+                        values_to = "coef_value")
 
-  row.names(args_tibble) <- NULL
-
-  return(args_tibble)
+  return(args_tibble_pivoted)
 }
 
 
 #' @import tibble
 get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
-                                   interaction_var_name, quantiles) {
+                                   random_effects_var_name, interaction_var_name, quantiles) {
   quantile_coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
@@ -60,6 +63,7 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
         interaction_data = interaction_data,
         coefs = coefs,
         coef_name = coef_name,
+        random_effects_var_name = random_effects_var_name,
         interaction_var_name = interaction_var_name,
         quantiles = quantiles
       )
@@ -83,6 +87,7 @@ update_dist_by_continuous_var <- function(model,
                                           interaction_var_name,
                                           coef_names,
                                           quantiles) {
+
   validate_continuous_args(
     quantiles = quantiles
   )
@@ -96,6 +101,7 @@ update_dist_by_continuous_var <- function(model,
     interaction_data = model$frame[[interaction_var_name]],
     coefs = coefs,
     coef_names = coef_names,
+    random_effects_var_name = random_effects_var_name,
     interaction_var_name = interaction_var_name,
     quantiles = quantiles
   )
