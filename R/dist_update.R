@@ -49,9 +49,7 @@ get_update_dist_args <- function(args) {
     interaction_var_name = args$interaction_var_name
   )
 
-
   if (!is.null(args$interaction_var_name)) {
-
     if (is_continuous(args$model, args$interaction_var_name)) {
       update_dist_args$quantiles <- args$quantiles
     }

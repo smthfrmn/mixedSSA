@@ -127,12 +127,12 @@ test_that("get_summed_coefs_all", {
 test_that("update_dist_by_categorical_var with interaction", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
-
+  models <- get_sample_models(
+    data = data
+  )
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    model <- get_sample_models(
-      data = data
-    )[[dist_name]]
+    model <- models[[dist_name]]
 
     column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
 
@@ -171,12 +171,13 @@ test_that("update_dist_by_categorical_var with interaction", {
 test_that("update_dist_by_categorical_var with interaction and random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
+  models <- get_sample_mixed_models(
+    data = data
+  )
 
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
-    model <- get_sample_mixed_models(
-      data = data
-    )[[dist_name]]
+    model <- models[[dist_name]]
 
     column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
 

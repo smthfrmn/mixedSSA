@@ -34,13 +34,17 @@ test_that("get_quantiles_coef_values", {
     "sl_:elevation" = c(2)
   )
 
+  quantiles <- c(0.25, 0.5, 0.75)
   result <- get_quantiles_coef_values(
     interaction_data = mock_data$elevation,
     quantiles = c(0.25, 0.5, 0.75),
     target_coefs = target_coefs[1, ]
   )
 
-  expect_equal(result, c(8, 10, 12))
+  expected_df <- as.data.frame(matrix(c(8, 10, 12), ncol=3))
+  colnames(expected_df) <- quantiles
+
+  expect_equal(result, expected_df)
 })
 
 
@@ -61,8 +65,8 @@ test_that("get_quantile_coefs", {
       coef_name <- coef_names[j]
 
       expected_tibble <- tibble::tibble(
-        quantile = TEST_QUANTILES,
         coef_name = coef_name,
+        quantile = as.character(TEST_QUANTILES),
         coef_value = get_expected_coef_sums(
           distribution = dist,
           coef_index = j,
@@ -75,6 +79,7 @@ test_that("get_quantile_coefs", {
         interaction_data = data$elevation,
         coefs = mock_coefs,
         coef_name = coef_name,
+        random_effects_var_name = NULL,
         interaction_var_name = "elevation",
         quantiles = TEST_QUANTILES
       ) %>%
@@ -106,8 +111,8 @@ test_that("get_quantile_coefs_all", {
     for (j in 1:length(coef_names)) {
       coef_name <- coef_names[j]
       current_tibble <- tibble::tibble(
-        quantile = TEST_QUANTILES,
         coef_name = coef_name,
+        quantile = as.character(TEST_QUANTILES),
         coef_value = get_expected_coef_sums(
           distribution = dist,
           coef_index = j,
@@ -126,6 +131,7 @@ test_that("get_quantile_coefs_all", {
       coefs = mock_coefs,
       coef_names = coef_names,
       interaction_var_name = "elevation",
+      random_effects_var_name = NULL,
       quantiles = TEST_QUANTILES
     )
 

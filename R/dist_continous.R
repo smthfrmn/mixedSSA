@@ -11,8 +11,14 @@ validate_continuous_args <- function(quantiles) {
 
 get_quantiles_coef_values <- function(interaction_data, quantiles,
                                       target_coefs) {
-  quantile_multipliers <- stats::quantile(interaction_data, probs = quantiles, na.rm = T)
-  quantile_coef_values <- target_coefs[, 1] + sapply(quantile_multipliers, function(q) q * target_coefs[,2])
+  quantile_multipliers <- stats::quantile(interaction_data,
+                                          probs = quantiles, na.rm = T)
+  quantile_coef_values <- target_coefs[,1] + sapply(quantile_multipliers,
+                                                    function(q) q * target_coefs[,2])
+
+  if (is.null(colnames(quantile_coef_values))) {
+    quantile_coef_values <- data.frame(t(quantile_coef_values))
+  }
   colnames(quantile_coef_values) <- quantiles
   return(quantile_coef_values)
 }

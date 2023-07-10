@@ -87,6 +87,7 @@ get_update_fn_nvars <- function(dist_name) {
 
 validate_coef_names <- function(args) {
   dist_name <- args$dist_name
+  model <- args$model
   update_fn_args <- get_update_distribution_function_and_args(dist_name)$args
   coef_names <- c()
   for (i in 2:length(update_fn_args)) {
