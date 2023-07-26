@@ -7,12 +7,13 @@
 update_dist(
   model,
   dist_name,
-  interaction_var_name = NULL,
   beta_sl = NULL,
   beta_log_sl = NULL,
   beta_sl_sq = NULL,
   beta_log_sl_sq = NULL,
   beta_cos_ta = NULL,
+  random_effects_var_name = NULL,
+  interaction_var_name = NULL,
   quantiles = DEFAULT_QUANTILES
 )
 }
