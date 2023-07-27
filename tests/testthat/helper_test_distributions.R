@@ -112,28 +112,34 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
   # suppress model convergence warnings :/
   suppressWarnings({
     if (interaction_var_name == "sex") {
-      models <- hash(
-        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data),
-        "exp" = glmmTMB(case_ ~ sl_ + sl_:sex, data = data),
-        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex, data = data),
-        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex, data = data),
-        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data),
-        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
-      )
+      # models <- hash(
+      #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data),
+      #   "exp" = glmmTMB(case_ ~ sl_ + sl_:sex, data = data),
+      #   "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex, data = data),
+      #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex, data = data),
+      #   "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data),
+      #   "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex, data = data)
+      # )
+      #
+      file_path <- str_interp("${get_data_path_root()}/models/sex_models.rds")
+      # saveRDS(models, file_path)
     }
 
     if (interaction_var_name == "elevation") {
-      models <- hash(
-        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation, data = data),
-        "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation, data = data),
-        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
-        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
-        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data),
-        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
-      )
+      # models <- hash(
+      #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation, data = data),
+      #   "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation, data = data),
+      #   "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation, data = data), # convergence issues
+      #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation, data = data),
+      #   "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data),
+      #   "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
+      # )
+      file_path <- str_interp("${get_data_path_root()}/models/elevation_models.rds")
+      # saveRDS(models, file_path)
     }
   })
 
+  models <- readRDS(file_path)
   return(models)
 }
 
@@ -142,28 +148,33 @@ get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction
   # suppress model convergence warnings :/
   suppressWarnings({
     if (interaction_var_name == "sex") {
-      models <- hash(
-        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex + (0 + sl_ + log_sl_ | id), data = data),
-        "exp" = glmmTMB(case_ ~ sl_ + sl_:sex + (0 + sl_ | id), data = data),
-        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex + (0 + sl_sq_ | id), data = data),
-        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex + (0 + log_sl_ + log_sl_sq_ | id), data = data),
-        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data),
-        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data)
-      )
+      # models <- hash(
+      #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex + (0 + sl_ + log_sl_ | id), data = data),
+      #   "exp" = glmmTMB(case_ ~ sl_ + sl_:sex + (0 + sl_ | id), data = data),
+      #   "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:sex + (0 + sl_sq_ | id), data = data),
+      #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:sex + log_sl_sq_:sex + (0 + log_sl_ + log_sl_sq_ | id), data = data),
+      #   "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data),
+      #   "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:sex + (0 + cos_ta_ | id), data = data)
+      # )
+      file_path <- str_interp("${get_data_path_root()}/models/mixed/sex_models.rds")
+      # saveRDS(models, file_path)
     }
 
     if (interaction_var_name == "elevation") {
-      models <- hash(
-        "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation + (0 + sl_ + log_sl_ | id), data = data),
-        "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation + (0 + sl_ | id), data = data),
-        "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation + (0 + sl_sq_ | id), data = data), # convergence issues
-        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation + (0 + log_sl_ + log_sl_sq_ | id), data = data),
-        "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data),
-        "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data)
-      )
+      # models <- hash(
+      #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation + log_sl_:elevation + (0 + sl_ + log_sl_ | id), data = data),
+      #   "exp" = glmmTMB(case_ ~ sl_ + sl_:elevation + (0 + sl_ | id), data = data),
+      #   "hnorm" = glmmTMB(case_ ~ sl_sq_ + sl_sq_:elevation + (0 + sl_sq_ | id), data = data), # convergence issues
+      #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + log_sl_:elevation + log_sl_sq_:elevation + (0 + log_sl_ + log_sl_sq_ | id), data = data),
+      #   "vonmises" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data),
+      #   "unif" = glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data)
+      # )
+      file_path <- str_interp("${get_data_path_root()}/models/mixed/elevation_models.rds")
+      # saveRDS(models, file_path)
     }
   })
 
+  models <- readRDS(file_path)
   return(models)
 }
 
@@ -175,7 +186,7 @@ get_sample_coefs <- function(dist_name, data = get_sample_fisher_data(),
   } else {
     model <- get_sample_models_custom_coefficients(interaction_var_name = interaction_var_name)[[dist_name]]
   }
-  return(fixef(model)$cond)
+  return(as.data.frame(t(unlist(fixef(model)$cond))))
 }
 
 
@@ -250,6 +261,7 @@ get_mock_coefs <- function(dist_name, interaction_var_name = "sex") {
 
   coefs <- glmmTMB::fixef(model)$cond
   mock_coefs <- coefs * 0 + c(1:length(coefs))
+  mock_coefs <- as.data.frame(t(unlist(mock_coefs)))
   return(mock_coefs)
 }
 

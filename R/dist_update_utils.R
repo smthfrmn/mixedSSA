@@ -105,14 +105,14 @@ validate_coef_names <- function(args) {
     coef_name <- coef_names[i]
     if (!coef_name %in% actual_coef_names) {
       stop(stringr::str_interp(
-        "argument 'coef_names' not valid. Variable name '${coef_name}' not found in model with coef names '${coef_names}'."
+        "distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that exist in the model with coefficients ${paste(actual_coef_names, collapse = ', ')}."
       ))
     }
   }
 
   sapply(coef_names, function(coef_name) {
     if (!assertive::is_numeric(model$frame[[coef_name]])) {
-      stop("argument 'coef_names' must contain names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the argument 'coef_names'.")
+      stop("distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the parameter arguments.")
     }
   })
 
@@ -295,7 +295,7 @@ validate_movement_data <- function(model, dist_name, coef_names) {
 }
 
 validate_base_args <- function(args) {
-  # TODO: validate random effects far
+  # TODO: validate random effects var
   if (!is(args$model, "glmmTMB")) {
     stop("argument 'model' must be of class 'glmmTMB'.")
   }
@@ -410,7 +410,7 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     unlist(tentative_params)
   )
 
-  updated_parameters_tibble <- type.convert(rbind(
+  updated_parameters_tibble <- utils::type.convert(rbind(
     tentative_row,
     cbind(
       pivoted_args_tibble,

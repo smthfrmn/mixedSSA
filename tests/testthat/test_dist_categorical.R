@@ -19,27 +19,6 @@ test_that("get_categories_from_coefs", {
 })
 
 
-test_that("validate_categorical_args fails non-categorical interaction var type", {
-  sample_data <- get_sample_fisher_data()
-
-  # get continuous interaction model
-  dist_name <- "gamma"
-  model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
-  expected_error_msg <- "argument 'interaction_var_name' with value 'elevation' must be a factor (i.e. categorical) variable."
-
-  error <- expect_error(
-    validate_categorical_args(
-      model = model,
-      dist_name = dist_name,
-      coef_names = c("sl_", "log_sl_"),
-      interaction_var_name = "elevation"
-    )
-  )
-
-  expect_equal(error$message, expected_error_msg)
-})
-
-
 test_that("get_summed_coefs", {
   dists <- get_supported_distributions()
 

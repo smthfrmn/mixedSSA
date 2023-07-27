@@ -17,35 +17,43 @@ test_that("get_movement_data", {
 
 
 
-test_that("get_interaction_coefs non-special characters", {
+test_that("get_coefs non-special characters", {
   coefs <- get_mock_coefs(dist_name = GAMMA)
-  result <- get_interaction_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
-  expect_equal(result, c("sl_:sexF" = 4))
+  result <- get_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
+  expected_results <- as.data.frame(list(placeholder=2, placeholder2=4))
+  colnames(expected_results) <- c("sl_", "sl_:sexF")
+  expect_equal(result, expected_results)
 })
 
 
 test_that("get_interaction_coefs special characters in coef_name", {
   coefs <- get_mock_coefs(dist_name = VONMISES)
   names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sexF")
-  result <- get_interaction_coefs(
+  result <- get_coefs(
     coefs = coefs,
     coef_name = "cos(ta_)",
     interaction_var_name = "sex"
   )
-  expect_equal(result, c("cos(ta_):sexF" = 3))
+
+  expected_results <- as.data.frame(list(placeholder=2, placeholder2=3))
+  colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sexF")
+  expect_equal(result, expected_results)
 })
 
 
 
-test_that("get_interaction_coefs special characters in coef_name and interaction_var_name", {
+test_that("get_coefs special characters in coef_name and interaction_var_name", {
   coefs <- get_mock_coefs(dist_name = VONMISES)
   names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sex(F)")
-  result <- get_interaction_coefs(
+  result <- get_coefs(
     coefs = coefs,
     coef_name = "cos(ta_)",
     interaction_var_name = "sex"
   )
-  expect_equal(result, c("cos(ta_):sex(F)" = 3))
+  expected_results <- as.data.frame(list(placeholder=2, placeholder2=3))
+  colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sex(F)")
+
+  expect_equal(result, expected_results)
 })
 
 
@@ -120,32 +128,25 @@ test_that("update_parameters for all distributions", {
     "unif" = update_unif
   )
 
-
   args_tibble_rows <- hash(
     "gamma" = tibble::tibble(
-      category = "placeholder",
       beta_sl = 0.003,
       beta_log_sl = 0.002
     ),
     "exp" = tibble::tibble(
-      category = "placeholder",
       beta_sl = 0.003
     ),
     "hnorm" = tibble::tibble(
-      category = "placeholder",
       beta_sl_sq = 0.0003
     ),
     "lnorm" = tibble::tibble(
-      category = "placeholder",
       beta_log_sl = 0.002,
       beta_log_sl_sq = 0.004
     ),
     "vonmises" = tibble::tibble(
-      category = "placeholder",
       beta_cos_ta = 0.002
     ),
     "unif" = tibble::tibble(
-      category = "placeholder",
       beta_cos_ta = 0 # TODO
     )
   )
@@ -194,75 +195,27 @@ test_that("get_update_fn_nvars", {
 
 
 
-test_that("validate_coef_names fails non-character coef_names", {
-  expected_error_msg <- "argument 'coef_names' must be a vector of characters."
+test_that("validate_coef_names fails missing parameters", {
+
+  expected_error_msg <- "beta_sl not present, must pass for dist gamma."
+  args <- list(model = NULL, dist_name = "gamma")
   expect_error(
-    validate_coef_names(
-      model = NULL, # don't need for this test
-      dist_name = "gamma",
-      coef_names = c(1, 2)
-    ),
+    validate_coef_names(args),
     expected_error_msg
   )
 })
 
 
+test_that("validate_coef_names fails unmatching coefs", {
 
-test_that("validate_coef_names fails number of args", {
-  distributions <- get_supported_distributions()
-  expected_number_params <- c(2, 1, 1, 2, 1, 1)
+  model <- get_sample_models()[["gamma"]]
 
-  for (i in 1:length(distributions)) {
-    expected_num <- expected_number_params[i]
-    wrong_num_coef_names <- rep("coef_name", expected_num + 1)
-    model <- NULL # don't need this for this test
-    dist_name <- distributions[i]
-
-    expected_param_str <- ifelse(expected_num == 1, "parameter", "parameters")
-    expected_error_msg <- stringr::str_interp(
-      "distribution ${dist_name} expects ${expected_num} ${expected_param_str} to be passed, not ${expected_num + 1}"
-    )
-    expect_error(
-      validate_coef_names(
-        model = model,
-        dist_name = dist_name,
-        coef_names = wrong_num_coef_names
-      ),
-      expected_error_msg
-    )
-  }
-})
-
-
-test_that("validate_coef_names fails unmatching coef names", {
-  distributions <- get_supported_distributions()
-
-  expected_params_list <- list(
-    c("sl_", "log_sl_"),
-    c("sl_"),
-    c("sl_sq_"),
-    c("log_sl_", "log_sl_sq_"),
-    c("cos_ta_"),
-    c("cos_ta_")
+  expected_error_msg <- "distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that exist in the model with coefficients (Intercept), sl_, log_sl_, sl_:sexF, log_sl_:sexF."
+  args <- list(model = model, dist_name = "gamma", beta_sl = "foo", beta_log_sl = "foo2")
+  error <- expect_error(
+    validate_coef_names(args)
   )
-
-  actual_params_list <- sapply(expected_params_list, function(x) {
-    return(unname(sapply(x, function(y) {
-      stringr::str_interp("${y}foo_")
-    })))
-  })
-
-  for (i in 1:length(distributions)) {
-    dist_name <- distributions[i]
-    model <- get_sample_models()[[dist_name]]
-
-    wrong_coef_names <- actual_params_list[[i]]
-    expect_error(validate_coef_names(
-      model = model,
-      dist_name = dist_name,
-      coef_names = wrong_coef_names
-    ))
-  }
+  expect_equal(error$message, expected_error_msg)
 })
 
 
@@ -271,38 +224,18 @@ test_that("validate_coef_names fails non-numeric coef data", {
 
   # artificially make non-numeric for check
   model$frame$sl_ <- as.character(model$frame$sl_)
+  args <- list(model = model,
+               dist_name = "gamma",
+               beta_sl = "sl_",
+               beta_log_sl = "log_sl_")
 
-  expect_error(validate_coef_names(
-    model = model,
-    dist_name = "gamma",
-    coef_names = c("sl_", "log_sl_")
-  ))
+  error_msg <- "distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the parameter arguments."
+  error <- expect_error(validate_coef_names(args))
+  expect_equal(error$message, error_msg)
 })
 
 
 test_that("validate_coef_names succeeds", {
-  distributions <- get_supported_distributions()
-  expected_params_list <- list(
-    c("sl_", "log_sl_"),
-    c("sl_"),
-    c("sl_sq_"),
-    c("log_sl_", "log_sl_sq_"),
-    c("cos_ta_"),
-    c("cos_ta_")
-  )
-
-  for (i in 1:length(distributions)) {
-    dist_name <- distributions[i]
-    model <- get_sample_models()[[dist_name]]
-
-    right_coef_names <- expected_params_list[[i]]
-
-    expect_no_error(validate_coef_names(
-      model = model,
-      dist_name = dist_name,
-      coef_names = right_coef_names
-    ))
-  }
 })
 
 
@@ -310,64 +243,68 @@ test_that("validate_base_args fails non-glmmTMB model", {
   sample_data <- get_sample_fisher_data()
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
-
-  error <- expect_error(validate_base_args(
-    model = "I am not a model",
-    dist_name = dist_name,
-    coef_names = coef_names,
-    interaction_var_name = "sex"
-  ), "argument 'model' must be of class 'glmmTMB'")
+  args <- list(model = "i am not a model",
+               dist_name = "gamma",
+               beta_sl = "sl_",
+               beta_log_sl = "log_sl_")
+  error <- expect_error(validate_base_args(args),
+                        "argument 'model' must be of class 'glmmTMB'")
 })
 
 
 test_that("validate_base_args fails non-string interaction_var_name", {
-  sample_data <- get_sample_fisher_data()
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
-  coef_names <- c("sl_", "log_sl_")
 
-  error <- expect_error(validate_base_args(
+  args <- list(
     model = model,
     dist_name = dist_name,
-    coef_names = coef_names,
+    beta_sl = "sl_",
+    beta_log_sl = "log_sl_",
     interaction_var_name = 123
-  ), "argument 'interaction_var_name' must be a string")
+  )
+  error <- expect_error(validate_base_args(args),
+                        "argument 'interaction_var_name' must be a string")
 })
 
 
 test_that("validate_base_args fails interaction_var_name not in model", {
   model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
-  coef_names <- c("sl_", "log_sl_")
 
-  error <- expect_error(validate_base_args(
+  args <- list(
     model = model,
     dist_name = dist_name,
-    coef_names = coef_names,
+    beta_sl = "sl_",
+    beta_log_sl = "log_sl_",
     interaction_var_name = "foo-sex"
-  ), "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model.")
+  )
+
+  error <- expect_error(validate_base_args(args),
+                        "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model.")
 })
 
 
 
-test_that("validate_base_args succeeds with user-passed coef names", {
-  sample_data <- get_sample_fisher_data()
-  model <- get_sample_models_custom_coefficients()[["gamma"]]
+test_that("validate_base_args succeeds", {
+  model <- get_sample_models()[["gamma"]]
   dist_name <- "gamma"
-  coef_names <- c("step_length", "step_length_log")
 
-  expect_no_error(validate_base_args(
+  args <- list(
     model = model,
     dist_name = dist_name,
-    coef_names = coef_names,
+    beta_sl = "sl_",
+    beta_log_sl = "log_sl_",
     interaction_var_name = "sex"
-  ))
+  )
+
+  expect_no_error(validate_base_args(args))
 })
 
 
 
 test_that("validate_interaction_coefficients fails when not a string", {
-  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  model <- get_sample_models()[["gamma"]]
   expect_error(validate_interaction_coefficients(
     model = model,
     interaction_var_name = 3
@@ -377,7 +314,7 @@ test_that("validate_interaction_coefficients fails when not a string", {
 
 
 test_that("validate_interaction_coefficients fails when not present in model", {
-  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  model <- get_sample_models()[["gamma"]]
   expect_error(validate_interaction_coefficients(
     model = model,
     interaction_var_name = "foo-sex"
@@ -388,7 +325,7 @@ test_that("validate_interaction_coefficients fails when not present in model", {
 
 
 test_that("validate_interaction_coefficients succeeds", {
-  model <- get_sample_models_custom_coefficients()[["gamma"]]
+  model <- get_sample_models()[["gamma"]]
   expect_no_error(validate_interaction_coefficients(
     model = model,
     interaction_var_name = "sex"
@@ -532,7 +469,8 @@ test_that("get_updated_parameters with categorical interactions", {
       model = model,
       coefs = coefs,
       coef_names = coef_names,
-      interaction_var_name = "sex"
+      interaction_var_name = "sex",
+      random_effects_var_name = NULL
     )
 
     mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
@@ -566,7 +504,6 @@ test_that("get_updated_parameters with categorical interactions", {
 
 test_that("get_updated_parameters with continuous interactions", {
   dists <- get_supported_distributions()
-  dists <- c(VONMISES)
 
   data <- get_sample_fisher_data()
 
@@ -587,6 +524,7 @@ test_that("get_updated_parameters with continuous interactions", {
       coefs = coefs,
       coef_names = coef_names,
       interaction_var_name = "elevation",
+      random_effects_var_name = NULL,
       quantiles = TEST_QUANTILES
     )
 
