@@ -362,6 +362,7 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 }
 
 
+#' @importFrom utils type.convert
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, grouping = "category") {
   pivoted_args_tibble <- coefs_tibble %>%
