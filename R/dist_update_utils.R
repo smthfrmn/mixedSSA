@@ -410,7 +410,7 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     unlist(tentative_params)
   )
 
-  updated_parameters_tibble <- utils::type.convert(rbind(
+  updated_parameters_tibble <- type.convert(rbind(
     tentative_row,
     cbind(
       pivoted_args_tibble,
