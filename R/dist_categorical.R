@@ -95,7 +95,6 @@ get_coefs_from_model <- function(model, random_effects_var_name) {
 #' @noRd
 #' @import dplyr
 #' @import amt
-#' @import glmmTMB
 update_dist_by_categorical_var <- function(model,
                                            dist_name,
                                            random_effects_var_name,

@@ -84,7 +84,6 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 #' @noRd
 #' @import dplyr
 #' @import amt
-#' @import glmmTMB
 update_dist_by_continuous_var <- function(model,
                                           dist_name,
                                           random_effects_var_name,
