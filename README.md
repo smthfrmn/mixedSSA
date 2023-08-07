@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# mixedSSF
+# mixedSSA
 
 ## Functions
 
