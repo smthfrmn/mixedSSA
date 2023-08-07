@@ -92,8 +92,7 @@ get_coefs_from_model <- function(model, random_effects_var_name) {
 }
 
 
-#' Update movement distributions based on fitted models
-#'
+#' @noRd
 #' @import dplyr
 #' @import amt
 #' @import glmmTMB

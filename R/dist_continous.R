@@ -81,9 +81,7 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 
 
 
-#' Update movement distributions based on fitted models
-#'
-#'
+#' @noRd
 #' @import dplyr
 #' @import amt
 #' @import glmmTMB
