@@ -83,7 +83,7 @@ get_update_dist_args <- function(args) {
 #'
 #' @examples
 #'
-#' data <- get_sample_fisher_data()
+#' #data <- get_sample_fisher_data()
 #'
 #' model <- glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data)
 #' updated_params <- update_dist(model,
