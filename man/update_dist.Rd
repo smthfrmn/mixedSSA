@@ -45,6 +45,9 @@ updatedDistributionParameters instance
 Update movement distributions based on fitted models
 }
 \examples{
+
+data <- get_sample_fisher_data()
+
 model <- glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data)
 updated_params <- update_dist(model,
   dist_name = "gamma",
