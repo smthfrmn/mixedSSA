@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # mixedSSF
 
 ## Functions
@@ -16,5 +17,5 @@ And the following turn angle distributions:
 
 ## Installing
 ```r
-devtools::install_github("smthfrmn/mixedSSF")
+devtools::install_github("smthfrmn/mixedSSA")
 ```

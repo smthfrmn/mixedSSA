@@ -68,7 +68,7 @@ get_update_dist_args <- function(args) {
 #'
 #' @export
 #'
-#' @param model An iSSF model fitted using glmmTMB
+#' @param model An ISSA model fitted using glmmTMB
 #' @param dist_name The string name of the distribution for which you want to update parameters. Currently supported: 'gamma', 'exp', 'hnorm', 'lnorm', 'vonmises'.
 #' @param beta_sl The string name of the step length coefficient, leave as NULL if not updating 'gamma' or 'exp' distributions.
 #' @param beta_log_sl The string name of the log step length coefficient, leave as NULL if not updating 'gamma' or 'lnorm' distributions.

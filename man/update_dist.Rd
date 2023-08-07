@@ -18,7 +18,7 @@ update_dist(
 )
 }
 \arguments{
-\item{model}{An iSSF model fitted using glmmTMB}
+\item{model}{An ISSA model fitted using glmmTMB}
 
 \item{dist_name}{The string name of the distribution for which you want to update parameters. Currently supported: 'gamma', 'exp', 'hnorm', 'lnorm', 'vonmises'.}
 
