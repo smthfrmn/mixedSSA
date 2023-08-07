@@ -2,7 +2,7 @@
 
 ## Functions
 
-This package currently contains a single function, `update_dist`, that allows the user to update the parameters of their chosen movement distribution from the fitted values of an iSSF model (using `glmmTMB`).
+This package currently contains a single function, `update_dist`, that allows the user to update the parameters of their chosen movement distribution from the fitted values of an ISSA model (using `glmmTMB`).
 
 Currently the package supports updating the following step-length distributions:
 - gamma
