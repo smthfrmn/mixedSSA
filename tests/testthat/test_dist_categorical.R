@@ -124,7 +124,8 @@ test_that("update_dist_by_categorical_var with interaction", {
       dist_name = dist_name,
       random_effects_var_name = NULL,
       interaction_var_name = "sex",
-      coef_names = get_default_coef_names(dist_name)
+      coef_names = get_default_coef_names(dist_name),
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(
@@ -169,7 +170,8 @@ test_that("update_dist_by_categorical_var with interaction and random effects", 
       dist_name = dist_name,
       random_effects_var_name = "id",
       interaction_var_name = "sex",
-      coef_names = get_default_coef_names(dist_name)
+      coef_names = get_default_coef_names(dist_name),
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(

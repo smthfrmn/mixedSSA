@@ -46,7 +46,8 @@ get_update_dist_args <- function(args) {
     dist_name = args$dist_name,
     coef_names = coef_names,
     random_effects_var_name = args$random_effects_var_name,
-    interaction_var_name = args$interaction_var_name
+    interaction_var_name = args$interaction_var_name,
+    tentative_dist = args$tentative_dist
   )
 
   if (!is.null(args$interaction_var_name)) {
@@ -120,6 +121,7 @@ update_dist <- function(model,
                         interaction_var_name = NULL,
                         tentative_dist = NULL,
                         quantiles = DEFAULT_QUANTILES) {
+
   args <- DesignLibrary::match.call.defaults()
   args$model <- model
   validate_base_args(args)

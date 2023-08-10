@@ -163,7 +163,8 @@ test_that("update_dist_by_continuous_var with custom quantiles", {
       quantiles = TEST_QUANTILES,
       coef_names = get_sample_coef_names_by_dist(
         dist_name = dist_name
-      )
+      ),
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(
@@ -209,7 +210,8 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
       quantiles = TEST_QUANTILES,
       coef_names = get_sample_coef_names_by_dist(
         dist_name = dist_name
-      )
+      ),
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(

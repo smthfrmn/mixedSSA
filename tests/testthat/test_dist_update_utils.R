@@ -479,7 +479,8 @@ test_that("get_updated_parameters with categorical interactions", {
       model = model,
       movement_coef_name = coef_names[1],
       dist_name = dist_name,
-      coefs_tibble = summed_coef_tibble
+      coefs_tibble = summed_coef_tibble,
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(
@@ -535,7 +536,8 @@ test_that("get_updated_parameters with continuous interactions", {
       movement_coef_name = coef_names[1],
       dist_name = dist_name,
       coefs_tibble = quantile_coef_tibble,
-      grouping = "quantile"
+      grouping = "quantile",
+      tentative_dist = NULL
     )
 
     file_path <- here(str_interp(
