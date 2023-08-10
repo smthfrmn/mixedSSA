@@ -106,7 +106,8 @@ get_update_dist_args <- function(args) {
 #'   dist_name = "vonmises",
 #'   interaction_var_name = "elevation",
 #'   random_effects_var_name = "id",
-#'   beta_cos_ta = "cos_ta_")
+#'   beta_cos_ta = "cos_ta_"
+#' )
 
 update_dist <- function(model,
                         dist_name,
@@ -117,6 +118,7 @@ update_dist <- function(model,
                         beta_cos_ta = NULL,
                         random_effects_var_name = NULL,
                         interaction_var_name = NULL,
+                        tentative_dist = NULL,
                         quantiles = DEFAULT_QUANTILES) {
   args <- DesignLibrary::match.call.defaults()
   args$model <- model

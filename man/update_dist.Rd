@@ -14,6 +14,7 @@ update_dist(
   beta_cos_ta = NULL,
   random_effects_var_name = NULL,
   interaction_var_name = NULL,
+  tentative_dist = NULL,
   quantiles = DEFAULT_QUANTILES
 )
 }
@@ -69,5 +70,6 @@ updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
   random_effects_var_name = "id",
-  beta_cos_ta = "cos_ta_")
+  beta_cos_ta = "cos_ta_"
+)
 }

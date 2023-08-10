@@ -99,7 +99,8 @@ update_dist_by_categorical_var <- function(model,
                                            dist_name,
                                            random_effects_var_name,
                                            interaction_var_name,
-                                           coef_names) {
+                                           coef_names,
+                                           tentative_dist) {
   coefs <- get_coefs_from_model(model, random_effects_var_name)
 
   summed_coefs_tibble <- get_summed_coefs_all(
@@ -115,7 +116,8 @@ update_dist_by_categorical_var <- function(model,
     model = model,
     movement_coef_name = movement_coef_name,
     dist_name = dist_name,
-    coefs_tibble = summed_coefs_tibble
+    coefs_tibble = summed_coefs_tibble,
+    tentative_dist = tentative_dist
   )
 
   return(updated_parameters)

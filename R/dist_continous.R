@@ -89,7 +89,8 @@ update_dist_by_continuous_var <- function(model,
                                           random_effects_var_name,
                                           interaction_var_name,
                                           coef_names,
-                                          quantiles) {
+                                          quantiles,
+                                          tentative_dist) {
 
   validate_continuous_args(
     quantiles = quantiles
@@ -115,6 +116,7 @@ update_dist_by_continuous_var <- function(model,
     movement_coef_name = movement_coef_name,
     dist_name = dist_name,
     coefs_tibble = quantile_coefs_tibble,
+    tentative_dist = tentative_dist,
     grouping = "quantile"
   )
 

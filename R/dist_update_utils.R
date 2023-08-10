@@ -337,7 +337,6 @@ transform_movement_data <- function(data, dist_name) {
 }
 
 
-#' @export
 fit_distribution <- function(movement_data, dist_name, na_rm) {
   return(amt::fit_distr(
     movement_data,
@@ -364,7 +363,7 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 
 #' @importFrom utils type.convert
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
-                                   coefs_tibble, grouping = "category") {
+                                   coefs_tibble, tentative_dist, grouping = "category") {
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
       names_from = "coef_name",
@@ -372,17 +371,20 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     )
 
 
-  movement_data <- get_movement_data(
-    model = model,
-    movement_coef_name = movement_coef_name,
-    dist_name = dist_name
-  )
+  if (is.null(tentative_dist)) {
+    movement_data <- get_movement_data(
+      model = model,
+      movement_coef_name = movement_coef_name,
+      dist_name = dist_name
+    )
 
-  tentative_fitted_distribution <- fit_distribution(
-    movement_data = movement_data,
-    dist_name = dist_name,
-    na_rm = TRUE
-  )
+    tentative_dist <- fit_distribution(
+      movement_data = movement_data,
+      dist_name = dist_name,
+      na_rm = TRUE
+    )
+  }
+
 
   update_fn_and_args <- get_update_distribution_function_and_args(
     dist_name = dist_name
@@ -400,11 +402,11 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
     pivoted_args_tibble %>%
       dplyr::select(all_of(param_names)),
     1, update_parameters,
-    dist = tentative_fitted_distribution,
+    dist = tentative_dist,
     update_fn = update_fn
   )
 
-  tentative_params <- tentative_fitted_distribution$params
+  tentative_params <- tentative_dist$params
   tentative_row <- c(
     "tentative",
     rep(NA, ncol(pivoted_args_tibble) - 1),
