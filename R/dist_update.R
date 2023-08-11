@@ -124,6 +124,7 @@ update_dist <- function(model,
 
   args <- as.list(match.call())[-1]
   args <- lapply(args, function(x) tryCatch(eval(x), error=function(z) x))
+  args$tentative_dist <- eval(args$tentative_dist)
 
   validate_base_args(args)
 
