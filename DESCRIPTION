@@ -19,8 +19,6 @@ Imports:
     berryFunctions,
     hash,
     extraDistr,
-    ggplot2,
-    DesignLibrary,
     utils
 Suggests: 
     testthat (>= 3.0.0),

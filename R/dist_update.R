@@ -122,8 +122,9 @@ update_dist <- function(model,
                         tentative_dist = NULL,
                         quantiles = DEFAULT_QUANTILES) {
 
-  args <- DesignLibrary::match.call.defaults()
-  args$model <- model
+  args <- as.list(match.call())[-1]
+  args <- lapply(args, function(x) tryCatch(eval(x), error=function(z) x))
+
   validate_base_args(args)
 
   update_dist_fn <- get_update_dist_fn(model, interaction_var_name)
