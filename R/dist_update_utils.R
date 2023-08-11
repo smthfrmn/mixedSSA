@@ -25,7 +25,7 @@ updatedDistributionParameters <- setClass(
     updated_parameters = "data.frame",
     distribution_name = "character",
     grouping = "character",
-    movement_data = c("numeric", NULL),
+    movement_data = "ANY",
     model = "ANY"
   )
 )
