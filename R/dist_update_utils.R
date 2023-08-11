@@ -370,7 +370,7 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
       values_from = "coef_value"
     )
 
-
+  movement_data <- NULL
   if (is.null(tentative_dist)) {
     movement_data <- get_movement_data(
       model = model,
