@@ -12,8 +12,7 @@ is_continuous <- function(model, interaction_var_name) {
 
 get_update_dist_fn <- function(model, interaction_var_name) {
   if (is.null(interaction_var_name)) {
-    # TODO: add support for non-interaction
-    stop("currently using a model that does not have movement variables interacted with some other variable is not supported. coming soon!")
+    return("update_dist_non_interaction")
   }
 
   if (is_categorical(model, interaction_var_name)) {
@@ -42,11 +41,11 @@ get_update_dist_args <- function(args) {
     dist_name = args$dist_name,
     coef_names = coef_names,
     random_effects_var_name = args$random_effects_var_name,
-    interaction_var_name = args$interaction_var_name,
     tentative_dist = args$tentative_dist
   )
 
   if (!is.null(args$interaction_var_name)) {
+    update_dist_args <- args$interaction_var_name
     if (is_continuous(args$model, args$interaction_var_name)) {
       update_dist_args$quantiles <- args$quantiles
     }
@@ -118,9 +117,16 @@ update_dist <- function(model,
                         tentative_dist = NULL,
                         quantiles = DEFAULT_QUANTILES) {
 
+  browser()
   args <- as.list(match.call())[-1]
+  formal_args <- formals(update_dist)[c(-1, -2)]
+
+  # TODO: DEAL WITH THIS
+  keys <- unique(c(names(args), names(formal_args)))
+  args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)
   args <- lapply(args, function(x) tryCatch(eval(x), error=function(z) x))
   args$tentative_dist <- eval(args$tentative_dist)
+
 
   validate_base_args(args)
 

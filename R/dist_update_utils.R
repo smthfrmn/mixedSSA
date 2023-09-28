@@ -121,15 +121,17 @@ validate_coef_names <- function(args) {
 
 
 validate_interaction_coefficients <- function(model, interaction_var_name) {
-  if (!assertive::is_a_string(interaction_var_name)) {
-    stop(stringr::str_interp("argument 'interaction_var_name' must be a string."))
-  }
+  if (!is.null(interaction_var_name)) {
+    if (!assertive::is_a_string(interaction_var_name)) {
+      stop(stringr::str_interp("argument 'interaction_var_name' must be a string."))
+    }
 
-  actual_coef_names <- names(glmmTMB::fixef(model)$cond)
-  valid_var_name <- any(grepl(stringr::str_interp(":${interaction_var_name}"), actual_coef_names))
+    actual_coef_names <- names(glmmTMB::fixef(model)$cond)
+    valid_var_name <- any(grepl(stringr::str_interp(":${interaction_var_name}"), actual_coef_names))
 
-  if (!valid_var_name) {
-    stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' does not appear to be part of an interaction coefficient in the provided model."))
+    if (!valid_var_name) {
+      stop(stringr::str_interp("argument 'interaction_var_name' with value '${interaction_var_name}' does not appear to be part of an interaction coefficient in the provided model."))
+    }
   }
 }
 
@@ -317,11 +319,11 @@ validate_tentative_distribution <- function(args) {
   dist_name <- args$dist_name
   tentative_dist <- args$tentative_dist
 
-  if((dist_name %in% NEED_TENTATIVE_DIST) && is.null(tentative_dist)) {
+  if ((dist_name %in% NEED_TENTATIVE_DIST) && is.null(tentative_dist)) {
     stop(stringr::str_interp("arg 'tentative_dist' must not be null for distribution ${dist_name}. See amt::fit_distr."))
   }
 
-  if (!is.null(tentative_dist) && !is(tentative_dist, "amt_distr"))  {
+  if (!is.null(tentative_dist) && !is(tentative_dist, "amt_distr")) {
     stop("arg 'tentative_dist' must be of clas 'amt_distr'")
   }
 }
@@ -451,17 +453,24 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
 
 get_coefs <- function(coefs, coef_name, interaction_var_name) {
-  regex_str <- gsub(
-    "([.|()\\^{}+$*?]|\\[|\\])",
-    "\\\\\\1",
-    stringr::str_interp("${coef_name}:${interaction_var_name}")
-  )
 
-  target_coefs <- coefs %>%
-    dplyr::select(
-      sym(coef_name) |
-        matches(stringr::str_interp("^${regex_str}"))
+  if (!is.null(interaction_var_name)) {
+    regex_str <- gsub(
+      "([.|()\\^{}+$*?]|\\[|\\])",
+      "\\\\\\1",
+      stringr::str_interp("${coef_name}:${interaction_var_name}")
     )
+
+    target_coefs <- coefs %>%
+      dplyr::select(
+        sym(coef_name) |
+          matches(stringr::str_interp("^${regex_str}"))
+      )
+  } else {
+    target_coefs <- coefs %>%
+      dplyr::select(
+        sym(coef_name))
+  }
 
   return(target_coefs)
 }

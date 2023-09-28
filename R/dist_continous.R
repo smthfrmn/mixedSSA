@@ -29,6 +29,7 @@ get_quantile_coefs <- function(interaction_data, coefs,
                                coef_name, random_effects_var_name,
                                interaction_var_name, quantiles) {
 
+  browser()
   target_coefs <- get_coefs(
     coefs = coefs,
     coef_name = coef_name,
