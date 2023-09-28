@@ -1,7 +1,3 @@
-# TODO:
-# - support non-interaction variable
-# - only allow quantiles to be passed if cont variable?
-
 is_categorical <- function(model, interaction_var_name) {
   interaction_var <- model$frame[[interaction_var_name]]
   return(is.factor(interaction_var))

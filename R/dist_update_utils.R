@@ -304,9 +304,26 @@ validate_base_args <- function(args) {
     stop(stringr::str_interp("argument 'dist_name' must be one of ${SUPPORTED_DISTRIBUTIONS}."))
   }
 
+  validate_tentative_distribution(args)
   coef_names <- validate_coef_names(args)
   validate_interaction_coefficients(args$model, args$interaction_var_name)
   validate_movement_data(args$model, args$dist_name, coef_names)
+}
+
+
+validate_tentative_distribution <- function(args) {
+  NEED_TENTATIVE_DIST <- c(HNORM, LNORM, VONMISES)
+
+  dist_name <- args$dist_name
+  tentative_dist <- args$tentative_dist
+
+  if((dist_name %in% NEED_TENTATIVE_DIST) && is.null(tentative_dist)) {
+    stop(stringr::str_interp("arg 'tentative_dist' must not be null for distribution ${dist_name}. See amt::fit_distr."))
+  }
+
+  if (!is.null(tentative_dist) && !is(tentative_dist, "amt_distr"))  {
+    stop("arg 'tentative_dist' must be of clas 'amt_distr'")
+  }
 }
 
 

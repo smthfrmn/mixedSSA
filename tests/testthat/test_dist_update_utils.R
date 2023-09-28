@@ -16,6 +16,64 @@ test_that("get_movement_data", {
 })
 
 
+test_that("validate_tentative_distribution validates not null", {
+  distributions <- c(HNORM, LNORM, VONMISES)
+  for(i in 1:length(distributions)) {
+    dist_name <- distributions[i]
+
+    args <- list(
+      dist_name = dist_name,
+      tentative_dist = NULL
+    )
+
+    expected_error_msg <- stringr::str_interp(
+      "arg 'tentative_dist' must not be null for distribution ${dist_name}. See amt::fit_distr.")
+    error <- expect_error(validate_tentative_distribution(args))
+    expect_equal(error$message, expected_error_msg)
+  }
+})
+
+
+test_that("validate_tentative_distribution validates null", {
+  distributions <- c(GAMMA, EXP)
+  for(i in 1:length(distributions)) {
+    dist_name <- distributions[i]
+
+    args <- list(
+      dist_name = dist_name,
+      tentative_dist = NULL
+    )
+
+    expect_no_error(validate_tentative_distribution(args))
+  }
+})
+
+
+
+test_that("validate_tentative_distribution validates tentative_dist is of correct type", {
+
+    args <- list(
+      dist_name = VONMISES,
+      tentative_dist = get_sample_tentative_distribution(dist_name = VONMISES,
+                                                         column = "cos_ta_")
+      )
+
+    expect_no_error(validate_tentative_distribution(args))
+})
+
+
+
+test_that("validate_tentative_distribution validates tentative_dist is of incorrect type", {
+
+  args <- list(
+    dist_name = VONMISES,
+    tentative_dist = 123
+  )
+
+  expect_error(validate_tentative_distribution(args), "arg 'tentative_dist' must be of clas 'amt_distr'")
+})
+
+
 
 test_that("get_coefs non-special characters", {
   coefs <- get_mock_coefs(dist_name = GAMMA)
@@ -237,6 +295,24 @@ test_that("validate_coef_names fails non-numeric coef data", {
 
 test_that("validate_coef_names succeeds", {
 })
+
+
+test_that("validate_base_args fails tentative_dist NULL", {
+  model <- get_sample_models()[["vonmises"]]
+  dist_name <- VONMISES
+
+  args <- list(
+    model = model,
+    dist_name = dist_name,
+    cos_ta_ = "cos_ta_",
+    tentative_dist = NULL
+  )
+
+  expect_error(
+    validate_base_args(args),
+    "arg 'tentative_dist' must not be null for distribution vonmises. See amt::fit_distr.")
+})
+
 
 
 test_that("validate_base_args fails non-glmmTMB model", {
