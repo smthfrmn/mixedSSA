@@ -95,14 +95,36 @@ get_fisher_data_quantiles <- function() {
 
 
 get_sample_simple_models <- function(data = get_sample_fisher_data()) {
-  models <- hash(
-    "gamma" = glmmTMB(case_ ~ sl_ + log_sl_, data = data),
-    "exp" = glmmTMB(case_ ~ sl_, data = data),
-    "hnorm" = glmmTMB(case_ ~ sl_sq_, data = data),
-    "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_, data = data),
-    "vonmises" = glmmTMB(case_ ~ cos_ta_, data = data),
-    "unif" = glmmTMB(case_ ~ cos_ta_, data = data)
-  )
+  # models <- hash(
+  #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_, data = data),
+  #   "exp" = glmmTMB(case_ ~ sl_, data = data),
+  #   "hnorm" = glmmTMB(case_ ~ sl_sq_, data = data),
+  #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_, data = data),
+  #   "vonmises" = glmmTMB(case_ ~ cos_ta_, data = data),
+  #   "unif" = glmmTMB(case_ ~ cos_ta_, data = data)
+  # )
+
+  file_path <- str_interp("${get_data_path_root()}/models/simple_models.rds")
+  # saveRDS(models, file = file_path)
+  models <- readRDS(file_path)
+
+  return(models)
+}
+
+
+get_sample_simple_mixed_models <- function(data = get_sample_fisher_data()) {
+  # models <- hash(
+  #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + (0 + sl_ + log_sl_ | id), data = data),
+  #   "exp" = glmmTMB(case_ ~ sl_ + (0 + sl_ | id), data = data),
+  #   "hnorm" = glmmTMB(case_ ~ sl_sq_ + (0 + sl_sq_ | id), data = data),
+  #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ + (0 + log_sl_ + log_sl_sq_ | id), data = data),
+  #   "vonmises" = glmmTMB(case_ ~ cos_ta_ + (0 + cos_ta_ | id), data = data),
+  #   "unif" = glmmTMB(case_ ~ cos_ta_ + (0 + cos_ta_ | id), data = data)
+  # )
+
+  file_path <- str_interp("${get_data_path_root()}/models/mixed/simple_models.rds")
+  # saveRDS(models, file = file_path)
+  models <- readRDS(file_path)
 
   return(models)
 }
@@ -257,11 +279,25 @@ get_sample_tentative_distribution <- function(dist_name = "gamma", column = "sl_
 
 
 get_mock_coefs <- function(dist_name, interaction_var_name = "sex") {
-  model <- get_sample_models(interaction_var_name = interaction_var_name)[[dist_name]]
+  if(is.null(interaction_var_name)) {
+    model <- get_sample_simple_models()[[dist_name]]
+  } else {
+    model <- get_sample_models(
+      interaction_var_name = interaction_var_name)[[dist_name]]
+  }
 
   coefs <- glmmTMB::fixef(model)$cond
   mock_coefs <- coefs * 0 + c(1:length(coefs))
   mock_coefs <- as.data.frame(t(unlist(mock_coefs)))
+  return(mock_coefs)
+}
+
+
+get_simple_mock_mixed_coefs <- function(dist_name) {
+  model <- get_sample_simple_mixed_models()[[dist_name]]
+  coefs <- get_coefs_from_model(model, "id")
+
+  mock_coefs <- coefs * 0 + c(1:nrow(coefs))
   return(mock_coefs)
 }
 

@@ -1,25 +1,25 @@
 #' @import tibble
-get_coefs_tibble <- function(coefs, coef_names, random_effects_var_name) {
+get_non_interaction_coefs <- function(coefs, coef_names, random_effects_var_name) {
   coefs_tibble <- tibble()
 
   for (i in 1:length(coef_names)) {
-    coef_name <- coef_names[i]
+    target_coef_name <- coef_names[i]
+
     args_tibble <- get_coefs(
       coefs = coefs,
-      coef_name = coef_name,
+      coef_name = target_coef_name,
       interaction_var_name = NULL
     ) %>%
       tibble::as_tibble() %>%
       dplyr::rename(
-        "coef_value" = coef_name
+        "coef_value" = sym(target_coef_name)  # sym to repress warning
       )
 
-    args_tibble$coef_name <- coef_name
+    args_tibble$coef_name <- target_coef_name
 
     if(!is.null(random_effects_var_name)) {
-      args_tibble[[random_effects_var_name]] <- rownames(target_coefs)
+      args_tibble[[random_effects_var_name]] <- rownames(coefs)
     }
-    browser()
 
     coefs_tibble <- rbind(coefs_tibble, args_tibble)
   }
@@ -40,13 +40,12 @@ update_dist_non_interaction <- function(model,
                                         coef_names,
                                         tentative_dist) {
 
-  browser()
   coefs <- get_coefs_from_model(
     model = model,
     random_effects_var_name = random_effects_var_name
   )
 
-  coefs_tibble <- get_coefs_tibble(
+  coefs_tibble <- get_non_interaction_coefs(
     coefs = coefs,
     coef_names = coef_names,
     random_effects_var_name = random_effects_var_name
