@@ -5,6 +5,7 @@
 5. Only allow quantiles to be passed if for continuous variable
 6. Validate random effects var
 7. Fill in empty tests
+8. Make grouping standard heading for interaction_var_name
 
 
 Working TODO:

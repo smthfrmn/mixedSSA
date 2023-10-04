@@ -24,6 +24,8 @@ get_coefs_tibble <- function(coefs, coef_names, random_effects_var_name) {
     coefs_tibble <- rbind(coefs_tibble, args_tibble)
   }
 
+  coefs_tibble <- coefs_tibble %>%
+    add_column(grouping = NA, .before = "coef_value")
   return(coefs_tibble)
 }
 

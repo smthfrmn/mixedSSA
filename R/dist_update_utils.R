@@ -411,10 +411,12 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
   update_fn <- update_fn_and_args$fn
   update_fn_arg_names <- update_fn_and_args$args
 
+  browser()
   # rename the column headers to match the amt arg names
   param_names <- update_fn_arg_names[2:length(update_fn_arg_names)]
   col_names <- colnames(pivoted_args_tibble)
-  new_col_names <- c(col_names[1:(length(col_names) - length(param_names))], param_names)
+  new_col_names <- c(col_names[1:(length(col_names) - length(param_names))],
+                     param_names)
   colnames(pivoted_args_tibble) <- new_col_names
 
   all_updated_parameters <- apply(

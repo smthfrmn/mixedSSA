@@ -117,21 +117,21 @@ update_dist <- function(model,
                         tentative_dist = NULL,
                         quantiles = DEFAULT_QUANTILES) {
 
-  browser()
-  args <- as.list(match.call())[-1]
-  formal_args <- formals(update_dist)[c(-1, -2)]
+  args <- lapply(as.list(match.call())[-1],
+                 function(x) tryCatch(eval(x), error=function(z) x))
+  formal_args <- lapply(formals(update_dist)[c(-1, -2)],
+                        function(x) tryCatch(eval(x), error=function(z) x))
 
-  # TODO: DEAL WITH THIS
+  # TODO: Check tentative dist works
   keys <- unique(c(names(args), names(formal_args)))
-  args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)
-  args <- lapply(args, function(x) tryCatch(eval(x), error=function(z) x))
-  args$tentative_dist <- eval(args$tentative_dist)
+  combined_args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)
+  combined_args$tentative_dist <- eval(args$tentative_dist)
+  combined_args$model <- args$model
 
-
-  validate_base_args(args)
+  validate_base_args(combined_args)
 
   update_dist_fn <- get_update_dist_fn(model, interaction_var_name)
-  update_dist_args <- get_update_dist_args(args)
+  update_dist_args <- get_update_dist_args(combined_args)
 
   updated_dist_parameters <- do.call(update_dist_fn, args = update_dist_args)
   return(updated_dist_parameters)
