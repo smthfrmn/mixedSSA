@@ -1,6 +1,5 @@
-#' @import tibble
-get_non_interaction_coefs <- function(coefs, coef_names, random_effects_var_name) {
-  coefs_tibble <- tibble()
+get_no_interaction_coefs <- function(coefs, coef_names, random_effects_var_name) {
+  coefs_tibble <- tibble::tibble()
 
   for (i in 1:length(coef_names)) {
     target_coef_name <- coef_names[i]
@@ -25,16 +24,14 @@ get_non_interaction_coefs <- function(coefs, coef_names, random_effects_var_name
   }
 
   coefs_tibble <- coefs_tibble %>%
-    add_column(grouping = NA, .before = "coef_value")
+    tibble::add_column(grouping = NA, .before = "coef_value")
   return(coefs_tibble)
 }
 
 
 
 #' @noRd
-#' @import dplyr
-#' @import amt
-update_dist_non_interaction <- function(model,
+update_dist_no_interaction <- function(model,
                                         dist_name,
                                         coef_names,
                                         random_effects_var_name,
@@ -45,7 +42,7 @@ update_dist_non_interaction <- function(model,
     random_effects_var_name = random_effects_var_name
   )
 
-  coefs_tibble <- get_non_interaction_coefs(
+  coefs_tibble <- get_no_interaction_coefs(
     coefs = coefs,
     coef_names = coef_names,
     random_effects_var_name = random_effects_var_name

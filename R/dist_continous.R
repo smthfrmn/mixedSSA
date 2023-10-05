@@ -1,7 +1,6 @@
 DEFAULT_QUANTILES <- c(0.05, 0.5, 0.75, 0.95)
 
 
-#' @import assertive
 validate_continuous_args <- function(quantiles) {
   if (any(quantiles > 1 | quantiles < 0)) {
     stop("argument 'quantiles' must be a numeric vector containing values between 0 and 1, e.g c(0.2, 0.4, 0.8)")
@@ -24,7 +23,6 @@ get_quantiles_coef_values <- function(interaction_data, quantiles,
 }
 
 
-#' @import tibble
 get_quantile_coefs <- function(interaction_data, coefs,
                                coef_name, random_effects_var_name,
                                interaction_var_name, quantiles) {
@@ -56,10 +54,9 @@ get_quantile_coefs <- function(interaction_data, coefs,
 }
 
 
-#' @import tibble
 get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
                                    random_effects_var_name, interaction_var_name, quantiles) {
-  quantile_coefs_tibble <- tibble()
+  quantile_coefs_tibble <- tibble::tibble()
 
   for (i in 1:length(coef_names)) {
     coef_name <- coef_names[i]
@@ -82,8 +79,6 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 
 
 #' @noRd
-#' @import dplyr
-#' @import amt
 update_dist_by_continuous_var <- function(model,
                                           dist_name,
                                           random_effects_var_name,

@@ -1,5 +1,5 @@
 Package: mixedSSA
-Title: Utilities for interpreting mixed ISSA models.
+Title: Utilities for interpreting mixed ISSA models
 Version: 1.0.0
 Authors@R: 
     person("Smith", "Freeman", , "smithifreeman@gmail.com", role = c("aut", "cre"),
@@ -13,18 +13,18 @@ Imports:
     glmmTMB,
     methods,
     stringr,
+    stats,
     tidyr,
     tibble,
-    stats,
-    berryFunctions,
     hash,
-    extraDistr,
+    berryFunctions,
     utils
 Suggests: 
     testthat (>= 3.0.0),
     usethis,
     mockr,
-    here
+    here,
+    R.utils
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

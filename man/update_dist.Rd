@@ -15,7 +15,7 @@ update_dist(
   random_effects_var_name = NULL,
   interaction_var_name = NULL,
   tentative_dist = NULL,
-  quantiles = DEFAULT_QUANTILES
+  quantiles = NULL
 )
 }
 \arguments{
@@ -37,6 +37,8 @@ update_dist(
 
 \item{interaction_var_name}{The string name of the variable in your model that is interacted with the movement variables. Can be a categorical or numerical variable.}
 
+\item{tentative_dist}{a tentative distribution fit using amt:fit_distr, required when dist_name is 'lnorm', 'hnorm', or 'vonmises'.}
+
 \item{quantiles}{A number vector containing the quantiles of the given interaction variable for which you want to calculate new distribution parameters. Must be between 0 and 1. Only relevant if the string passed to \code{interaction_var_name} points to a numeric variable.}
 }
 \value{
@@ -47,9 +49,9 @@ Update movement distributions based on fitted models
 }
 \examples{
 
-#data <- get_sample_fisher_data()
+fisher_data <- get_sample_fisher_data()
 
-model <- glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = data)
+model <- glmmTMB::glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = fisher_data)
 updated_params <- update_dist(model,
   dist_name = "gamma",
   interaction_var_name = "sex",
@@ -57,19 +59,27 @@ updated_params <- update_dist(model,
   beta_log_sl = "log_sl_"
 )
 
-model <- glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = data)
+model <- glmmTMB::glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = fisher_data)
+tentative_dist_data <- fisher_data \%>\%
+  dplyr::filter(case_ == TRUE) \%>\%
+  dplyr::pull("cos_ta_")
+
+tentative_dist <- fit_distr(tentative_dist_data, dist_name = "vonmises", na.rm = TRUE)
 updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
-  interaction_var_name = "elevation",
-  beta_cos_ta = "cos_ta_"
+  beta_cos_ta = "cos_ta_",
+  tentative_dist = tentative_dist
 )
 
-model <- glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = data)
+model <- glmmTMB::glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = fisher_data)
 updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
   random_effects_var_name = "id",
-  beta_cos_ta = "cos_ta_"
+  beta_cos_ta = "cos_ta_",
+  tentative_dist = tentative_dist
 )
+
+updated_params@updated_parameters
 }

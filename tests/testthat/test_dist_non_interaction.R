@@ -1,4 +1,4 @@
-test_that("get_non_interaction_coefs", {
+test_that("get_no_interaction_coefs", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
 
@@ -20,7 +20,7 @@ test_that("get_non_interaction_coefs", {
       coef_name = coef_names
     )
 
-    actual_tibble <- get_non_interaction_coefs(
+    actual_tibble <- get_no_interaction_coefs(
       coefs = mock_coefs,
       coef_name = coef_names,
       random_effects_var_name = NULL
@@ -34,7 +34,7 @@ test_that("get_non_interaction_coefs", {
 })
 
 
-test_that("get_non_interaction_coefs with random_effects", {
+test_that("get_no_interaction_coefs with random_effects", {
   dists <- get_supported_distributions()
 
   for (i in 1:length(dists)) {
@@ -50,7 +50,7 @@ test_that("get_non_interaction_coefs with random_effects", {
       id = rep(c("F1", "F2", "M1", "M4"), length(coef_names))
     )
 
-    actual_tibble <- get_non_interaction_coefs(
+    actual_tibble <- get_no_interaction_coefs(
       coefs = mock_coefs,
       coef_name = coef_names,
       random_effects_var_name = "id"

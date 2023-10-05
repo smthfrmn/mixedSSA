@@ -1,7 +1,3 @@
-# TODO:
-# - include random effects in update functions
-# - add unif distribution support
-
 get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
   interaction_coef_names <- names(interaction_coefs)
 
@@ -14,7 +10,6 @@ get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
 }
 
 
-#' @import tibble
 get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name, random_effects_var_name) {
   target_coefs <- get_coefs(
     coefs = coefs,
@@ -22,14 +17,13 @@ get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name, rand
     interaction_var_name = interaction_var_name
   )
 
-  # categories <- get_categories_from_coefs(interaction_coefs, interaction_var_name)
   all_categories <- levels(model$frame[[interaction_var_name]])
   reference_category <- all_categories[1]
   non_ref_categories <- all_categories[2:length(all_categories)]
 
   nrows <- length(all_categories) * nrow(target_coefs)
 
-  reference_category_rows <- tibble(
+  reference_category_rows <- tibble::tibble(
     category = reference_category,
     coef_name = coef_name,
     coef_value = target_coefs[[coef_name]]
@@ -59,9 +53,8 @@ get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name, rand
 }
 
 
-#' @import tibble
 get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
-  summed_coefs_tibble <- tibble()
+  summed_coefs_tibble <- tibble::tibble()
 
   for (i in 1:length(coef_names)) {
     coef_name <- coef_names[i]
@@ -93,8 +86,6 @@ get_coefs_from_model <- function(model, random_effects_var_name) {
 
 
 #' @noRd
-#' @import dplyr
-#' @import amt
 update_dist_by_categorical_var <- function(model,
                                            dist_name,
                                            random_effects_var_name,

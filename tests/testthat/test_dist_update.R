@@ -223,7 +223,7 @@ test_that("update_dist categorical no random effects", {
 })
 
 
-test_that("update_dist non_interaction random effects", {
+test_that("update_dist no_interaction random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
   models <- get_sample_simple_mixed_models()
@@ -276,7 +276,7 @@ test_that("update_dist non_interaction random effects", {
 })
 
 
-test_that("update_dist non_interaction random effects", {
+test_that("update_dist no_interaction random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
   models <- get_sample_simple_models()

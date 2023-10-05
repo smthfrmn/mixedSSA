@@ -1,5 +1,5 @@
 1. [DONE] Enforce passing tentative distribution for turn angles (and other non transformable distributions)
-2. Support non-interaction models
+2. [DONE] Support non-interaction models
 3. Pass explicit parameter for type of interaction variable
 4. Support uniform distributions
 5. Only allow quantiles to be passed if for continuous variable
