@@ -36,8 +36,8 @@ get_non_interaction_coefs <- function(coefs, coef_names, random_effects_var_name
 #' @import amt
 update_dist_non_interaction <- function(model,
                                         dist_name,
-                                        random_effects_var_name,
                                         coef_names,
+                                        random_effects_var_name,
                                         tentative_dist) {
 
   coefs <- get_coefs_from_model(

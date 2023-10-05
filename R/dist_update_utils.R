@@ -11,11 +11,13 @@ STEP_LENGTH_DISTRIBUTIONS <- c(GAMMA, EXP, HNORM, LNORM)
 # TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES, UNIF)
 TURN_ANGLE_DISTRIBUTIONS <- c(VONMISES)
 
-
 SUPPORTED_DISTRIBUTIONS <- c(
   STEP_LENGTH_DISTRIBUTIONS,
   TURN_ANGLE_DISTRIBUTIONS
 )
+
+NEED_TENTATIVE_DIST <- c(HNORM, LNORM, VONMISES)
+
 
 UPDATED_DISTRIBUTION_PARAMETERS <- "updatedDistributionParameters"
 
@@ -314,7 +316,6 @@ validate_base_args <- function(args) {
 
 
 validate_tentative_distribution <- function(args) {
-  NEED_TENTATIVE_DIST <- c(HNORM, LNORM, VONMISES)
 
   dist_name <- args$dist_name
   tentative_dist <- args$tentative_dist
@@ -477,7 +478,7 @@ get_coefs <- function(coefs, coef_name, interaction_var_name) {
 }
 
 
-get_coefs_from_model <- function(model, random_effects_var_name) {
+get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
   if (is.null(random_effects_var_name)) {
     fixed_effects <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
     return(fixed_effects)

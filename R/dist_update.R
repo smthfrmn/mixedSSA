@@ -5,6 +5,10 @@ is_categorical <- function(model, interaction_var_name) {
 
 
 is_continuous <- function(model, interaction_var_name) {
+  if(is_null(interaction_var_name)) {
+    return(FALSE)
+  }
+
   interaction_var <- model$frame[[interaction_var_name]]
   return(is.numeric(interaction_var))
 }
@@ -44,10 +48,15 @@ get_update_dist_args <- function(args) {
     tentative_dist = args$tentative_dist
   )
 
-  if (!is.null(args$interaction_var_name)) {
-    update_dist_args <- args$interaction_var_name
-    if (is_continuous(args$model, args$interaction_var_name)) {
+  if (!is_null(args$interaction_var_name)) {
+    update_dist_args$interaction_var_name = args$interaction_var_name
+  }
+
+  if (is_continuous(args$model, args$interaction_var_name)) {
+    if (!is_null(args$quantiles)) {
       update_dist_args$quantiles <- args$quantiles
+    } else {
+      update_dist_args$quantiles <- DEFAULT_QUANTILES
     }
   }
 
@@ -115,14 +124,13 @@ update_dist <- function(model,
                         random_effects_var_name = NULL,
                         interaction_var_name = NULL,
                         tentative_dist = NULL,
-                        quantiles = DEFAULT_QUANTILES) {
+                        quantiles = NULL) {
 
   args <- lapply(as.list(match.call())[-1],
                  function(x) tryCatch(eval(x), error=function(z) x))
   formal_args <- lapply(formals(update_dist)[c(-1, -2)],
                         function(x) tryCatch(eval(x), error=function(z) x))
 
-  # TODO: Check tentative dist works
   keys <- unique(c(names(args), names(formal_args)))
   combined_args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)
   combined_args$tentative_dist <- eval(args$tentative_dist)

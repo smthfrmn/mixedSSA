@@ -6,6 +6,7 @@
 6. Validate random effects var
 7. Fill in empty tests
 8. Make grouping standard heading for interaction_var_name
+9. Make random effects standard heading for random_effects_var_name
 
 
 Working TODO:
