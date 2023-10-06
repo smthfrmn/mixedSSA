@@ -49,9 +49,13 @@ Update movement distributions based on fitted models
 }
 \examples{
 
-fisher_data <- get_sample_fisher_data()
+library(dplyr)
+library(amt)
+library(glmmTMB)
 
-model <- glmmTMB::glmmTMB(case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = fisher_data)
+model <- glmmTMB(
+  case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = mixedssa_fisher)
+
 updated_params <- update_dist(model,
   dist_name = "gamma",
   interaction_var_name = "sex",
@@ -59,12 +63,16 @@ updated_params <- update_dist(model,
   beta_log_sl = "log_sl_"
 )
 
-model <- glmmTMB::glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation, data = fisher_data)
-tentative_dist_data <- fisher_data \%>\%
+model <- glmmTMB(
+  case_ ~ cos_ta_ + cos_ta_:elevation, data = mixedssa_fisher)
+
+tentative_dist_data <- mixedssa_fisher \%>\%
   dplyr::filter(case_ == TRUE) \%>\%
   dplyr::pull("cos_ta_")
 
-tentative_dist <- fit_distr(tentative_dist_data, dist_name = "vonmises", na.rm = TRUE)
+tentative_dist <- fit_distr(
+  tentative_dist_data, dist_name = "vonmises", na.rm = TRUE)
+
 updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
@@ -72,7 +80,10 @@ updated_params <- update_dist(model,
   tentative_dist = tentative_dist
 )
 
-model <- glmmTMB::glmmTMB(case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id), data = fisher_data)
+model <- glmmTMB(
+  case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id),
+  data = mixedssa_fisher)
+
 updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
