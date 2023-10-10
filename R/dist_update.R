@@ -95,7 +95,7 @@ get_update_dist_args <- function(args) {
 #' library(glmmTMB)
 #'
 #' model <- glmmTMB(
-#'   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = mixedssa_fisher)
+#'   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = mixedssa_fisher_data)
 #'
 #' updated_params <- update_dist(model,
 #'   dist_name = "gamma",
@@ -105,9 +105,9 @@ get_update_dist_args <- function(args) {
 #' )
 #'
 #' model <- glmmTMB(
-#'   case_ ~ cos_ta_ + cos_ta_:elevation, data = mixedssa_fisher)
+#'   case_ ~ cos_ta_ + cos_ta_:elevation, data = mixedssa_fisher_data)
 #'
-#' tentative_dist_data <- mixedssa_fisher %>%
+#' tentative_dist_data <- mixedssa_fisher_data %>%
 #'   dplyr::filter(case_ == TRUE) %>%
 #'   dplyr::pull("cos_ta_")
 #'
@@ -123,7 +123,7 @@ get_update_dist_args <- function(args) {
 #'
 #' model <- glmmTMB(
 #'   case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id),
-#'   data = mixedssa_fisher)
+#'   data = mixedssa_fisher_data)
 #'
 #' updated_params <- update_dist(model,
 #'   dist_name = "vonmises",
