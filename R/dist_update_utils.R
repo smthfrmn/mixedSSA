@@ -86,7 +86,6 @@ get_update_fn_nvars <- function(dist_name) {
 }
 
 
-#' @importFrom assertive is_numeric
 validate_coef_names <- function(args) {
   dist_name <- args$dist_name
   model <- args$model
@@ -113,7 +112,7 @@ validate_coef_names <- function(args) {
   }
 
   sapply(coef_names, function(coef_name) {
-    if (!is_numeric(model$frame[[coef_name]])) {
+    if (!is.numeric(model$frame[[coef_name]])) {
       stop("distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the parameter arguments.")
     }
   })
@@ -122,10 +121,9 @@ validate_coef_names <- function(args) {
 }
 
 
-#' @importFrom assertive is_a_string
 validate_interaction_coefficients <- function(model, interaction_var_name) {
   if (!is.null(interaction_var_name)) {
-    if (!is_a_string(interaction_var_name)) {
+    if (!(is.character(interaction_var_name) & length(interaction_var_name) == 1)) {
       stop(stringr::str_interp("argument 'interaction_var_name' must be a string."))
     }
 
