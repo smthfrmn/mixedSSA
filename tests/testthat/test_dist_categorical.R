@@ -2,7 +2,7 @@
 # - add other random effects tests
 
 
-test_that("get_summed_coefs_all_new", {
+test_that("get_summed_coefs_all", {
   dists <- get_supported_distributions()
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
@@ -31,7 +31,7 @@ test_that("get_summed_coefs_all_new", {
         arrange(coef_value)
     }
 
-    actual_tibble <- get_summed_coefs_all_new(
+    actual_tibble <- get_summed_coefs_all(
       model = model,
       coefs = mock_coefs,
       coef_names = coef_names,
@@ -91,61 +91,6 @@ test_that("update_dist_by_categorical_var with interaction", {
     expect_equal(results, expected_results)
   }
 })
-
-
-test_that("update_dist_by_categorical_var with interaction and random effects", {
-
-  # this is a legacy test leftover from before I realized having an interaction with sex
-  # and an id random effect makes no sense. But leaving it in because I know it passes.
-  dists <- get_supported_distributions()
-  data <- get_sample_fisher_data()
-  models <- get_sample_mixed_models(
-    data = data,
-    interaction_var_name = "sex"
-  )
-
-
-  for (i in 1:length(dists)) {
-    dist_name <- dists[i]
-    model <- models[[dist_name]]
-
-    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
-
-    mockr::local_mock(
-      fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
-    )
-
-    results <- update_dist_by_categorical_var(
-      model = model,
-      dist_name = dist_name,
-      random_effects_var_name = "id",
-      interaction_var_name = "sex",
-      coef_names = get_default_coef_names(dist_name),
-      tentative_dist = NULL
-    )
-
-    file_path <- here(str_interp(
-      "${get_data_path_root()}/expected/categorical/legacy_mixed/${dist_name}.rds"
-    ))
-
-
-    expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
-
-    expected_results_tibble <- readRDS(file_path)
-    expected_results <- updatedDistributionParameters(
-      updated_parameters = expected_results_tibble,
-      distribution_name = dist_name,
-      grouping = "category",
-      random_effect = "id",
-      interaction_var = "sex",
-      movement_data = expected_movement_data,
-      model = model
-    )
-
-    expect_equal(results, expected_results)
-  }
-})
-
 
 
 test_that("update_dist_by_categorical_var with interaction with more than two categories", {
@@ -246,4 +191,3 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
     expect_equal(results, expected_results)
   }
 })
-

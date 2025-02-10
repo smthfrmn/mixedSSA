@@ -1,96 +1,3 @@
-# get_categories_from_coefs <- function(interaction_coefs, interaction_var_name) {
-#   interaction_coef_names <- names(interaction_coefs)
-#
-#   categories <- sapply(interaction_coef_names, function(name) {
-#     regex_str <- stringr::str_interp("(?<=:${interaction_var_name}).*")
-#     return(stringr::str_extract(name, stringr::regex(regex_str)))
-#   })
-#
-#   return(unname(categories))
-# }
-
-
-
-
-
-# get_summed_coefs <- function(model, coefs, coef_name, interaction_var_name, random_effects_var_name) {
-#   target_coefs <- get_coefs(
-#     coefs = coefs,
-#     coef_name = coef_name,
-#     interaction_var_name = interaction_var_name
-#   )
-#
-#   all_categories <- levels(model$frame[[interaction_var_name]])
-#
-#   reference_category <- all_categories[1]
-#   non_ref_categories <- all_categories[2:length(all_categories)]
-#
-#   nrows <- length(all_categories) * nrow(target_coefs)
-#
-#   reference_category_val <- target_coefs[[coef_name]]
-#   reference_category_rows <- tibble::tibble(
-#     category = reference_category,
-#     coef_name = coef_name,
-#     coef_value = reference_category_val
-#   )
-#
-#   if (!is.null(random_effects_var_name)) {
-#     reference_category_rows[[random_effects_var_name]] <- rownames(target_coefs)
-#   }
-#
-#   target_coef_sums <- reference_category_val + unlist(target_coefs[2:length(all_categories)], use.names = F)
-#   non_reference_category_rows <- tibble(
-#     category = rep(non_ref_categories, each = length(reference_category_val)),
-#     coef_name = coef_name,
-#     coef_value = target_coef_sums
-#   )
-#
-#   if (!is.null(random_effects_var_name)) {
-#     non_reference_category_rows[[random_effects_var_name]] <- rep(rownames(target_coefs), length(non_ref_categories))
-#   }
-#
-#   args_tibble <- rbind(
-#     reference_category_rows,
-#     non_reference_category_rows
-#   )
-#
-#   return(args_tibble)
-# }
-
-
-# get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
-#   summed_coefs_tibble <- tibble::tibble()
-#
-#   for (i in 1:length(coef_names)) {
-#     coef_name <- coef_names[i]
-#     summed_coefs_tibble <- rbind(
-#       summed_coefs_tibble,
-#       get_summed_coefs_new(
-#         model = model,
-#         coefs = coefs,
-#         coef_name = coef_name,
-#         interaction_var_name = interaction_var_name,
-#         random_effects_var_name = random_effects_var_name
-#       )
-#     )
-#   }
-#
-#   return(summed_coefs_tibble)
-# }
-
-
-# get_coefs_from_model <- function(model, random_effects_var_name) {
-#   if (is.null(random_effects_var_name)) {
-#     fixed_effects <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
-#     return(fixed_effects)
-#   }
-#
-#   random_effects <- coef(model)$cond[[random_effects_var_name]]
-#   return(random_effects)
-# }
-
-
-
 get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
   coef_names_str <- paste(coef_names, collapse = "|")
   interaction_str <- gsub(
@@ -154,10 +61,10 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
 
   final_df <- rbind(
     all_coefs |>
-      dplyr::select(interaction_var, random_effect, coef_name, coef_value),
+      dplyr::select(random_effect, interaction_var, coef_name, coef_value),
     reference_class_df
   ) |>
-    arrange(match(interaction_var, all_categories), random_effect)
+    arrange(random_effect, match(interaction_var, all_categories))
 
 
   return(final_df)
@@ -171,7 +78,6 @@ update_dist_by_categorical_var <- function(model,
                                            interaction_var_name,
                                            coef_names,
                                            tentative_dist) {
-
   coefs <- get_coefs_from_model(model, random_effects_var_name)
 
   summed_coefs_tibble <- get_summed_coefs_all(

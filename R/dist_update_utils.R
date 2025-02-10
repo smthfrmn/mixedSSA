@@ -434,8 +434,9 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
   tentative_params <- tentative_dist$params
   tentative_row <- c(
+    ifelse(!is.null(random_effect_var_name), "typical_individual", NA),
     "tentative",
-    rep(NA, ncol(pivoted_args_tibble) - 1),
+    rep(NA, ncol(pivoted_args_tibble) - 2),
     unlist(tentative_params)
   )
 
@@ -479,30 +480,30 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 #   }
 # }
 
-# get_coefs <- function(coefs, coef_name, interaction_var_name) {
-#
-#   if (!is.null(interaction_var_name)) {
-#     regex_str <- gsub(
-#       "([.|()\\^{}+$*?]|\\[|\\])",
-#       "\\\\\\1",
-#       stringr::str_interp("${coef_name}:${interaction_var_name}")
-#     )
-#
-#     target_coefs <- coefs %>%
-#       dplyr::select(
-#         sym(coef_name) |
-#           matches(stringr::str_interp("^${regex_str}"))
-#       )
-#   } else {
-#     target_coefs <- coefs %>%
-#       dplyr::select(
-#         sym(coef_name))
-#   }
-#
-#   return(target_coefs)
-# }
-#
-#
+get_coefs <- function(coefs, coef_name, interaction_var_name) {
+
+  if (!is.null(interaction_var_name)) {
+    regex_str <- gsub(
+      "([.|()\\^{}+$*?]|\\[|\\])",
+      "\\\\\\1",
+      stringr::str_interp("${coef_name}:${interaction_var_name}")
+    )
+
+    target_coefs <- coefs %>%
+      dplyr::select(
+        sym(coef_name) |
+          matches(stringr::str_interp("^${regex_str}"))
+      )
+  } else {
+    target_coefs <- coefs %>%
+      dplyr::select(
+        sym(coef_name))
+  }
+
+  return(target_coefs)
+}
+
+
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
 
   coefs <- NULL
