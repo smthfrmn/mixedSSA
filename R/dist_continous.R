@@ -142,7 +142,6 @@ get_quantile_coefs_all_new <- function(interaction_data, coefs, coef_names,
     dplyr::select(interaction_var, random_effect, coef_name, coef_value) |>
     arrange(interaction_var, random_effect)
 
-  browser()
   return(final_df)
 }
 
