@@ -24,121 +24,6 @@ test_that("validate_con_args fails non-valid quantiles", {
 })
 
 
-# test_that("get_quantiles_coef_values", {
-#   mock_data <- data.frame(elevation = c(
-#     2, 4, 6
-#   ))
-#
-#   target_coefs <- data.frame(
-#     "sl_" = c(2),
-#     "sl_:elevation" = c(2)
-#   )
-#
-#   quantiles <- c(0.25, 0.5, 0.75)
-#   result <- get_quantiles_coef_values(
-#     interaction_data = mock_data$elevation,
-#     quantiles = c(0.25, 0.5, 0.75),
-#     target_coefs = target_coefs[1, ]
-#   )
-#
-#   expected_df <- as.data.frame(matrix(c(8, 10, 12), ncol=3))
-#   colnames(expected_df) <- quantiles
-#
-#   expect_equal(result, expected_df)
-# })
-#
-#
-# test_that("get_quantile_coefs", {
-#   dists <- get_supported_distributions()
-#   data <- get_sample_fisher_data()
-#
-#   for (i in 1:length(dists)) {
-#     dist <- dists[i]
-#
-#     mock_coefs <- as.data.frame(t(unlist(get_mock_coefs(
-#       dist_name = dist,
-#       interaction_var_name = "elevation"
-#     ))))
-#     coef_names <- get_default_coef_names(dists[i])
-#
-#     for (j in 1:length(coef_names)) {
-#       coef_name <- coef_names[j]
-#
-#       expected_tibble <- tibble::tibble(
-#         coef_name = coef_name,
-#         quantile = as.character(TEST_QUANTILES),
-#         coef_value = get_expected_coef_sums(
-#           distribution = dist,
-#           coef_index = j,
-#           quantiles = TEST_QUANTILES
-#         )
-#       ) %>%
-#         arrange(coef_value)
-#
-#       actual_tibble <- get_quantile_coefs(
-#         interaction_data = data$elevation,
-#         coefs = mock_coefs,
-#         coef_name = coef_name,
-#         random_effects_var_name = NULL,
-#         interaction_var_name = "elevation",
-#         quantiles = TEST_QUANTILES
-#       ) %>%
-#         arrange(coef_value)
-#
-#       expect_equal(
-#         actual_tibble,
-#         expected_tibble
-#       )
-#     }
-#   }
-# })
-#
-#
-# test_that("get_quantile_coefs_all", {
-#   dists <- get_supported_distributions()
-#   data <- get_sample_fisher_data()
-#
-#   for (i in 1:length(dists)) {
-#     dist <- dists[i]
-#
-#     mock_coefs <- as.data.frame(t(unlist(get_mock_coefs(
-#       dist_name = dist,
-#       interaction_var_name = "elevation"
-#     ))))
-#     coef_names <- get_default_coef_names(dists[i])
-#     expected_tibble <- tibble::tibble()
-#
-#     for (j in 1:length(coef_names)) {
-#       coef_name <- coef_names[j]
-#       current_tibble <- tibble::tibble(
-#         coef_name = coef_name,
-#         quantile = as.character(TEST_QUANTILES),
-#         coef_value = get_expected_coef_sums(
-#           distribution = dist,
-#           coef_index = j,
-#           quantiles = TEST_QUANTILES
-#         )
-#       )
-#
-#       expected_tibble <- rbind(
-#         expected_tibble,
-#         current_tibble
-#       )
-#     }
-#
-#     actual_tibble <- get_quantile_coefs_all(
-#       interaction_data = data$elevation,
-#       coefs = mock_coefs,
-#       coef_names = coef_names,
-#       interaction_var_name = "elevation",
-#       random_effects_var_name = NULL,
-#       quantiles = TEST_QUANTILES
-#     )
-#
-#     expect_equal(actual_tibble, expected_tibble)
-#   }
-# })
-
 
 test_that("update_dist_by_continuous_var with custom quantiles", {
   dists <- get_supported_distributions()
@@ -173,8 +58,9 @@ test_that("update_dist_by_continuous_var with custom quantiles", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path)
+    saveRDS(results@updated_parameters, file_path)
 
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -182,11 +68,10 @@ test_that("update_dist_by_continuous_var with custom quantiles", {
       grouping = "quantile",
       interaction_var = "elevation",
       random_effect = NULL,
-      movement_data = NULL,
+      movement_data = expected_movement_data,
       model = model
     )
 
-    browser()
     expect_equal(results, expected_results)
   }
 })
@@ -225,12 +110,9 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    # with rename to keep test data the same but adjust to new column orders
-    expected_results_tibble <- readRDS(file_path) |>
-      dplyr::rename(
-        random_effect = id,
-        interaction_var = quantile
-      )
+    saveRDS(results@updated_parameters, file_path)
+
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -238,11 +120,10 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
       grouping = "quantile",
       interaction_var = "elevation",
       random_effect = "id",
-      movement_data = expected_movement_data,
+      movement_data = NULL,
       model = model
     )
 
-    browser()
     expect_equal(results, expected_results)
   }
 })

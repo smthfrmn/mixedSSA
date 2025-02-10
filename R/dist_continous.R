@@ -139,9 +139,10 @@ get_quantile_coefs_all_new <- function(interaction_data, coefs, coef_names,
       quantile_multiplier = stats::quantile(interaction_data, probs = interaction_var, na.rm = T),
       coef_value = coef_base_value + (coef_value_add * quantile_multiplier)
     ) |>
-    dplyr::select(random_effect, interaction_var, coef_name, coef_value) |>
-    arrange(random_effect, interaction_var)
+    dplyr::select(interaction_var, random_effect, coef_name, coef_value) |>
+    arrange(interaction_var, random_effect)
 
+  browser()
   return(final_df)
 }
 

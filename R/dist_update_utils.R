@@ -434,8 +434,8 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
   tentative_params <- tentative_dist$params
   tentative_row <- c(
-    ifelse(!is.null(random_effect_var_name), "typical_individual", NA),
     "tentative",
+    ifelse(!is.null(random_effect_var_name), "typical_individual", NA),
     rep(NA, ncol(pivoted_args_tibble) - 2),
     unlist(tentative_params)
   )

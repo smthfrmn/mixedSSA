@@ -61,10 +61,10 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
 
   final_df <- rbind(
     all_coefs |>
-      dplyr::select(random_effect, interaction_var, coef_name, coef_value),
+      dplyr::select(interaction_var, random_effect, coef_name, coef_value),
     reference_class_df
   ) |>
-    arrange(random_effect, match(interaction_var, all_categories))
+    arrange(match(interaction_var, all_categories), random_effect, )
 
 
   return(final_df)
