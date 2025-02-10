@@ -387,7 +387,7 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 #' @importFrom utils type.convert
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, tentative_dist,
-                                   grouping = "category", random_effect_var_name = NULL,
+                                   grouping, random_effect_var_name = NULL,
                                    interaction_var_name = NULL) {
   pivoted_args_tibble <- coefs_tibble %>%
     tidyr::pivot_wider(
@@ -447,7 +447,10 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
       dplyr::bind_rows(all_updated_parameters)
     )
   ), as.is = TRUE) %>%
-    mutate(across(where(is.numeric), function(x) round(x, 6)))
+    mutate(across(where(is.numeric), function(x) round(x, 6))) |>
+    rename(
+      grouping = interaction_var  # every type of model uses generic heading 'grouping'
+    )
 
   updated_parameters <- updatedDistributionParameters(
     updated_parameters = updated_parameters_tibble,

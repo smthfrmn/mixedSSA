@@ -45,6 +45,8 @@ test_that("update_dist continuous random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "quantile",
+      interaction_var = "elevation",
+      random_effect = "id",
       movement_data = expected_movement_data,
       model = model
     )
@@ -101,6 +103,8 @@ test_that("update_dist continuous no random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "quantile",
+      interaction_var = "elevation",
+      random_effect = NULL,
       movement_data = expected_movement_data,
       model = model
     )
@@ -114,7 +118,8 @@ test_that("update_dist categorical random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
   models <- get_sample_mixed_models(
-    data = data
+    data = data,
+    interaction_var_name = "elevation_fact"
   )
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
@@ -129,7 +134,7 @@ test_that("update_dist categorical random effects", {
     args <- list(model = model,
                  dist_name = dist_name,
                  random_effects_var_name = "id",
-                 interaction_var_name = "sex")
+                 interaction_var_name = "elevation_fact")
 
     if(dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
@@ -158,6 +163,8 @@ test_that("update_dist categorical random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "category",
+      interaction_var = "elevation_fact",
+      random_effect = "id",
       movement_data = expected_movement_data,
       model = model
     )
@@ -214,6 +221,8 @@ test_that("update_dist categorical no random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "category",
+      interaction_var = "sex",
+      random_effect = NULL,
       movement_data = expected_movement_data,
       model = model
     )
@@ -267,16 +276,19 @@ test_that("update_dist no_interaction random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "no_interaction",
+      random_effect = NULL,
+      interaction_var = NULL,
       movement_data = expected_movement_data,
       model = model
     )
 
+    browser()
     expect_equal(results, expected_results)
   }
 })
 
 
-test_that("update_dist no_interaction random effects", {
+test_that("update_dist no_interaction no random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()
   models <- get_sample_simple_models()
@@ -319,6 +331,8 @@ test_that("update_dist no_interaction random effects", {
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
       grouping = "no_interaction",
+      random_effect = NULL,
+      interaction_var = NULL,
       movement_data = expected_movement_data,
       model = model
     )

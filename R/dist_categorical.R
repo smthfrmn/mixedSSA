@@ -39,7 +39,7 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
     ) |>
     mutate( # get the new values and the category for each row
       coef_value = coef_base_value + coef_value_add,
-      interaction_var = stringr::str_extract(coef_name_add, paste(
+      grouping = stringr::str_extract(coef_name_add, paste(
         all_categories[order(-nchar(all_categories))],
         collapse = "|"
       ))
@@ -53,7 +53,7 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
     ) |>
     distinct() |>
     mutate(
-      interaction_var = all_categories[[1]]
+      grouping = all_categories[[1]]
     ) |>
     rename(
       coef_value = coef_base_value
@@ -61,10 +61,10 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
 
   final_df <- rbind(
     all_coefs |>
-      dplyr::select(interaction_var, random_effect, coef_name, coef_value),
+      dplyr::select(grouping, random_effect, coef_name, coef_value),
     reference_class_df
   ) |>
-    arrange(match(interaction_var, all_categories), random_effect, )
+    arrange(match(grouping, all_categories), random_effect, )
 
 
   return(final_df)

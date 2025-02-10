@@ -129,18 +129,18 @@ get_quantile_coefs_all_new <- function(interaction_data, coefs, coef_names,
   )
 
   quantiles_df <- all_coefs |>
-    tidyr::expand(random_effect, interaction_var = quantiles)
+    tidyr::expand(random_effect, grouping = quantiles)
 
   final_df <- full_join(all_coefs, quantiles_df,
     by = "random_effect",
     relationship = "many-to-many"
   ) |>
     mutate(
-      quantile_multiplier = stats::quantile(interaction_data, probs = interaction_var, na.rm = T),
+      quantile_multiplier = stats::quantile(interaction_data, probs = grouping, na.rm = T),
       coef_value = coef_base_value + (coef_value_add * quantile_multiplier)
     ) |>
-    dplyr::select(interaction_var, random_effect, coef_name, coef_value) |>
-    arrange(interaction_var, random_effect)
+    dplyr::select(grouping, random_effect, coef_name, coef_value) |>
+    arrange(grouping, random_effect)
 
   return(final_df)
 }
@@ -180,7 +180,7 @@ update_dist_by_continuous_var <- function(model,
     coefs_tibble = quantile_coefs_tibble,
     tentative_dist = tentative_dist,
     grouping = "quantile",
-    interaction_var = interaction_var_name,
+    grouping = interaction_var_name,
     random_effect = random_effects_var_name
   )
 
