@@ -14,6 +14,11 @@ And the following turn angle distributions:
 - Von Mises
 - NOT SUPPORTED YET: uniform
 
+## Vignettes
+
+[Using MixedSSA to Update Movement Distribution Parameters
+from ISSA models](https://conservancy.umn.edu/server/api/core/bitstreams/5a2245ec-b285-4b2b-b749-e126165e168d/content): This vignette is paired with the methods paper [Modelling individual variability in habitat selection and movement using integrated step-selection analysis](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.14321) 
+
 ## Installing
 ```r
 devtools::install_github("smthfrmn/mixedSSA")
