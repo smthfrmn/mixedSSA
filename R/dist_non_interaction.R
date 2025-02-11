@@ -1,5 +1,4 @@
 get_no_interaction_coefs <- function(coefs, coef_names, random_effects_var_name) {
-
   if (!is.null(random_effects_var_name)) {
     random_effects <- rownames(coefs)
   } else {
@@ -25,11 +24,10 @@ get_no_interaction_coefs <- function(coefs, coef_names, random_effects_var_name)
 
 #' @noRd
 update_dist_no_interaction <- function(model,
-                                        dist_name,
-                                        coef_names,
-                                        random_effects_var_name,
-                                        tentative_dist) {
-
+                                       dist_name,
+                                       coef_names,
+                                       random_effects_var_name,
+                                       tentative_dist) {
   coefs <- get_coefs_from_model(
     model = model,
     random_effects_var_name = random_effects_var_name
@@ -48,7 +46,7 @@ update_dist_no_interaction <- function(model,
     dist_name = dist_name,
     coefs_tibble = coefs_tibble,
     tentative_dist = tentative_dist,
-    grouping = "no_interaction",
+    grouping_type = "no_interaction",
     interaction_var = NULL,
     random_effect_var_name = random_effects_var_name
   )

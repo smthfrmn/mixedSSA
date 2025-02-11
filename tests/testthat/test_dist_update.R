@@ -12,26 +12,29 @@ test_that("update_dist continuous random effects", {
 
     mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
-    args <- list(model = model,
-                 dist_name = dist_name,
-                 random_effects_var_name = "id",
-                 interaction_var_name = "elevation",
-                 quantiles = TEST_QUANTILES)
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      random_effects_var_name = "id",
+      interaction_var_name = "elevation",
+      quantiles = TEST_QUANTILES
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
 
     results <- do.call(update_dist, args = c(args, update_args))
@@ -74,25 +77,28 @@ test_that("update_dist continuous no random effects", {
 
     mockr::local_mock(fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column))
 
-    args <- list(model = model,
-                 dist_name = dist_name,
-                 interaction_var_name = "elevation",
-                 quantiles = TEST_QUANTILES)
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      interaction_var_name = "elevation",
+      quantiles = TEST_QUANTILES
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
 
     results <- do.call(update_dist, args = c(args, update_args))
@@ -104,7 +110,8 @@ test_that("update_dist continuous no random effects", {
 
     expected_results_tibble <- readRDS(file_path) |>
       rename(
-        grouping = interaction_var)
+        grouping = interaction_var
+      )
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -138,25 +145,28 @@ test_that("update_dist categorical random effects", {
       fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
-    args <- list(model = model,
-                 dist_name = dist_name,
-                 random_effects_var_name = "id",
-                 interaction_var_name = "elevation_fact")
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      random_effects_var_name = "id",
+      interaction_var_name = "elevation_fact"
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
 
     results <- do.call(update_dist, args = c(args, update_args))
@@ -199,24 +209,27 @@ test_that("update_dist categorical no random effects", {
       fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
-    args <- list(model = model,
-                 dist_name = dist_name,
-                 interaction_var_name = "sex")
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      interaction_var_name = "sex"
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
 
     results <- do.call(update_dist, args = c(args, update_args))
@@ -261,24 +274,27 @@ test_that("update_dist no_interaction random effects", {
       fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
-    args <- list(model = model,
-                 dist_name = dist_name,
-                 random_effects_var_name = "id")
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      random_effects_var_name = "id"
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
     results <- do.call(update_dist, args = c(args, update_args))
     file_path <- here(str_interp(
@@ -316,23 +332,26 @@ test_that("update_dist no_interaction no random effects", {
       fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
     )
 
-    args <- list(model = model,
-                 dist_name = dist_name)
+    args <- list(
+      model = model,
+      dist_name = dist_name
+    )
 
-    if(dist_name %in% NEED_TENTATIVE_DIST) {
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
       args$tentative_dist <- get_sample_tentative_distribution(
-        dist_name = dist_name, column = column)
+        dist_name = dist_name, column = column
+      )
       expected_movement_data <- NULL
     } else {
       expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
     }
 
     update_args <- switch(as.character(dist_name),
-                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
-                          "exp" = list(beta_sl = "sl_"),
-                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
-                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
-                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+      "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+      "exp" = list(beta_sl = "sl_"),
+      "hnorm" = list(beta_sl_sq = "sl_sq_"),
+      "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+      "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
     results <- do.call(update_dist, args = c(args, update_args))
     file_path <- here(str_interp(

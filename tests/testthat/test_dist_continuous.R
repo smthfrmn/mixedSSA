@@ -129,4 +129,3 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
     expect_equal(results, expected_results)
   }
 })
-

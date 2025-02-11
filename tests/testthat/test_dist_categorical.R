@@ -132,7 +132,8 @@ test_that("update_dist_by_categorical_var with interaction with more than two ca
 
     expected_results_tibble <- readRDS(file_path) |>
       rename( # for grouping rename
-        grouping = interaction_var)
+        grouping = interaction_var
+      )
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,

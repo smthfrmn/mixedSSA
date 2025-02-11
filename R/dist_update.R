@@ -45,7 +45,7 @@ get_update_dist_args <- function(args) {
   )
 
   if (!is.null(args$interaction_var_name)) {
-    update_dist_args$interaction_var_name = args$interaction_var_name
+    update_dist_args$interaction_var_name <- args$interaction_var_name
 
     if (is_continuous(args$model, args$interaction_var_name)) {
       if (!is.null(args$quantiles)) {
@@ -95,7 +95,9 @@ get_update_dist_args <- function(args) {
 #' library(glmmTMB)
 #'
 #' model <- glmmTMB(
-#'   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = mixedssa_fisher_data)
+#'   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex,
+#'   data = mixedssa_fisher_data
+#' )
 #'
 #' updated_params <- update_dist(model,
 #'   dist_name = "gamma",
@@ -105,14 +107,18 @@ get_update_dist_args <- function(args) {
 #' )
 #'
 #' model <- glmmTMB(
-#'   case_ ~ cos_ta_ + cos_ta_:elevation, data = mixedssa_fisher_data)
+#'   case_ ~ cos_ta_ + cos_ta_:elevation,
+#'   data = mixedssa_fisher_data
+#' )
 #'
 #' tentative_dist_data <- mixedssa_fisher_data %>%
 #'   dplyr::filter(case_ == TRUE) %>%
 #'   dplyr::pull("cos_ta_")
 #'
 #' tentative_dist <- fit_distr(
-#'   tentative_dist_data, dist_name = "vonmises", na.rm = TRUE)
+#'   tentative_dist_data,
+#'   dist_name = "vonmises", na.rm = TRUE
+#' )
 #'
 #' updated_params <- update_dist(model,
 #'   dist_name = "vonmises",
@@ -123,7 +129,8 @@ get_update_dist_args <- function(args) {
 #'
 #' model <- glmmTMB(
 #'   case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id),
-#'   data = mixedssa_fisher_data)
+#'   data = mixedssa_fisher_data
+#' )
 #'
 #' updated_params <- update_dist(model,
 #'   dist_name = "vonmises",
@@ -134,7 +141,6 @@ get_update_dist_args <- function(args) {
 #' )
 #'
 #' updated_params@updated_parameters
-
 update_dist <- function(model,
                         dist_name,
                         beta_sl = NULL,
@@ -146,11 +152,14 @@ update_dist <- function(model,
                         interaction_var_name = NULL,
                         tentative_dist = NULL,
                         quantiles = NULL) {
-
-  args <- lapply(as.list(match.call())[-1],
-                 function(x) tryCatch(eval(x), error=function(z) x))
-  formal_args <- lapply(formals(update_dist)[c(-1, -2)],
-                        function(x) tryCatch(eval(x), error=function(z) x))
+  args <- lapply(
+    as.list(match.call())[-1],
+    function(x) tryCatch(eval(x), error = function(z) x)
+  )
+  formal_args <- lapply(
+    formals(update_dist)[c(-1, -2)],
+    function(x) tryCatch(eval(x), error = function(z) x)
+  )
 
   keys <- unique(c(names(args), names(formal_args)))
   combined_args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)

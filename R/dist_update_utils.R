@@ -319,7 +319,6 @@ validate_base_args <- function(args) {
 
 
 validate_tentative_distribution <- function(args) {
-
   dist_name <- args$dist_name
   tentative_dist <- args$tentative_dist
 
@@ -389,7 +388,6 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, tentative_dist,
                                    grouping_type, random_effect_var_name = NULL,
                                    interaction_var_name = NULL) {
-
   pivoted_args_tibble <- coefs_tibble |>
     tidyr::pivot_wider(
       names_from = "coef_name",
@@ -421,8 +419,10 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
   # rename the column headers to match the amt arg names
   param_names <- update_fn_arg_names[2:length(update_fn_arg_names)]
   col_names <- colnames(pivoted_args_tibble)
-  new_col_names <- c(col_names[1:(length(col_names) - length(param_names))],
-                     param_names)
+  new_col_names <- c(
+    col_names[1:(length(col_names) - length(param_names))],
+    param_names
+  )
   colnames(pivoted_args_tibble) <- new_col_names
 
   all_updated_parameters <- apply(
@@ -491,7 +491,6 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
 
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
-
   coefs <- NULL
   if (is.null(random_effects_var_name)) {
     coefs <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))

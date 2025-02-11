@@ -9,8 +9,7 @@ validate_continuous_args <- function(quantiles) {
 
 
 get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
-                                       random_effects_var_name, interaction_var_name, quantiles) {
-
+                                   random_effects_var_name, interaction_var_name, quantiles) {
   coef_names_str <- paste(coef_names, collapse = "|")
   interaction_str <- gsub(
     "([.|()\\^{}+$*?]|\\[|\\])",
@@ -51,7 +50,7 @@ get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
 
 
   quantile_multipliers <- stats::quantile(interaction_data,
-                                          probs = quantiles, na.rm = T
+    probs = quantiles, na.rm = T
   )
 
   quantiles_df <- all_coefs |>

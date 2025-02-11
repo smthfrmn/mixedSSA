@@ -18,7 +18,8 @@ test_that("get_no_interaction_coefs", {
       coef_name = coef_names,
       coef_value = unlist(
         mock_coefs[1, 2:length(mock_coefs)],
-        use.names = F)
+        use.names = F
+      )
     )
 
     actual_tibble <- get_no_interaction_coefs(

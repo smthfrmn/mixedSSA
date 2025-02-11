@@ -18,7 +18,7 @@ test_that("get_movement_data", {
 
 test_that("validate_tentative_distribution validates not null", {
   distributions <- c(HNORM, LNORM, VONMISES)
-  for(i in 1:length(distributions)) {
+  for (i in 1:length(distributions)) {
     dist_name <- distributions[i]
 
     args <- list(
@@ -27,7 +27,8 @@ test_that("validate_tentative_distribution validates not null", {
     )
 
     expected_error_msg <- stringr::str_interp(
-      "arg 'tentative_dist' must not be null for distribution ${dist_name}. See amt::fit_distr.")
+      "arg 'tentative_dist' must not be null for distribution ${dist_name}. See amt::fit_distr."
+    )
     error <- expect_error(validate_tentative_distribution(args))
     expect_equal(error$message, expected_error_msg)
   }
@@ -36,7 +37,7 @@ test_that("validate_tentative_distribution validates not null", {
 
 test_that("validate_tentative_distribution validates null", {
   distributions <- c(GAMMA, EXP)
-  for(i in 1:length(distributions)) {
+  for (i in 1:length(distributions)) {
     dist_name <- distributions[i]
 
     args <- list(
@@ -51,20 +52,20 @@ test_that("validate_tentative_distribution validates null", {
 
 
 test_that("validate_tentative_distribution validates tentative_dist is of correct type", {
-
-    args <- list(
+  args <- list(
+    dist_name = VONMISES,
+    tentative_dist = get_sample_tentative_distribution(
       dist_name = VONMISES,
-      tentative_dist = get_sample_tentative_distribution(dist_name = VONMISES,
-                                                         column = "cos_ta_")
-      )
+      column = "cos_ta_"
+    )
+  )
 
-    expect_no_error(validate_tentative_distribution(args))
+  expect_no_error(validate_tentative_distribution(args))
 })
 
 
 
 test_that("validate_tentative_distribution validates tentative_dist is of incorrect type", {
-
   args <- list(
     dist_name = VONMISES,
     tentative_dist = 123
@@ -78,7 +79,7 @@ test_that("validate_tentative_distribution validates tentative_dist is of incorr
 test_that("get_coefs non-special characters", {
   coefs <- get_mock_coefs(dist_name = GAMMA)
   result <- get_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
-  expected_results <- as.data.frame(list(placeholder=2, placeholder2=4))
+  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 4))
   colnames(expected_results) <- c("sl_", "sl_:sexF")
   expect_equal(result, expected_results)
 })
@@ -93,7 +94,7 @@ test_that("get_interaction_coefs special characters in coef_name", {
     interaction_var_name = "sex"
   )
 
-  expected_results <- as.data.frame(list(placeholder=2, placeholder2=3))
+  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 3))
   colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sexF")
   expect_equal(result, expected_results)
 })
@@ -108,7 +109,7 @@ test_that("get_coefs special characters in coef_name and interaction_var_name", 
     coef_name = "cos(ta_)",
     interaction_var_name = "sex"
   )
-  expected_results <- as.data.frame(list(placeholder=2, placeholder2=3))
+  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 3))
   colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sex(F)")
 
   expect_equal(result, expected_results)
@@ -254,7 +255,6 @@ test_that("get_update_fn_nvars", {
 
 
 test_that("validate_coef_names fails missing parameters", {
-
   expected_error_msg <- "beta_sl not present, must pass for dist gamma."
   args <- list(model = NULL, dist_name = "gamma")
   expect_error(
@@ -265,7 +265,6 @@ test_that("validate_coef_names fails missing parameters", {
 
 
 test_that("validate_coef_names fails unmatching coefs", {
-
   model <- get_sample_models()[["gamma"]]
 
   expected_error_msg <- "distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that exist in the model with coefficients (Intercept), sl_, log_sl_, sl_:sexF, log_sl_:sexF."
@@ -282,10 +281,12 @@ test_that("validate_coef_names fails non-numeric coef data", {
 
   # artificially make non-numeric for check
   model$frame$sl_ <- as.character(model$frame$sl_)
-  args <- list(model = model,
-               dist_name = "gamma",
-               beta_sl = "sl_",
-               beta_log_sl = "log_sl_")
+  args <- list(
+    model = model,
+    dist_name = "gamma",
+    beta_sl = "sl_",
+    beta_log_sl = "log_sl_"
+  )
 
   error_msg <- "distribution parameter arguments (e.g. beta_sl, beta_log_sl) must be coefficient names that map to numeric data. Make sure you are passing either the name of the step length (e.g. sl_, log_sl_, sl_sq_) or turn angle (e.g. cos_ta_) movement coefficients in the parameter arguments."
   error <- expect_error(validate_coef_names(args))
@@ -310,7 +311,8 @@ test_that("validate_base_args fails tentative_dist NULL", {
 
   expect_error(
     validate_base_args(args),
-    "arg 'tentative_dist' must not be null for distribution vonmises. See amt::fit_distr.")
+    "arg 'tentative_dist' must not be null for distribution vonmises. See amt::fit_distr."
+  )
 })
 
 
@@ -319,12 +321,16 @@ test_that("validate_base_args fails non-glmmTMB model", {
   sample_data <- get_sample_fisher_data()
   dist_name <- "gamma"
   coef_names <- c("sl_", "log_sl_")
-  args <- list(model = "i am not a model",
-               dist_name = "gamma",
-               beta_sl = "sl_",
-               beta_log_sl = "log_sl_")
-  error <- expect_error(validate_base_args(args),
-                        "argument 'model' must be of class 'glmmTMB'")
+  args <- list(
+    model = "i am not a model",
+    dist_name = "gamma",
+    beta_sl = "sl_",
+    beta_log_sl = "log_sl_"
+  )
+  error <- expect_error(
+    validate_base_args(args),
+    "argument 'model' must be of class 'glmmTMB'"
+  )
 })
 
 
@@ -339,8 +345,10 @@ test_that("validate_base_args fails non-string interaction_var_name", {
     beta_log_sl = "log_sl_",
     interaction_var_name = 123
   )
-  error <- expect_error(validate_base_args(args),
-                        "argument 'interaction_var_name' must be a string")
+  error <- expect_error(
+    validate_base_args(args),
+    "argument 'interaction_var_name' must be a string"
+  )
 })
 
 
@@ -356,8 +364,10 @@ test_that("validate_base_args fails interaction_var_name not in model", {
     interaction_var_name = "foo-sex"
   )
 
-  error <- expect_error(validate_base_args(args),
-                        "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model.")
+  error <- expect_error(
+    validate_base_args(args),
+    "argument 'interaction_var_name' with value 'foo-sex' does not appear to be part of an interaction coefficient in the provided model."
+  )
 })
 
 
