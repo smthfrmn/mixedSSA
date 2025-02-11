@@ -5,8 +5,8 @@
 5. Only allow quantiles to be passed if for continuous variable
 6. Validate random effects var
 7. Fill in empty tests
-8. Make grouping standard heading for interaction_var_name
-9. Make random effects standard heading for random_effects_var_name
+8. [DONE] Make grouping standard heading for interaction_var_name
+9. [DONE] Make random effects standard heading for random_effects_var_name
 10. Add types to documentation per https://github.com/jmsigner/amt/commit/1be7e43aaf5c2c8795fabd2d04747b49fb4da043
 
 
