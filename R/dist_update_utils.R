@@ -28,7 +28,7 @@ updatedDistributionParameters <- setClass(
   slots = list(
     updated_parameters = "data.frame",
     distribution_name = "character",
-    grouping = "character",
+    grouping_type = "character",
     random_effect = "NULLorCharacter",
     interaction_var = "NULLorCharacter",
     movement_data = "ANY",
@@ -387,9 +387,10 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
 #' @importFrom utils type.convert
 get_updated_parameters <- function(model, movement_coef_name, dist_name,
                                    coefs_tibble, tentative_dist,
-                                   grouping, random_effect_var_name = NULL,
+                                   grouping_type, random_effect_var_name = NULL,
                                    interaction_var_name = NULL) {
-  pivoted_args_tibble <- coefs_tibble %>%
+
+  pivoted_args_tibble <- coefs_tibble |>
     tidyr::pivot_wider(
       names_from = "coef_name",
       values_from = "coef_value"
@@ -425,7 +426,7 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
   colnames(pivoted_args_tibble) <- new_col_names
 
   all_updated_parameters <- apply(
-    pivoted_args_tibble %>%
+    pivoted_args_tibble |>
       dplyr::select(all_of(param_names)),
     1, update_parameters,
     dist = tentative_dist,
@@ -446,16 +447,13 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
       pivoted_args_tibble,
       dplyr::bind_rows(all_updated_parameters)
     )
-  ), as.is = TRUE) %>%
-    mutate(across(where(is.numeric), function(x) round(x, 6))) |>
-    rename(
-      grouping = interaction_var  # every type of model uses generic heading 'grouping'
-    )
+  ), as.is = TRUE) |>
+    mutate(across(where(is.numeric), function(x) round(x, 6)))
 
   updated_parameters <- updatedDistributionParameters(
     updated_parameters = updated_parameters_tibble,
     distribution_name = dist_name,
-    grouping = grouping,
+    grouping_type = grouping_type,
     interaction_var = interaction_var_name,
     random_effect = random_effect_var_name,
     movement_data = movement_data,
@@ -467,44 +465,29 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
 
 
+
+# get_coefs <- function(coefs, coef_name, interaction_var_name) {
 #
-# get_all_coefs <- function(coefs, coef_names, interaction_var_name) {
-#   ncoef_names <- length(coef_names)
+#   if (!is.null(interaction_var_name)) {
+#     regex_str <- gsub(
+#       "([.|()\\^{}+$*?]|\\[|\\])",
+#       "\\\\\\1",
+#       stringr::str_interp("${coef_name}:${interaction_var_name}")
+#     )
 #
-#   coefs_df <- NULL
-#   for(i in 1:ncoef_names) {
-#     coef_name <- coef_names[i]
-#     coefs <- get_coefs(coefs, coef_name, interaction_var_name)
-#     if (is.null(coefs_df)) {
-#       coefs_df <- coefs
-#     } else {
-#       coefs_df <- cbind()
-#     }
+#     target_coefs <- coefs %>%
+#       dplyr::select(
+#         sym(coef_name) |
+#           matches(stringr::str_interp("^${regex_str}"))
+#       )
+#   } else {
+#     target_coefs <- coefs %>%
+#       dplyr::select(
+#         sym(coef_name))
 #   }
+#
+#   return(target_coefs)
 # }
-
-get_coefs <- function(coefs, coef_name, interaction_var_name) {
-
-  if (!is.null(interaction_var_name)) {
-    regex_str <- gsub(
-      "([.|()\\^{}+$*?]|\\[|\\])",
-      "\\\\\\1",
-      stringr::str_interp("${coef_name}:${interaction_var_name}")
-    )
-
-    target_coefs <- coefs %>%
-      dplyr::select(
-        sym(coef_name) |
-          matches(stringr::str_interp("^${regex_str}"))
-      )
-  } else {
-    target_coefs <- coefs %>%
-      dplyr::select(
-        sym(coef_name))
-  }
-
-  return(target_coefs)
-}
 
 
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {

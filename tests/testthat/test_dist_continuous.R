@@ -58,12 +58,15 @@ test_that("update_dist_by_continuous_var with custom quantiles", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile",
+      grouping_type = "quantile",
       interaction_var = "elevation",
       random_effect = NULL,
       movement_data = expected_movement_data,
@@ -108,12 +111,15 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile",
+      grouping_type = "quantile",
       interaction_var = "elevation",
       random_effect = "id",
       movement_data = expected_movement_data,
@@ -123,3 +129,4 @@ test_that("update_dist_by_continuous_var with custom quantiles and random effect
     expect_equal(results, expected_results)
   }
 })
+

@@ -40,11 +40,15 @@ test_that("update_dist continuous random effects", {
       "${get_data_path_root()}/expected/continuous/mixed/${dist_name}.rds"
     ))
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile",
+      grouping_type = "quantile",
       interaction_var = "elevation",
       random_effect = "id",
       movement_data = expected_movement_data,
@@ -98,11 +102,14 @@ test_that("update_dist continuous no random effects", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "quantile",
+      grouping_type = "quantile",
       interaction_var = "elevation",
       random_effect = NULL,
       movement_data = expected_movement_data,
@@ -151,6 +158,7 @@ test_that("update_dist categorical random effects", {
                           "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
                           "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
+
     results <- do.call(update_dist, args = c(args, update_args))
 
 
@@ -159,10 +167,11 @@ test_that("update_dist categorical random effects", {
     ))
 
     expected_results_tibble <- readRDS(file_path)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
       interaction_var = "elevation_fact",
       random_effect = "id",
       movement_data = expected_movement_data,
@@ -209,6 +218,7 @@ test_that("update_dist categorical no random effects", {
                           "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
                           "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
+
     results <- do.call(update_dist, args = c(args, update_args))
 
 
@@ -216,11 +226,15 @@ test_that("update_dist categorical no random effects", {
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
       interaction_var = "sex",
       random_effect = NULL,
       movement_data = expected_movement_data,
@@ -275,14 +289,13 @@ test_that("update_dist no_interaction random effects", {
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "no_interaction",
-      random_effect = NULL,
+      grouping_type = "no_interaction",
+      random_effect = "id",
       interaction_var = NULL,
       movement_data = expected_movement_data,
       model = model
     )
 
-    browser()
     expect_equal(results, expected_results)
   }
 })
@@ -330,7 +343,7 @@ test_that("update_dist no_interaction no random effects", {
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "no_interaction",
+      grouping_type = "no_interaction",
       random_effect = NULL,
       interaction_var = NULL,
       movement_data = expected_movement_data,

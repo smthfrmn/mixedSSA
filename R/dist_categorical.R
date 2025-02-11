@@ -96,7 +96,7 @@ update_dist_by_categorical_var <- function(model,
     dist_name = dist_name,
     coefs_tibble = summed_coefs_tibble,
     tentative_dist = tentative_dist,
-    grouping = "category",
+    grouping_type = "category",
     interaction_var = interaction_var_name,
     random_effect = random_effects_var_name
   )

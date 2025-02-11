@@ -556,7 +556,10 @@ test_that("get_updated_parameters with categorical interactions", {
       movement_coef_name = coef_names[1],
       dist_name = dist_name,
       coefs_tibble = summed_coef_tibble,
-      tentative_dist = NULL
+      tentative_dist = NULL,
+      grouping_type = "category",
+      interaction_var_name = "sex",
+      random_effect_var_name = NULL
     )
 
     file_path <- here(str_interp(
@@ -565,11 +568,17 @@ test_that("get_updated_parameters with categorical interactions", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_updated_parameters_tibble <- readRDS(file_path)
+    expected_updated_parameters_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
+
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
+      interaction_var = "sex",
+      random_effect = NULL,
       movement_data = expected_movement_data,
       model = model
     )
@@ -587,7 +596,7 @@ test_that("get_updated_parameters with continuous interactions", {
   for (i in 1:length(dists)) {
     dist_name <- dists[i]
     column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
-    model <- get_sample_models()[[dist_name]]
+    model <- get_sample_models(interaction_var_name = "elevation")[[dist_name]]
 
     coefs <- get_sample_coefs(
       dist_name = dist_name,
@@ -596,8 +605,10 @@ test_that("get_updated_parameters with continuous interactions", {
 
     coef_names <- get_default_coef_names(dist_name = dist_name)
 
+    interaction_data <- model$frame$elevation
+
     quantile_coef_tibble <- get_quantile_coefs_all(
-      interaction_data = data$elevation,
+      interaction_data = interaction_data,
       coefs = coefs,
       coef_names = coef_names,
       interaction_var_name = "elevation",
@@ -612,7 +623,9 @@ test_that("get_updated_parameters with continuous interactions", {
       movement_coef_name = coef_names[1],
       dist_name = dist_name,
       coefs_tibble = quantile_coef_tibble,
-      grouping = "quantile",
+      grouping_type = "quantile",
+      interaction_var_name = "elevation",
+      random_effect = NULL,
       tentative_dist = NULL
     )
 
@@ -620,14 +633,19 @@ test_that("get_updated_parameters with continuous interactions", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
 
-    expected_updated_parameters_tibble <- readRDS(file_path)
+    expected_updated_parameters_tibble <- readRDS(file_path) |>
+      rename(
+        grouping = interaction_var
+      )
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
       distribution_name = dist_name,
-      grouping = "quantile",
+      grouping_type = "quantile",
+      interaction_var = "elevation",
+      random_effect = NULL,
       movement_data = expected_movement_data,
       model = model
     )

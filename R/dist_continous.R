@@ -8,83 +8,9 @@ validate_continuous_args <- function(quantiles) {
 }
 
 
-get_quantiles_coef_values <- function(interaction_data, quantiles,
-                                      target_coefs) {
-  quantile_multipliers <- stats::quantile(interaction_data,
-    probs = quantiles, na.rm = T
-  )
-  quantile_coef_values <- target_coefs[, 1] + sapply(
-    quantile_multipliers,
-    function(q) q * target_coefs[, 2]
-  )
-
-  if (is.null(colnames(quantile_coef_values))) {
-    quantile_coef_values <- data.frame(t(quantile_coef_values))
-  }
-  colnames(quantile_coef_values) <- quantiles
-  return(quantile_coef_values)
-}
-
-
-get_quantile_coefs <- function(interaction_data, coefs,
-                               coef_name, random_effects_var_name,
-                               interaction_var_name, quantiles) {
-  target_coefs <- get_coefs(
-    coefs = coefs,
-    coef_name = coef_name,
-    interaction_var_name = interaction_var_name
-  )
-
-  args_tibble <- get_quantiles_coef_values(
-    interaction_data, quantiles,
-    target_coefs
-  ) %>%
-    tibble::as_tibble()
-
-  args_tibble$coef_name <- coef_name
-
-  if (!is.null(random_effects_var_name)) {
-    args_tibble[[random_effects_var_name]] <- rownames(target_coefs)
-  }
-
-  args_tibble_pivoted <- args_tibble %>%
-    tidyr::pivot_longer(
-      cols = as.character(quantiles),
-      names_to = "quantile",
-      values_to = "coef_value"
-    )
-
-  return(args_tibble_pivoted)
-}
-
-
 get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
-                                   random_effects_var_name, interaction_var_name, quantiles) {
-  quantile_coefs_tibble <- tibble::tibble()
-
-  for (i in 1:length(coef_names)) {
-    coef_name <- coef_names[i]
-    quantile_coefs_tibble <- rbind(
-      quantile_coefs_tibble,
-      get_quantile_coefs(
-        interaction_data = interaction_data,
-        coefs = coefs,
-        coef_name = coef_name,
-        random_effects_var_name = random_effects_var_name,
-        interaction_var_name = interaction_var_name,
-        quantiles = quantiles
-      )
-    )
-  }
-
-  return(quantile_coefs_tibble)
-}
-
-
-
-
-get_quantile_coefs_all_new <- function(interaction_data, coefs, coef_names,
                                        random_effects_var_name, interaction_var_name, quantiles) {
+
   coef_names_str <- paste(coef_names, collapse = "|")
   interaction_str <- gsub(
     "([.|()\\^{}+$*?]|\\[|\\])",
@@ -163,7 +89,7 @@ update_dist_by_continuous_var <- function(model,
     random_effects_var_name = random_effects_var_name
   )
 
-  quantile_coefs_tibble <- get_quantile_coefs_all_new(
+  quantile_coefs_tibble <- get_quantile_coefs_all(
     interaction_data = model$frame[[interaction_var_name]],
     coefs = coefs,
     coef_names = coef_names,
@@ -179,8 +105,8 @@ update_dist_by_continuous_var <- function(model,
     dist_name = dist_name,
     coefs_tibble = quantile_coefs_tibble,
     tentative_dist = tentative_dist,
-    grouping = "quantile",
-    grouping = interaction_var_name,
+    grouping_type = "quantile",
+    interaction_var = interaction_var_name,
     random_effect = random_effects_var_name
   )
 

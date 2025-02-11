@@ -19,7 +19,7 @@ test_that("get_summed_coefs_all", {
       expected_tibble <- rbind(
         expected_tibble,
         tibble::tibble(
-          interaction_var = SEXES,
+          grouping = SEXES,
           random_effect = rep(NA, length(SEXES)),
           coef_name = coef_name,
           coef_value = get_expected_coef_sums(
@@ -77,11 +77,15 @@ test_that("update_dist_by_categorical_var with interaction", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename( # for grouping rename
+        grouping = interaction_var
+      )
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
       interaction_var = "sex",
       random_effect = NULL,
       movement_data = expected_movement_data,
@@ -126,11 +130,14 @@ test_that("update_dist_by_categorical_var with interaction with more than two ca
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path)
+    expected_results_tibble <- readRDS(file_path) |>
+      rename( # for grouping rename
+        grouping = interaction_var)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
       interaction_var = "sex_three_factors",
       random_effect = NULL,
       movement_data = expected_movement_data,
@@ -174,14 +181,14 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
       "${get_data_path_root()}/expected/categorical/mixed/${dist_name}.rds"
     ))
 
-    saveRDS(results@updated_parameters, file_path)
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
     expected_results_tibble <- readRDS(file_path)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
-      grouping = "category",
+      grouping_type = "category",
       interaction_var = "elevation_fact",
       random_effect = "id",
       movement_data = expected_movement_data,

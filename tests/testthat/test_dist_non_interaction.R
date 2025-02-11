@@ -14,13 +14,14 @@ test_that("get_no_interaction_coefs", {
 
     expected_tibble <- tibble::tibble(
       grouping = NA,
+      random_effect = NA,
+      coef_name = coef_names,
       coef_value = unlist(
         mock_coefs[1, 2:length(mock_coefs)],
-        use.names = F),
-      coef_name = coef_names
+        use.names = F)
     )
 
-    actual_tibble <- get_no_interaction_coefs_new(
+    actual_tibble <- get_no_interaction_coefs(
       coefs = mock_coefs,
       coef_name = coef_names,
       random_effects_var_name = NULL
@@ -45,12 +46,13 @@ test_that("get_no_interaction_coefs with random_effects", {
 
     expected_tibble <- tibble::tibble(
       grouping = NA,
-      coef_value = rep(1:nrow(mock_coefs), length(coef_names)),
+      random_effect = rep(c("F1", "F2", "M1", "M4"), length(coef_names)),
       coef_name = rep(coef_names, each = nrow(mock_coefs)),
-      id = rep(c("F1", "F2", "M1", "M4"), length(coef_names))
-    )
+      coef_value = rep(1:nrow(mock_coefs), length(coef_names)),
+    ) |>
+      arrange(grouping, random_effect)
 
-    actual_tibble <- get_no_interaction_coefs_new(
+    actual_tibble <- get_no_interaction_coefs(
       coefs = mock_coefs,
       coef_name = coef_names,
       random_effects_var_name = "id"
