@@ -54,7 +54,9 @@ library(amt)
 library(glmmTMB)
 
 model <- glmmTMB(
-  case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex, data = mixedssa_fisher_data)
+  case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex,
+  data = mixedssa_fisher_data
+)
 
 updated_params <- update_dist(model,
   dist_name = "gamma",
@@ -64,14 +66,18 @@ updated_params <- update_dist(model,
 )
 
 model <- glmmTMB(
-  case_ ~ cos_ta_ + cos_ta_:elevation, data = mixedssa_fisher_data)
+  case_ ~ cos_ta_ + cos_ta_:elevation,
+  data = mixedssa_fisher_data
+)
 
 tentative_dist_data <- mixedssa_fisher_data \%>\%
   dplyr::filter(case_ == TRUE) \%>\%
   dplyr::pull("cos_ta_")
 
 tentative_dist <- fit_distr(
-  tentative_dist_data, dist_name = "vonmises", na.rm = TRUE)
+  tentative_dist_data,
+  dist_name = "vonmises", na.rm = TRUE
+)
 
 updated_params <- update_dist(model,
   dist_name = "vonmises",
@@ -82,7 +88,8 @@ updated_params <- update_dist(model,
 
 model <- glmmTMB(
   case_ ~ cos_ta_ + cos_ta_:elevation + (0 + cos_ta_ | id),
-  data = mixedssa_fisher_data)
+  data = mixedssa_fisher_data
+)
 
 updated_params <- update_dist(model,
   dist_name = "vonmises",
