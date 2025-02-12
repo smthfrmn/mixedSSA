@@ -76,45 +76,6 @@ test_that("validate_tentative_distribution validates tentative_dist is of incorr
 
 
 
-test_that("get_coefs non-special characters", {
-  coefs <- get_mock_coefs(dist_name = GAMMA)
-  result <- get_coefs(coefs = coefs, coef_name = "sl_", interaction_var_name = "sex")
-  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 4))
-  colnames(expected_results) <- c("sl_", "sl_:sexF")
-  expect_equal(result, expected_results)
-})
-
-
-test_that("get_interaction_coefs special characters in coef_name", {
-  coefs <- get_mock_coefs(dist_name = VONMISES)
-  names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sexF")
-  result <- get_coefs(
-    coefs = coefs,
-    coef_name = "cos(ta_)",
-    interaction_var_name = "sex"
-  )
-
-  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 3))
-  colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sexF")
-  expect_equal(result, expected_results)
-})
-
-
-
-test_that("get_coefs special characters in coef_name and interaction_var_name", {
-  coefs <- get_mock_coefs(dist_name = VONMISES)
-  names(coefs) <- c("(Intercept)", "cos(ta_)", "cos(ta_):sex(F)")
-  result <- get_coefs(
-    coefs = coefs,
-    coef_name = "cos(ta_)",
-    interaction_var_name = "sex"
-  )
-  expected_results <- as.data.frame(list(placeholder = 2, placeholder2 = 3))
-  colnames(expected_results) <- c("cos(ta_)", "cos(ta_):sex(F)")
-
-  expect_equal(result, expected_results)
-})
-
 
 test_that("transform_movement_data supports all distributions and transforms data correctly", {
   distributions <- get_supported_distributions()

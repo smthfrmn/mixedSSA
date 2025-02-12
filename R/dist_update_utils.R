@@ -463,33 +463,6 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 }
 
 
-
-
-
-# get_coefs <- function(coefs, coef_name, interaction_var_name) {
-#
-#   if (!is.null(interaction_var_name)) {
-#     regex_str <- gsub(
-#       "([.|()\\^{}+$*?]|\\[|\\])",
-#       "\\\\\\1",
-#       stringr::str_interp("${coef_name}:${interaction_var_name}")
-#     )
-#
-#     target_coefs <- coefs %>%
-#       dplyr::select(
-#         sym(coef_name) |
-#           matches(stringr::str_interp("^${regex_str}"))
-#       )
-#   } else {
-#     target_coefs <- coefs %>%
-#       dplyr::select(
-#         sym(coef_name))
-#   }
-#
-#   return(target_coefs)
-# }
-
-
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
   coefs <- NULL
   if (is.null(random_effects_var_name)) {
@@ -499,4 +472,15 @@ get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
   }
 
   return(coefs)
+}
+
+
+make_regex_safe <- function(base_str) {
+  safe_regex_str <- gsub(
+    "([.|()\\^{}+$*?]|\\[|\\])",
+    "\\\\\\1",
+    base_str
+  )
+
+  return(safe_regex_str)
 }

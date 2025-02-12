@@ -152,24 +152,25 @@ update_dist <- function(model,
                         interaction_var_name = NULL,
                         tentative_dist = NULL,
                         quantiles = NULL) {
-  args <- lapply(
-    as.list(match.call())[-1],
-    function(x) tryCatch(eval(x), error = function(z) x)
-  )
-  formal_args <- lapply(
-    formals(update_dist)[c(-1, -2)],
-    function(x) tryCatch(eval(x), error = function(z) x)
-  )
 
-  keys <- unique(c(names(args), names(formal_args)))
-  combined_args <- setNames(mapply(c, formal_args[keys], args[keys]), keys)
-  combined_args$tentative_dist <- eval(args$tentative_dist)
-  combined_args$model <- args$model
+  formal_args <- list()
 
-  validate_base_args(combined_args)
+  formal_args$model <- model
+  formal_args$dist_name <- dist_name
+  formal_args$beta_sl <- beta_sl
+  formal_args$beta_log_sl <- beta_log_sl
+  formal_args$beta_sl_sq <- beta_sl_sq
+  formal_args$beta_log_sl_sq <- beta_log_sl_sq
+  formal_args$beta_cos_ta <- beta_cos_ta
+  formal_args$random_effects_var_name <- random_effects_var_name
+  formal_args$interaction_var_name <- interaction_var_name
+  formal_args$tentative_dist <- tentative_dist
+  formal_args$quantiles <- quantiles
+
+  validate_base_args(formal_args)
 
   update_dist_fn <- get_update_dist_fn(model, interaction_var_name)
-  update_dist_args <- get_update_dist_args(combined_args)
+  update_dist_args <- get_update_dist_args(formal_args)
 
   updated_dist_parameters <- do.call(update_dist_fn, args = update_dist_args)
   return(updated_dist_parameters)

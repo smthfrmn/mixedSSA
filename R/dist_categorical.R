@@ -1,10 +1,8 @@
 get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
-  coef_names_str <- paste(coef_names, collapse = "|")
-  interaction_str <- gsub(
-    "([.|()\\^{}+$*?]|\\[|\\])",
-    "\\\\\\1",
-    stringr::str_interp("${interaction_var_name}")
-  )
+
+  coef_names_str <- paste(make_regex_safe(coef_names), collapse = "|")
+  interaction_str <- make_regex_safe(
+    stringr::str_interp("${interaction_var_name}"))
 
   all_categories <- levels(model$frame[[interaction_var_name]])
 
@@ -87,7 +85,6 @@ update_dist_by_categorical_var <- function(model,
     interaction_var_name = interaction_var_name,
     random_effects_var_name = random_effects_var_name
   )
-
 
   movement_coef_name <- coef_names[1]
   updated_parameters <- get_updated_parameters(

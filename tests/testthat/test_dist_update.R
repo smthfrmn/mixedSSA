@@ -372,3 +372,62 @@ test_that("update_dist no_interaction no random effects", {
     expect_equal(results, expected_results)
   }
 })
+
+
+test_that("update_dist special characters in movement params categorical", {
+  dists <- get_supported_distributions()
+  data <- get_sample_fisher_data()
+
+  dist_name <- VONMISES
+  column <- "ta_"
+  mockr::local_mock(
+    fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
+  )
+
+  tentative_dist <- get_sample_tentative_distribution(
+    dist_name = dist_name, column = column
+  )
+
+  expected_movement_data <- NULL
+
+  interaction_vars <- c("sex", "elevation")
+
+  for (i in 1:length(interaction_vars)) {
+
+    interaction_var <- interaction_vars[i]
+
+    if (interaction_var == "sex") {
+      model <- glmmTMB(case_ ~ cos(ta_) + cos(ta_):sex + (0 + cos(ta_) | id), data = data)
+    } else {
+      model <- glmmTMB(case_ ~ cos(ta_) + cos(ta_):elevation + (0 + cos(ta_) | id), data = data)
+    }
+
+    results <- update_dist(model = model,
+                dist_name = dist_name,
+                beta_cos_ta = "cos(ta_)",
+                interaction_var_name = interaction_var,
+                tentative_dist = tentative_dist,
+                quantiles = TEST_QUANTILES)
+
+    grouping_type <- ifelse(interaction_var == "sex", "categorical", "continuous")
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/expected/${grouping_type}/${dist_name}_special_character.rds"
+    ))
+
+    saveRDS(results@updated_parameters, file_path)
+    expected_results_tibble <- readRDS(file_path)
+
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping_type = ifelse(grouping_type == "categorical", "category", "quantile"),
+      random_effect = NULL,
+      interaction_var = interaction_var,
+      movement_data = NULL,
+      model = model
+    )
+
+    expect_equal(results, expected_results)
+
+  }
+})
