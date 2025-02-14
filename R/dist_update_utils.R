@@ -436,7 +436,7 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
   tentative_params <- tentative_dist$params
   tentative_row <- c(
     "tentative",
-    ifelse(!is.null(random_effect_var_name), "typical_individual", NA),
+    NA, # random effect NA for tentative
     rep(NA, ncol(pivoted_args_tibble) - 2),
     unlist(tentative_params)
   )
@@ -464,11 +464,13 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
 
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
-  coefs <- NULL
-  if (is.null(random_effects_var_name)) {
-    coefs <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
-  } else {
-    coefs <- coef(model)$cond[[random_effects_var_name]]
+
+  coefs <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
+
+  if (!is.null(random_effects_var_name)) {
+    random_coefs <- coef(model)$cond[[random_effects_var_name]]
+    rownames(coefs) <- c("typical")
+    coefs <- rbind(coefs, random_coefs)
   }
 
   return(coefs)

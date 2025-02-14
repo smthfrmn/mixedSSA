@@ -15,7 +15,8 @@ get_no_interaction_coefs <- function(coefs, coef_names, random_effects_var_name)
       names_to = "coef_name",
       values_to = "coef_value"
     ) |>
-    dplyr::select(grouping, random_effect, coef_name, coef_value)
+    dplyr::select(grouping, random_effect, coef_name, coef_value) |>
+    dplyr::arrange(grouping, random_effect)
 
   return(final_df)
 }

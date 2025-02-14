@@ -47,7 +47,7 @@ test_that("get_no_interaction_coefs with random_effects", {
 
     expected_tibble <- tibble::tibble(
       grouping = NA,
-      random_effect = rep(c("F1", "F2", "M1", "M4"), length(coef_names)),
+      random_effect = rep(c("typical", "F1", "F2", "M1", "M4"), length(coef_names)),
       coef_name = rep(coef_names, each = nrow(mock_coefs)),
       coef_value = rep(1:nrow(mock_coefs), length(coef_names)),
     ) |>

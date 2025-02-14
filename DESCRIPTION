@@ -1,6 +1,6 @@
 Package: mixedSSA
 Title: Utilities for interpreting mixed ISSA models
-Version: 1.0.4
+Version: 1.0.5
 Authors@R: 
     person("Smith", "Freeman", , "smithifreeman@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0009-0008-0430-653X"))

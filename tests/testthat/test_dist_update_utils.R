@@ -120,6 +120,7 @@ test_that("get_update_distribution_function_and_args returns correct values", {
     amt::update_vonmises,
     update_unif
   )
+
   expected_args <- list(
     c("dist", "beta_sl", "beta_log_sl"),
     c("dist", "beta_sl"),
