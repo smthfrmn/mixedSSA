@@ -8,7 +8,7 @@ get_no_interaction_coefs <- function(coefs, coef_names, random_effects_var_name)
   final_df <- coefs |>
     mutate(
       random_effect = random_effects,
-      grouping = NA
+      grouping = "updated"
     ) |>
     tidyr::pivot_longer( # get sl_, log_sl_ etc in one column
       cols = all_of(coef_names),

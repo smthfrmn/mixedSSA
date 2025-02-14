@@ -1,10 +1,10 @@
 Package: mixedSSA
 Title: Utilities for interpreting mixed ISSA models
-Version: 1.0.5
+Version: 1.0.6
 Authors@R: 
     person("Smith", "Freeman", , "smithifreeman@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0009-0008-0430-653X"))
-Description: Methods for interpreting fitted ISSA models. Currently supports updating tentative movement distribution parameters with fitted values from an ISSA model.
+Description: Methods for interpreting fitted ISSA models. Currently supports updating and plotting movement distribution parameters with fitted values from an ISSA model.
 License: MIT + file LICENSE
 Imports: 
     amt,
@@ -17,7 +17,9 @@ Imports:
     tibble,
     hash,
     berryFunctions,
-    utils
+    utils,
+    circular,
+    ggplot2
 Suggests: 
     testthat (>= 3.0.0),
     usethis,
