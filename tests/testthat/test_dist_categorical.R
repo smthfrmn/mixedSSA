@@ -77,10 +77,7 @@ test_that("update_dist_by_categorical_var with interaction", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path) |>
-      rename( # for grouping rename
-        grouping = interaction_var
-      )
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -124,16 +121,14 @@ test_that("update_dist_by_categorical_var with interaction with more than two ca
     )
 
 
+
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/three_factors/${dist_name}.rds"
     ))
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_results_tibble <- readRDS(file_path) |>
-      rename( # for grouping rename
-        grouping = interaction_var
-      )
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,

@@ -10,11 +10,10 @@ validate_continuous_args <- function(quantiles) {
 
 get_quantile_coefs_all <- function(interaction_data, coefs, coef_names,
                                    random_effects_var_name, interaction_var_name, quantiles) {
-
-
   coef_names_str <- paste(make_regex_safe(coef_names), collapse = "|")
   interaction_str <- make_regex_safe(
-    stringr::str_interp("${interaction_var_name}"))
+    stringr::str_interp("${interaction_var_name}")
+  )
 
   if (!is.null(random_effects_var_name)) {
     random_effects <- rownames(coefs)

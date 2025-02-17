@@ -540,10 +540,7 @@ test_that("get_updated_parameters with categorical interactions", {
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
-    expected_updated_parameters_tibble <- readRDS(file_path) |>
-      rename(
-        grouping = interaction_var
-      )
+    expected_updated_parameters_tibble <- readRDS(file_path)
 
     expected_updated_parameters <- updatedDistributionParameters(
       updated_parameters = expected_updated_parameters_tibble,
@@ -605,10 +602,7 @@ test_that("get_updated_parameters with continuous interactions", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
 
-    expected_updated_parameters_tibble <- readRDS(file_path) |>
-      rename(
-        grouping = interaction_var
-      )
+    expected_updated_parameters_tibble <- readRDS(file_path)
 
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 

@@ -395,3 +395,79 @@ get_expected_coef_sums <- function(distribution, coef_index, quantiles = NULL) {
 
   return(expected_values)
 }
+
+
+get_sample_model <- function(dist_name, grouping_type, mixed) {
+  if (mixed) {
+    model_path_root <- "models/mixed/"
+  } else {
+    model_path_root <- "models/"
+  }
+
+  if (grouping_type == "quantile") {
+    model_path_root <- paste0(model_path_root, "elevation_models.rds")
+  } else if (grouping_type == "category") {
+    if (mixed) {
+      model_path_root <- paste0(model_path_root, "elevation_fact_models.rds")
+    } else {
+      model_path_root <- paste0(model_path_root, "sex_three_factors_models.rds")
+    }
+  } else {
+    model_path_root <- paste0(model_path_root, "simple_models.rds")
+  }
+
+  models <- readRDS(here(paste0("tests/testthat/helper_data/dist/", model_path_root)))
+
+  return(models[[dist_name]])
+}
+
+
+get_sample_updated_params_obj <- function(dist_name, grouping_type, mixed) {
+  model <- get_sample_model(
+    dist_name = dist_name,
+    grouping_type = grouping_type,
+    mixed = mixed
+  )
+
+  if (grouping_type == "quantile") {
+    interaction_var <- "elevation"
+    updated_params_path <- "tests/testthat/helper_data/dist/expected/continuous/"
+  } else if (grouping_type == "category") {
+    interaction_var <- "elevation_fact"
+    updated_params_path <- "tests/testthat/helper_data/dist/expected/categorical/"
+  } else {
+    interaction_var <- NULL
+    updated_params_path <- "tests/testthat/helper_data/dist/expected/no_interaction/"
+  }
+
+
+  if (isTRUE(mixed)) {
+    random_effect <- "id"
+    updated_params_path <- paste0(updated_params_path, "mixed/")
+  } else {
+    random_effect <- NULL
+  }
+
+  movement_data <- NULL
+
+  if (dist_name != VONMISES) {
+    movement_data <- abs(subset(data, case_ == TRUE)$sl_)
+  }
+
+  updated_params <- readRDS(here(
+    str_interp("${updated_params_path}${dist_name}.rds")
+  ))
+
+
+  updated_parameters <- updatedDistributionParameters(
+    updated_parameters = updated_params,
+    distribution_name = dist_name,
+    grouping_type = grouping_type,
+    interaction_var = interaction_var,
+    random_effect = random_effect,
+    movement_data = movement_data,
+    model = model
+  )
+
+  return(updated_parameters)
+}

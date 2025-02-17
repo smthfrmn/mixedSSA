@@ -464,7 +464,6 @@ get_updated_parameters <- function(model, movement_coef_name, dist_name,
 
 
 get_coefs_from_model <- function(model, random_effects_var_name = NULL) {
-
   coefs <- as.data.frame(t(unlist(glmmTMB::fixef(model)$cond)))
 
   if (!is.null(random_effects_var_name)) {

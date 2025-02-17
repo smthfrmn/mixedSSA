@@ -105,10 +105,7 @@ test_that("update_dist continuous no random effects", {
       "${get_data_path_root()}/expected/continuous/${dist_name}.rds"
     ))
 
-    expected_results_tibble <- readRDS(file_path) |>
-      rename(
-        grouping = interaction_var
-      )
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -236,10 +233,7 @@ test_that("update_dist categorical no random effects", {
       "${get_data_path_root()}/expected/categorical/${dist_name}.rds"
     ))
 
-    expected_results_tibble <- readRDS(file_path) |>
-      rename(
-        grouping = interaction_var
-      )
+    expected_results_tibble <- readRDS(file_path)
 
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
@@ -299,7 +293,9 @@ test_that("update_dist no_interaction random effects", {
       "${get_data_path_root()}/expected/no_interaction/mixed/${dist_name}.rds"
     ))
 
+
     expected_results_tibble <- readRDS(file_path)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
@@ -351,12 +347,15 @@ test_that("update_dist no_interaction no random effects", {
       "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
       "vonmises" = list(beta_cos_ta = "cos_ta_")
     )
+
     results <- do.call(update_dist, args = c(args, update_args))
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/no_interaction/${dist_name}.rds"
     ))
 
+
     expected_results_tibble <- readRDS(file_path)
+
     expected_results <- updatedDistributionParameters(
       updated_parameters = expected_results_tibble,
       distribution_name = dist_name,
@@ -391,7 +390,6 @@ test_that("update_dist special characters in movement params categorical", {
   interaction_vars <- c("sex", "elevation")
 
   for (i in 1:length(interaction_vars)) {
-
     interaction_var <- interaction_vars[i]
 
     if (interaction_var == "sex") {
@@ -400,12 +398,14 @@ test_that("update_dist special characters in movement params categorical", {
       model <- glmmTMB(case_ ~ cos(ta_) + cos(ta_):elevation + (0 + cos(ta_) | id), data = data)
     }
 
-    results <- update_dist(model = model,
-                dist_name = dist_name,
-                beta_cos_ta = "cos(ta_)",
-                interaction_var_name = interaction_var,
-                tentative_dist = tentative_dist,
-                quantiles = TEST_QUANTILES)
+    results <- update_dist(
+      model = model,
+      dist_name = dist_name,
+      beta_cos_ta = "cos(ta_)",
+      interaction_var_name = interaction_var,
+      tentative_dist = tentative_dist,
+      quantiles = TEST_QUANTILES
+    )
 
     grouping_type <- ifelse(interaction_var == "sex", "categorical", "continuous")
     file_path <- here(str_interp(
@@ -426,6 +426,5 @@ test_that("update_dist special characters in movement params categorical", {
     )
 
     expect_equal(results, expected_results)
-
   }
 })

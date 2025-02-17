@@ -19,6 +19,7 @@ Imports:
     berryFunctions,
     utils,
     circular,
+    extraDistr,
     ggplot2
 Suggests: 
     testthat (>= 3.0.0),

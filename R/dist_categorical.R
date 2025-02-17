@@ -1,8 +1,8 @@
 get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
-
   coef_names_str <- paste(make_regex_safe(coef_names), collapse = "|")
   interaction_str <- make_regex_safe(
-    stringr::str_interp("${interaction_var_name}"))
+    stringr::str_interp("${interaction_var_name}")
+  )
 
   all_categories <- levels(model$frame[[interaction_var_name]])
 
