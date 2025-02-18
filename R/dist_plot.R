@@ -53,9 +53,7 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
         fn_name,
         args = args
       )
-
     })
-
   }
 
   plots_data_all <- do.call(rbind, plots_data)
@@ -69,27 +67,39 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
 
   has_random_effect <- !is.null(updated_dist_params_obj@random_effect)
 
-  if(has_random_effect) {
-    if(isTRUE(include_tentative)) {
-      plots_data_all <- plots_data_all |>
-        mutate(
-          random_effect = ifelse(grouping == "tentative", "tentative", random_effect)
-        )
-    }
+  if (has_random_effect) {
+    # if(isTRUE(include_tentative)) {
+    #   plots_data_all <- plots_data_all |>
+    #     mutate(
+    #       random_effect = ifelse(grouping == "tentative", "tentative", random_effect)
+    #     )
+    # }
 
-    if(isFALSE(include_random_effect)) {
+    if (isFALSE(include_random_effect)) {
       plots_data_all <- plots_data_all |>
         filter(
           random_effect == "typical" | grouping == "tentative"
         )
+    } else {
+      plots_data_all <- plots_data_all |>
+        mutate(
+          random_effect_grouping = paste(random_effect, grouping, sep = "_")
+        )
     }
 
-    random_effect_str <- str_interp("random effect: ${updated_dist_params_obj@random_effect}")
     plots_data_all <- plots_data_all |>
       mutate(
-        random_effect_type = ifelse(random_effect == "typical", "typical", random_effect_str)
+        random_effect_type = ifelse(random_effect == "typical" | is.na(random_effect),
+          random_effect, updated_dist_params_obj@random_effect
+        ),
       )
   }
+
+  plots_data_all <- plots_data_all |>
+    filter(!is.infinite(y)) |>
+    mutate(
+      is_tentative = ifelse(grouping == "tentative", "yes", "no")
+    )
 
   return(plots_data_all)
 }
@@ -183,7 +193,7 @@ plot_updated_dist <- function(updated_dist_params_obj,
                               vonmises_mu = NULL,
                               include_random_effect = FALSE,
                               include_tentative = TRUE,
-                              plot = TRUE) {
+                              print_plot = TRUE) {
   args <- list(
     updated_dist_params_obj = updated_dist_params_obj,
     vonmises_mu = vonmises_mu,
@@ -200,40 +210,34 @@ plot_updated_dist <- function(updated_dist_params_obj,
     include_random_effect = include_random_effect
   )
 
-
-
   line_args <- list(
     x = "x",
-    y = "y"
+    y = "y",
+    col = "grouping",
+    linetype = "is_tentative"
   )
-
-  line_args$col <- "grouping"
-
 
   if (include_random_effect) {
     line_args$alpha <- "random_effect_type"
-    line_args$group <- "random_effect"
-  }
-
-  if (include_random_effect) {
-    plot_data <- plot_data |>
-      mutate(
-        random_effect_grouping = paste(random_effect, grouping, sep = "_")
-      )
-
     line_args$group <- "random_effect_grouping"
   }
 
 
   suppressWarnings({
-    lines <- geom_line(do.call(aes, line_args), linewidth = 1)
+    lines <- geom_line(do.call(aes_string, line_args), linewidth = 1)
 
 
     plot <- ggplot(data = plot_data) +
       lines +
       theme_bw() +
-      scale_color_discrete(name = updated_dist_params_obj@interaction_var) +
-      scale_alpha_discrete(guide = "none")
+      scale_color_discrete(name = paste(updated_dist_params_obj@interaction_var,
+        updated_dist_params_obj@grouping_type,
+        sep = " "
+      )) +
+      scale_alpha_discrete(na.translate = FALSE, range = c(0.2, 1), name = "random effect") +
+      scale_linetype_manual(values = c("yes" = "dotted", "no" = "solid"), guide = "none") +
+      ylim(0, max(plot_data$y) + 0.005)
+
 
 
     if (updated_dist_params_obj@distribution_name == VONMISES) {
@@ -244,12 +248,13 @@ plot_updated_dist <- function(updated_dist_params_obj,
         ) +
         labs(x = "Relative turn angle (radians)", y = "Probability Density")
     } else {
-      plot <- plot + labs(x = "Step length (m)", y = "Probability Density")
+      plot <- plot +
+        labs(x = "Step length (m)", y = "Probability Density")
     }
   })
 
 
-  if (isTRUE(plot)) {
+  if (isTRUE(print_plot)) {
     print(plot)
   }
 

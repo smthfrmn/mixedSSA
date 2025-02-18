@@ -157,7 +157,7 @@ test_that("plot_updated_dist runs for all types random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = T,
         include_tentative = T,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
@@ -167,7 +167,7 @@ test_that("plot_updated_dist runs for all types random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = F,
         include_tentative = T,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
@@ -178,7 +178,7 @@ test_that("plot_updated_dist runs for all types random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = T,
         include_tentative = F,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
@@ -188,11 +188,10 @@ test_that("plot_updated_dist runs for all types random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = F,
         include_tentative = F,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
-
     }
   }
 })
@@ -225,7 +224,7 @@ test_that("plot_updated_dist runs for all types no random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = F,
         include_tentative = T,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
@@ -236,11 +235,10 @@ test_that("plot_updated_dist runs for all types no random effects", {
         vonmises_mu = vonmises_mu,
         include_random_effect = F,
         include_tentative = F,
-        plot = T
+        print_plot = T
       )
 
       expect_no_error(do.call(plot_updated_dist, args = args))
-
     }
   }
 })
