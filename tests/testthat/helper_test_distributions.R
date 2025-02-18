@@ -451,7 +451,7 @@ get_sample_updated_params_obj <- function(dist_name, grouping_type, mixed) {
   movement_data <- NULL
 
   if (dist_name != VONMISES) {
-    movement_data <- abs(subset(data, case_ == TRUE)$sl_)
+    movement_data <- abs(subset(get_sample_fisher_data(), case_ == TRUE)$sl_)
   }
 
   updated_params <- readRDS(here(
