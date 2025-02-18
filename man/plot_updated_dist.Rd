@@ -19,9 +19,9 @@ plot_updated_dist(
 
 \item{include_random_effect}{\verb{[logical(1)]\{FALSE\}}. Indicates whether or not to plot the curves per random effect variable}
 
-\item{include_tentative_dist}{\verb{[logical(1)]\{TRUE\}}. Indicates whether or not to plot the tentative distribution}
+\item{include_tentative}{\verb{[logical(1)]\{TRUE\}}. Indicates whether or not to plot the tentative distribution}
 
-\item{plot}{\verb{[logical(1)]\{TRUE\}}. Indicates whether or not to plot the plot before returning it}
+\item{print_plot}{\verb{[logical(1)]\{TRUE\}}. Indicates whether or not to plot the plot before returning it}
 }
 \value{
 ggplot object
@@ -55,6 +55,16 @@ model <- glmmTMB(
   data = mixedssa_fisher_data
 )
 
+
+tentative_dist_data <- mixedssa_fisher_data \%>\%
+  dplyr::filter(case_ == TRUE) \%>\%
+  dplyr::pull("cos_ta_")
+
+tentative_dist <- fit_distr(
+  tentative_dist_data,
+  dist_name = "vonmises", na.rm = TRUE
+)
+
 updated_params <- update_dist(model,
   dist_name = "vonmises",
   interaction_var_name = "elevation",
@@ -66,8 +76,8 @@ updated_params <- update_dist(model,
 
 plot_updated_dist(updated_params,
   vonmises_mu = 0,
-  include_random_effect = T,
-  include_tentative = F
+  include_random_effect = TRUE,
+  include_tentative = FALSE
 )
 
 }

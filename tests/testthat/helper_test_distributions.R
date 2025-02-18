@@ -416,7 +416,7 @@ get_sample_model <- function(dist_name, grouping_type, mixed) {
     model_path_root <- paste0(model_path_root, "simple_models.rds")
   }
 
-  models <- readRDS(here(paste0("tests/testthat/helper_data/dist/", model_path_root)))
+  models <- readRDS(here(paste(get_data_path_root(), model_path_root, sep = "/")))
 
   return(models[[dist_name]])
 }
@@ -431,19 +431,19 @@ get_sample_updated_params_obj <- function(dist_name, grouping_type, mixed) {
 
   if (grouping_type == "quantile") {
     interaction_var <- "elevation"
-    updated_params_path <- "tests/testthat/helper_data/dist/expected/continuous/"
+    updated_params_path <- "continuous"
   } else if (grouping_type == "category") {
     interaction_var <- "elevation_fact"
-    updated_params_path <- "tests/testthat/helper_data/dist/expected/categorical/"
+    updated_params_path <- "categorical"
   } else {
     interaction_var <- NULL
-    updated_params_path <- "tests/testthat/helper_data/dist/expected/no_interaction/"
+    updated_params_path <- "no_interaction"
   }
 
 
   if (isTRUE(mixed)) {
     random_effect <- "id"
-    updated_params_path <- paste0(updated_params_path, "mixed/")
+    updated_params_path <- paste0(updated_params_path, "/mixed")
   } else {
     random_effect <- NULL
   }
@@ -455,7 +455,7 @@ get_sample_updated_params_obj <- function(dist_name, grouping_type, mixed) {
   }
 
   updated_params <- readRDS(here(
-    str_interp("${updated_params_path}${dist_name}.rds")
+    str_interp("${get_data_path_root()}/expected/${updated_params_path}/${dist_name}.rds")
   ))
 
 

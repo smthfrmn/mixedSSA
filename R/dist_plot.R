@@ -28,7 +28,7 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
 
     fn_name <- stringr::str_interp("d${updated_dist_params_obj@distribution_name}")
 
-    formal_args <- formalArgs(fn_name)
+    formal_args <- methods::formalArgs(fn_name)
 
     params <- updated_params |>
       dplyr::select(any_of(formal_args))
@@ -142,9 +142,8 @@ validate_plot_args <- function(args) {
 #' @param updated_dist_params_obj `[updatedDistributionParameters]` The output from calling update_dist on an ISSA model
 #' @param vonmises_mu `[numeric(1)]{NULL}`, pi or 0, optional parameter. Tells the function where to center the distribution when plotting a von Mises
 #' @param include_random_effect `[logical(1)]{FALSE}`. Indicates whether or not to plot the curves per random effect variable
-#' @param include_tentative_dist `[logical(1)]{TRUE}`. Indicates whether or not to plot the tentative distribution
-#' @param plot `[logical(1)]{TRUE}`. Indicates whether or not to plot the plot before returning it
-
+#' @param include_tentative `[logical(1)]{TRUE}`. Indicates whether or not to plot the tentative distribution
+#' @param print_plot `[logical(1)]{TRUE}`. Indicates whether or not to plot the plot before returning it
 #'
 #' @return ggplot object
 #'
@@ -174,6 +173,16 @@ validate_plot_args <- function(args) {
 #'   data = mixedssa_fisher_data
 #' )
 #'
+#'
+#' tentative_dist_data <- mixedssa_fisher_data %>%
+#'   dplyr::filter(case_ == TRUE) %>%
+#'   dplyr::pull("cos_ta_")
+#'
+#' tentative_dist <- fit_distr(
+#'   tentative_dist_data,
+#'   dist_name = "vonmises", na.rm = TRUE
+#' )
+#'
 #' updated_params <- update_dist(model,
 #'   dist_name = "vonmises",
 #'   interaction_var_name = "elevation",
@@ -185,8 +194,8 @@ validate_plot_args <- function(args) {
 #'
 #' plot_updated_dist(updated_params,
 #'   vonmises_mu = 0,
-#'   include_random_effect = T,
-#'   include_tentative = F
+#'   include_random_effect = TRUE,
+#'   include_tentative = FALSE
 #' )
 #'
 plot_updated_dist <- function(updated_dist_params_obj,
