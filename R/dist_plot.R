@@ -1,15 +1,20 @@
-get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
+get_plot_data <- function(updated_dist_params_obj, vonmises_mu, xlim,
                           include_tentative, include_random_effect) {
   is_vonmises <- updated_dist_params_obj@distribution_name == VONMISES
   updated_params <- updated_dist_params_obj@updated_parameters
   plots_data <- list()
 
   from <- ifelse(is_vonmises, -pi, 0)
-  to <- ifelse(
-    is_vonmises,
-    pi,
-    ceiling(max(updated_dist_params_obj@movement_data))
-  )
+
+  if (is_vonmises) {
+    to <- pi
+  } else {
+    if (!is.null(xlim)) {
+      to <- xlim
+    } else {
+      to <- ceiling(max(updated_dist_params_obj@movement_data))
+    }
+  }
 
 
   for (i in 1:nrow(updated_params)) {
@@ -68,12 +73,6 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
   has_random_effect <- !is.null(updated_dist_params_obj@random_effect)
 
   if (has_random_effect) {
-    # if(isTRUE(include_tentative)) {
-    #   plots_data_all <- plots_data_all |>
-    #     mutate(
-    #       random_effect = ifelse(grouping == "tentative", "tentative", random_effect)
-    #     )
-    # }
 
     if (isFALSE(include_random_effect)) {
       plots_data_all <- plots_data_all |>
@@ -106,6 +105,15 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu,
 
 
 validate_plot_args <- function(args) {
+
+  if (!is.null(args$xlim) & !is.numeric(args$xlim)) {
+    stop("argument 'xlim' must be numeric")
+  }
+
+  if (!is.null(args$xlim) & args$updated_dist_params_obj@distribution_name == VONMISES) {
+    stop("argument 'xlim' is only valid for step length distributions (e.g., NOT von Mises)")
+  }
+
   if (isTRUE(args$include_random_effect) & is.null(args$updated_dist_params_obj@random_effect)) {
     stop("argument 'include_random_effect' = TRUE is not valid for an updated_dist_params_obj with no random effects.")
   }
@@ -141,6 +149,7 @@ validate_plot_args <- function(args) {
 #'
 #' @param updated_dist_params_obj `[updatedDistributionParameters]` The output from calling update_dist on an ISSA model
 #' @param vonmises_mu `[numeric(1)]{NULL}`, pi or 0, optional parameter. Tells the function where to center the distribution when plotting a von Mises
+#' @param xlim `[numeric(1)]{NULL}`, the max step length of the density curve, default is the max step length in the model's data. Ignored if distribution is von Mises
 #' @param include_random_effect `[logical(1)]{FALSE}`. Indicates whether or not to plot the curves per random effect variable
 #' @param include_tentative `[logical(1)]{TRUE}`. Indicates whether or not to plot the tentative distribution
 #' @param print_plot `[logical(1)]{TRUE}`. Indicates whether or not to plot the plot before returning it
@@ -165,7 +174,7 @@ validate_plot_args <- function(args) {
 #'   beta_log_sl = "log_sl_"
 #' )
 #'
-#' plot_updated_dist(updated_params)
+#' plot_updated_dist(updated_params, xlim = 100)
 #'
 #'
 #' model <- glmmTMB(
@@ -200,12 +209,14 @@ validate_plot_args <- function(args) {
 #'
 plot_updated_dist <- function(updated_dist_params_obj,
                               vonmises_mu = NULL,
+                              xlim = NULL,
                               include_random_effect = FALSE,
                               include_tentative = TRUE,
                               print_plot = TRUE) {
   args <- list(
     updated_dist_params_obj = updated_dist_params_obj,
     vonmises_mu = vonmises_mu,
+    xlim = xlim,
     include_random_effect = include_random_effect,
     include_tentative = include_tentative
   )
@@ -215,9 +226,11 @@ plot_updated_dist <- function(updated_dist_params_obj,
   plot_data <- get_plot_data(
     updated_dist_params_obj = updated_dist_params_obj,
     vonmises_mu = vonmises_mu,
+    xlim = xlim,
     include_tentative = include_tentative,
     include_random_effect = include_random_effect
   )
+
 
   line_args <- list(
     x = "x",

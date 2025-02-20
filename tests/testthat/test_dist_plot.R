@@ -93,6 +93,50 @@ test_that("validate_plot_args fails vonmises_mu when dist not vm", {
 
 
 
+test_that("validate_plot_args fails xlim not numeric", {
+  updated_params <- get_sample_updated_params_obj(
+    dist_name = "gamma",
+    grouping_type = "no_interaction",
+    mixed = F
+  )
+
+  args <- list(
+    updated_dist_params_obj = updated_params,
+    vonmises_mu = NULL,
+    xlim = "not a number",
+    include_random_effect = F,
+    include_tentative = F
+  )
+
+  expected_error_msg <- "argument 'xlim' must be numeric"
+  error <- expect_error(validate_plot_args(args))
+  expect_equal(error$message, expected_error_msg)
+})
+
+
+
+test_that("validate_plot_args fails xlim invalid for von mises", {
+  updated_params <- get_sample_updated_params_obj(
+    dist_name = "vonmises",
+    grouping_type = "no_interaction",
+    mixed = F
+  )
+
+  args <- list(
+    updated_dist_params_obj = updated_params,
+    vonmises_mu = 0,
+    xlim = 100,
+    include_random_effect = F,
+    include_tentative = F
+  )
+
+  expected_error_msg <- "argument 'xlim' is only valid for step length distributions (e.g., NOT von Mises)"
+  error <- expect_error(validate_plot_args(args))
+  expect_equal(error$message, expected_error_msg)
+})
+
+
+
 test_that("validate_plot_args passes", {
   distributions <- SUPPORTED_DISTRIBUTIONS
   grouping_types <- c("quantile", "category", "no_interaction")
@@ -107,14 +151,17 @@ test_that("validate_plot_args passes", {
       )
 
       vonmises_mu <- NULL
+      xlim <- 100
 
       if (dist_name == VONMISES) {
         vonmises_mu <- 0
+        xlim = NULL
       }
 
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = T,
         include_tentative = T
       )
@@ -147,14 +194,17 @@ test_that("plot_updated_dist runs for all types random effects", {
       )
 
       vonmises_mu <- NULL
+      xlim <- 100
 
       if (dist_name == VONMISES) {
         vonmises_mu <- 0
+        xlim <- NULL
       }
 
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = T,
         include_tentative = T,
         print_plot = T
@@ -165,6 +215,7 @@ test_that("plot_updated_dist runs for all types random effects", {
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = F,
         include_tentative = T,
         print_plot = T
@@ -176,6 +227,7 @@ test_that("plot_updated_dist runs for all types random effects", {
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = T,
         include_tentative = F,
         print_plot = T
@@ -186,6 +238,7 @@ test_that("plot_updated_dist runs for all types random effects", {
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = F,
         include_tentative = F,
         print_plot = T
@@ -200,7 +253,6 @@ test_that("plot_updated_dist runs for all types random effects", {
 
 test_that("plot_updated_dist runs for all types no random effects", {
   distributions <- SUPPORTED_DISTRIBUTIONS
-  distributions <- c(LNORM)
 
   grouping_types <- c("quantile", "category", "no_interaction")
   for (i in 1:length(distributions)) {
@@ -214,14 +266,17 @@ test_that("plot_updated_dist runs for all types no random effects", {
       )
 
       vonmises_mu <- NULL
+      xlim <- 100
 
       if (dist_name == VONMISES) {
         vonmises_mu <- 0
+        xlim <- NULL
       }
 
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = F,
         include_tentative = T,
         print_plot = T
@@ -233,6 +288,7 @@ test_that("plot_updated_dist runs for all types no random effects", {
       args <- list(
         updated_dist_params_obj = updated_params,
         vonmises_mu = vonmises_mu,
+        xlim = xlim,
         include_random_effect = F,
         include_tentative = F,
         print_plot = T

@@ -7,6 +7,7 @@
 plot_updated_dist(
   updated_dist_params_obj,
   vonmises_mu = NULL,
+  xlim = NULL,
   include_random_effect = FALSE,
   include_tentative = TRUE,
   print_plot = TRUE
@@ -16,6 +17,8 @@ plot_updated_dist(
 \item{updated_dist_params_obj}{\verb{[updatedDistributionParameters]} The output from calling update_dist on an ISSA model}
 
 \item{vonmises_mu}{\verb{[numeric(1)]\{NULL\}}, pi or 0, optional parameter. Tells the function where to center the distribution when plotting a von Mises}
+
+\item{xlim}{\verb{[numeric(1)]\{NULL\}}, the max step length of the density curve, default is the max step length in the model's data. Ignored if distribution is von Mises}
 
 \item{include_random_effect}{\verb{[logical(1)]\{FALSE\}}. Indicates whether or not to plot the curves per random effect variable}
 
@@ -47,7 +50,7 @@ updated_params <- update_dist(model,
   beta_log_sl = "log_sl_"
 )
 
-plot_updated_dist(updated_params)
+plot_updated_dist(updated_params, xlim = 100)
 
 
 model <- glmmTMB(
