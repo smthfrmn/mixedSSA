@@ -21,5 +21,5 @@ from ISSA models](https://conservancy.umn.edu/server/api/core/bitstreams/5a2245e
 
 ## Installing
 ```r
-devtools::install_github("smthfrmn/mixedSSA")
+devtools::install_github("smthfrmn/mixedSSA", timeout = 400)   # add the timeout variable if the package fails to download
 ```
