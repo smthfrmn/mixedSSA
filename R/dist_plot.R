@@ -248,7 +248,6 @@ plot_updated_dist <- function(updated_dist_params_obj,
   suppressWarnings({
     lines <- geom_line(do.call(aes_string, line_args), linewidth = 1)
 
-
     plot <- ggplot(data = plot_data) +
       lines +
       theme_bw() +
@@ -257,9 +256,7 @@ plot_updated_dist <- function(updated_dist_params_obj,
         sep = " "
       )) +
       scale_alpha_discrete(na.translate = FALSE, range = c(0.2, 1), name = "random effect") +
-      scale_linetype_manual(values = c("yes" = "dotted", "no" = "solid"), guide = "none") +
-      ylim(0, max(plot_data$y) + 0.005)
-
+      scale_linetype_manual(values = c("yes" = "dotted", "no" = "solid"), guide = "none")
 
 
     if (updated_dist_params_obj@distribution_name == VONMISES) {
