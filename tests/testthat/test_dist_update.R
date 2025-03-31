@@ -1,3 +1,21 @@
+test_that("is_categorical gets dummy variable", {
+  model <- get_sample_dummy_model()
+  expect_true(is_categorical(model, "sex"))
+})
+
+
+test_that("is_categorical gets categorical variable", {
+  model <- get_sample_models(interaction_var_name = "sex")[["gamma"]]
+  expect_true(is_categorical(model, "sex"))
+})
+
+
+test_that("is_continuous gets continuous", {
+  model <- get_sample_models(interaction_var_name = "elevation")[["gamma"]]
+  expect_true(is_continuous(model, "elevation"))
+})
+
+
 test_that("update_dist continuous random effects", {
   dists <- get_supported_distributions()
   data <- get_sample_fisher_data()

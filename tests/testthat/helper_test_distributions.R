@@ -240,6 +240,20 @@ get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction
 }
 
 
+get_sample_dummy_model <- function(data = get_sample_fisher_data()) {
+
+  data$sex <- ifelse(data$sex == "M", 0, 1)
+  # model <- glmmTMB(
+  #   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex + (0 + sl_ + log_sl_ | id),
+  #   data = data)
+  #
+  # saveRDS(model, file = str_interp("${get_data_path_root()}/models/mixed/dummy_model.rds"))
+
+  model <- readRDS(str_interp("${get_data_path_root()}/models/mixed/dummy_model.rds"))
+  return(model)
+}
+
+
 refit_all_models <- function() {
   get_sample_simple_models()
   get_sample_simple_mixed_models()
