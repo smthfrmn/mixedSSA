@@ -4,6 +4,13 @@ test_that("is_categorical gets dummy variable", {
 })
 
 
+test_that("is_categorical gets character variable", {
+  model <- get_sample_models(interaction_var_name = "sex")[["gamma"]]
+  model$frame$sex <- as.character(model$frame$sex)
+  expect_true(is_categorical(model, "sex"))
+})
+
+
 test_that("is_categorical gets categorical variable", {
   model <- get_sample_models(interaction_var_name = "sex")[["gamma"]]
   expect_true(is_categorical(model, "sex"))
