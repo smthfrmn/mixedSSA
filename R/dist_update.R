@@ -2,7 +2,8 @@ is_categorical <- function(model, interaction_var_name) {
   interaction_var <- model$frame[[interaction_var_name]]
 
   var_is_factor_or_char <- is.factor(interaction_var) | is.character(interaction_var)
-  var_is_dummy <- all(unique(interaction_var) == c(0, 1))
+  unique_vals <- unique(interaction_var)
+  var_is_dummy <- length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))
 
   categorical <- var_is_factor_or_char | var_is_dummy
   return(categorical)
@@ -13,7 +14,8 @@ is_continuous <- function(model, interaction_var_name) {
   interaction_var <- model$frame[[interaction_var_name]]
 
   var_is_numeric <- is.numeric(interaction_var)
-  var_is_dummy <- all(unique(interaction_var) == c(0, 1))
+  unique_vals <- unique(interaction_var)
+  var_is_dummy <- length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))
 
   continuous <- var_is_numeric & !var_is_dummy
   return(continuous)

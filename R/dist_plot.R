@@ -73,7 +73,6 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu, xlim,
   has_random_effect <- !is.null(updated_dist_params_obj@random_effect)
 
   if (has_random_effect) {
-
     if (isFALSE(include_random_effect)) {
       plots_data_all <- plots_data_all |>
         filter(
@@ -105,7 +104,6 @@ get_plot_data <- function(updated_dist_params_obj, vonmises_mu, xlim,
 
 
 validate_plot_args <- function(args) {
-
   if (!is.null(args$xlim) & !is.numeric(args$xlim)) {
     stop("argument 'xlim' must be numeric")
   }

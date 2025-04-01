@@ -155,7 +155,7 @@ test_that("validate_plot_args passes", {
 
       if (dist_name == VONMISES) {
         vonmises_mu <- 0
-        xlim = NULL
+        xlim <- NULL
       }
 
       args <- list(

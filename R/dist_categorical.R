@@ -1,28 +1,19 @@
 get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
-  browser()
   coef_names_str <- paste(make_regex_safe(coef_names), collapse = "|")
   interaction_str <- make_regex_safe(
     stringr::str_interp("${interaction_var_name}")
   )
 
   all_categories <- levels(model$frame[[interaction_var_name]])
+  all_categories_string <- paste(
+    all_categories[order(-nchar(all_categories))],
+    collapse = "|"
+  )
 
   if (!is.null(random_effects_var_name)) {
     random_effects <- rownames(coefs)
   } else {
     random_effects <- rep(NA, nrow(coefs))
-  }
-
-  get_grouping <- function(coef_name_add) {
-    grouping <- stringr::str_extract(coef_name_add, paste(
-      all_categories[order(-nchar(all_categories))],
-      collapse = "|"
-    ))
-
-    # handle the dummy variable coding
-    if (is.na(grouping)) {
-      grouping <- "1"
-    }
   }
 
 
@@ -51,8 +42,13 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
     ) |>
     mutate( # get the new values and the category for each row
       coef_value = coef_base_value + coef_value_add,
-      grouping = sapply(coef_name_add, get_grouping)
+      grouping = ifelse(
+        is.na(stringr::str_extract(coef_name_add, all_categories_string)),
+        "1",
+        stringr::str_extract(coef_name_add, all_categories_string)
+      )
     )
+
 
 
   # calculate reference class separately because it is just the coefficient
@@ -87,7 +83,6 @@ update_dist_by_categorical_var <- function(model,
                                            interaction_var_name,
                                            coef_names,
                                            tentative_dist) {
-
   # update the variable to be a factor, to make treatment of model the same
   model$frame[[interaction_var_name]] <- as.factor(model$frame[[interaction_var_name]])
   coefs <- get_coefs_from_model(model, random_effects_var_name)

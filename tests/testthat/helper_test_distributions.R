@@ -241,7 +241,6 @@ get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction
 
 
 get_sample_dummy_model <- function(data = get_sample_fisher_data()) {
-
   data$sex <- ifelse(data$sex == "M", 0, 1)
   # model <- glmmTMB(
   #   case_ ~ sl_ + log_sl_ + sl_:sex + log_sl_:sex + (0 + sl_ + log_sl_ | id),

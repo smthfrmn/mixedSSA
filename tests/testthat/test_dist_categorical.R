@@ -120,8 +120,6 @@ test_that("update_dist_by_categorical_var with interaction with more than two ca
       tentative_dist = NULL
     )
 
-
-
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/three_factors/${dist_name}.rds"
     ))
@@ -193,4 +191,40 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
 
     expect_equal(results, expected_results)
   }
+})
+
+
+test_that("update_dist_by_categorical_var with interaction with dummy variable", {
+  dummy_model <- get_sample_dummy_model()
+
+
+  results <- update_dist_by_categorical_var(
+    model = dummy_model,
+    dist_name = "gamma",
+    random_effects_var_name = "id",
+    interaction_var_name = "sex",
+    coef_names = get_default_coef_names("gamma"),
+    tentative_dist = NULL
+  )
+
+
+  file_path <- here(str_interp(
+    "${get_data_path_root()}/expected/categorical/legacy_mixed/gamma.rds"
+  ))
+
+  expected_movement_data <- abs(subset(data, case_ == TRUE)[["sl_"]])
+  expected_results_tibble <- readRDS(file_path)
+
+  dummy_model$frame$sex <- as.factor(dummy_model$frame$sex)
+  expected_results <- updatedDistributionParameters(
+    updated_parameters = expected_results_tibble,
+    distribution_name = "gamma",
+    grouping_type = "category",
+    interaction_var = "sex",
+    random_effect = "id",
+    movement_data = expected_movement_data,
+    model = dummy_model
+  )
+
+  expect_equal(results, expected_results)
 })
