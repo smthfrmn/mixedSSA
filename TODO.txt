@@ -8,7 +8,3 @@
 8. [DONE] Make grouping standard heading for interaction_var_name
 9. [DONE] Make random effects standard heading for random_effects_var_name
 10. Add types to documentation per https://github.com/jmsigner/amt/commit/1be7e43aaf5c2c8795fabd2d04747b49fb4da043
-
-
-Working TODO:
-- update get_coefs tests
