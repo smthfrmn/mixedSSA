@@ -1,0 +1,259 @@
+---
+title: "Using mixedSSA"
+author: "Smith Freeman"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+```{r, warning = FALSE}
+library(glmmTMB)
+library(mixedSSA)
+library(here)
+library(stringr)
+library(ggpubr)
+```
+
+This vignette demonstrates how to use the two available functions in `mixedSSA` (`update_dist_params` and `plot_updated_dist`) to intepret and plot movement parameters from an Integrated Step-Selection Analysis (ISSA). Currently, the package only supports interpreting coefficients from a model fit using the package `glmmTMB`.
+
+
+## Fitting Integrated Step-Selection Analyses
+
+Here we fit two ISSAs using `glmmTMB` the fisher movement data available in the package. Models 1 and 2 have movement kernels that depend on a categorical variable (i.e., elevation factor - low, medium, and high) and a continuous variable (i.e., elevation - in meters), respectively.
+
+We include a helper function here for fitting the models using `glmmTMB`:
+
+```{r}
+# Model fitting function
+fit_model <- function(data, model_name, interaction_var_name,
+                      habitat_selection_var_name, include_random_effects,
+                      save_model = TRUE,
+                      from_cache = FALSE) {
+  # If you've already fit the model once, just pull it from the cache
+  file_path <- here(paste0(model_name, ".rds"))
+
+  if (from_cache) {
+    model <- readRDS(file_path)
+    return(model)
+  }
+
+
+  if (include_random_effects) {
+    # Model parameterization, including random effects for the movement parameters
+    formula <- as.formula(str_interp("case_ ~ sl_ + log_sl_ + cos(ta_) +
+  ${habitat_selection_var_name} +
+  ${interaction_var_name}:sl_ + ${interaction_var_name}:log_sl_ +
+  ${interaction_var_name}:cos(ta_) +
+  (1 | step_id_) + (0 + sl_ + log_sl_ + cos(ta_) | id)"))
+  } else {
+    formula <- as.formula(str_interp("case_ ~ sl_ + log_sl_ + cos(ta_) +
+  ${habitat_selection_var_name} +
+  ${interaction_var_name}:sl_ + ${interaction_var_name}:log_sl_ +
+  ${interaction_var_name}:cos(ta_) +
+  (1 | step_id_)"))
+  }
+
+
+
+  model_config <- glmmTMB(
+    formula,
+    REML = TRUE,
+    family = poisson(), data = data,
+    doFit = FALSE
+  )
+
+  model <- glmmTMB:::fitTMB(model_config)
+
+  if (save_model & !from_cache) {
+    saveRDS(model, file = file_path)
+  }
+
+  return(model)
+}
+```
+
+### Model 1: Categorical
+
+#### Fitting the Model
+
+We'll fit our first ISSA without random effects and using our factor variable, `elevation_fact` (i.e., `low`, `medium`, `high`). `fit_model` parameterizes the model with an interaction between the habitat variable at the start of the step (`elevation_fact_start`) and the movement parameters (`sl_`, `log_sl_`, and `cos_ta_`) and includes the habitat variable at the end of the step (`elevation_fact_end`) in the habitat selection kernel. This is because we make the assumption, somewhat arbitrarily, that the habitat at the start of the step affects the individual's step length and turn angle for that step, while the end of the step affects the individuals habitat selection. Of course, this is somewhat artificial as individuals may take bigger or shorter and more or less directed steps to enter or exit certain habitats.
+
+```{r}
+# load fisher_data
+data("mixedssa_fisher_data")
+
+model1 <- fit_model(
+  data = fisher_data,
+  model_name = "model_1",
+  interaction_var_name = "elevation_fact_start",
+  habitat_selection_var_name = "elevation_fact_end",
+  include_random_effects = FALSE,
+  save_model = TRUE
+)
+
+summary(model1)
+```
+
+#### Updating movement distribution parameters
+
+Now that we've fit the model we can use `mixedSSA` to get the updated movement parameters from the model's coefficients. We will do this per movement characteristics, step lengths and turn angles. First we will update the parameters for step lengths.
+
+##### Step Lengths
+
+```{r}
+updated_param_sl_model1 <- mixedSSA::update_dist(
+  model = model1,
+  dist_name = "gamma",
+  beta_sl = "sl_", # the name of the step length coefficient in our model
+  beta_log_sl = "log_sl_", # the name of the log(step length) coefficient in our model
+  interaction_var_name = "elevation_fact_start", # elevation "class" at the start of each step
+)
+
+# The updated params object contains a lot of attributes,
+# but we'll just take a look at the updated params table
+updated_param_sl_model1@updated_parameters
+```
+
+##### Turn Angles
+
+Now we can do a similar process with the turn angle parameters. Keep in mind, when we update the parameters for the turn angle distribution, we need to pass the tentative distribution as well. This is just because of the internal transformations `mixedSSA` does and the inability to back transform `cos(ta)` and maintain its original sign.
+
+```{r}
+tentative_ta_dist <- amt::fit_distr(
+  fisher_data$ta_[fisher_data$case_ == "TRUE"],
+  "vonmises",
+  na.rm = T
+)
+
+
+updated_param_ta_model1 <- mixedSSA::update_dist(
+  model = model1,
+  dist_name = "vonmises",
+  beta_cos_ta = "cos(ta_)", # the name of the cos(ta) coefficient in our model
+  interaction_var_name = "elevation_fact_start",
+  tentative_dist = tentative_ta_dist
+)
+
+# By default, the mu parameter of the vonmises distribution will be 0
+updated_param_ta_model1@updated_parameters
+```
+
+#### Plot updated movement distributions
+
+Now that we have our updated movement parameters we can use the package to plot said distributions. The `plot_updated_dist` function returns a `ggplot` object that you can add custom code to like any other `ggplot`.
+
+```{r}
+# define the plot for step length distributions
+sl_plot <- plot_updated_dist(
+  updated_dist_params_obj = updated_param_sl_model1,
+  print_plot = F,
+  include_tentative = T,
+  xlim = 100
+)
+
+
+# define the plot for turn angle distributions
+# note that you need to supply the mean of the vonmises distribution
+ta_plot <- plot_updated_dist(
+  updated_dist_params_obj = updated_param_ta_model1,
+  vonmises_mu = 0,
+  print_plot = F,
+  include_tentative = T
+)
+
+ggarrange(sl_plot, ta_plot, common.legend = T)
+```
+
+### Model 2: Continuous with Random Effects
+
+#### Fitting the Model
+
+We'll fit our second ISSA with random effects and using our continuous variable, `elevation`. Our habitat selection variable is `elevation_end` and we interact the movement parameters with `elevation_start` per the way we paramerterized our first model. Unfortunately, this model doesn't actually converge (due to the random effects), so in a non-example situation we would not want to use this model for inference, however it serves its purpose for this vignette. But note, we do not have SEs for our coefficients :(.
+
+```{r}
+model2 <- fit_model(
+  data = fisher_data,
+  model_name = "model_2",
+  interaction_var_name = "elevation_start",
+  habitat_selection_var_name = "elevation_end",
+  include_random_effects = TRUE,
+  save_model = TRUE
+)
+
+summary(model2)
+```
+
+#### Update movement distribution parameters with random effects
+
+Now use the model coefficients to once again update the movement parameters, this time including the random effects (e.g., individual movements).
+
+```{r}
+updated_param_sl_model2 <- mixedSSA::update_dist(
+  model = model2,
+  dist_name = "gamma",
+  beta_sl = "sl_", # the name of the step length coefficient in our model
+  beta_log_sl = "log_sl_", # the name of the log(step length) coefficient in our model
+  interaction_var_name = "elevation_start", # elevation at the start of each step
+  random_effects_var_name = "id", # must match the random effects in the model
+  quantiles = c(0.05, 0.5, 0.95) # the quantiles for elevation for which we want to calculate the distribution parameters
+)
+
+# The updated params object contains a lot of attributes,
+# but we'll just take a look at the updated params table with the random effects
+updated_param_sl_model2@updated_parameters
+
+
+updated_param_ta_model2 <- mixedSSA::update_dist(
+  model = model2,
+  dist_name = "vonmises",
+  beta_cos_ta = "cos(ta_)", # the name of the cos(ta) coefficient in our model
+  interaction_var_name = "elevation_start",
+  tentative_dist = tentative_ta_dist,
+  random_effects_var_name = "id",
+  quantiles = c(0.05, 0.5, 0.95)
+)
+
+# By default, the mu parameter of the vonmises distribution will be 0
+updated_param_ta_model2@updated_parameters
+```
+
+#### Plot updated movement distributions
+
+Again, we can use the package to plot the updated movement distributions, this time including the distributions for each individual.
+
+```{r}
+# define the plot for step length distributions
+sl_plot <- plot_updated_dist(
+  updated_dist_params_obj = updated_param_sl_model2,
+  print_plot = F,
+  include_tentative = F, # this time don't include the tentative dist
+  include_random_effect = T,
+  xlim = 100
+)
+
+
+# define the plot for turn angle distributions
+# note that you need to supply the mean of the vonmises distribution
+ta_plot <- plot_updated_dist(
+  updated_dist_params_obj = updated_param_ta_model2,
+  vonmises_mu = 0,
+  print_plot = F,
+  include_tentative = F,
+  include_random_effect = T
+)
+
+ggarrange(sl_plot, ta_plot, common.legend = T)
+```

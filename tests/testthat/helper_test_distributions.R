@@ -73,19 +73,19 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
     extract_covariates(terra::unwrap(amt_fisher_covar$elevation), where = "both") |>
     mutate(
       elevation_fact = case_when(
-        elevation < 45 + 35 ~ "low",
-        elevation < 45 + 70 ~ "medium",
-        elevation < 45 + 100 ~ "high"
+        elevation < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+        elevation < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+        elevation < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
       ) |> as.factor(),
       elevation_fact_start = case_when(
-        elevation_start < 45 + 35 ~ "low",
-        elevation_start < 45 + 70 ~ "medium",
-        elevation_start < 45 + 100 ~ "high"
+        elevation_start < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+        elevation_start < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+        elevation_start < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
       ) |> as.factor(),
       elevation_fact_end = case_when(
-        elevation_start < 45 + 35 ~ "low",
-        elevation_start < 45 + 70 ~ "medium",
-        elevation_start < 45 + 100 ~ "high"
+        elevation_end < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+        elevation_end < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+        elevation_end < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
       ) |> as.factor()
     )
 
