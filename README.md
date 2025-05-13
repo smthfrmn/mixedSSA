@@ -16,7 +16,7 @@ And the following turn angle distributions:
 
 ## Vignettes
 
-- There is one vignette [`Using mixedSSA`](https://github.com/smthfrmn/mixedSSA/blob/main/vignettes/using_mixedssa.Rmd), contained within this package, that includes simple examples of how to fit an ISSA using `glmmTMB` and interpret and plot the fitted model using this package
+- There is one vignette contained within this package that includes simple examples of how to fit an ISSA using `glmmTMB` and interpret and plot the fitted model using this package. To view this vignette, run `vignette("using_mixedssa", package = "mixedSSA")`. But make sure you installed `mixedSSA` as instructed below in order for this to work.
 - It may also be helpful to look at the vignettes association with Fieberg Lab's methods paper: [Modelling individual variability in habitat selection and movement using integrated step-selection analysis](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.14321):
   - [Using MixedSSA to Update Movement Distribution Parameters
 from ISSA models](https://conservancy.umn.edu/server/api/core/bitstreams/5a2245ec-b285-4b2b-b749-e126165e168d/content)
@@ -24,5 +24,5 @@ from ISSA models](https://conservancy.umn.edu/server/api/core/bitstreams/5a2245e
 
 ## Installing
 ```r
-devtools::install_github("smthfrmn/mixedSSA")
+devtools::install_github("smthfrmn/mixedSSA", build_vignettes = TRUE)
 ```

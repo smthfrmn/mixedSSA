@@ -4,7 +4,7 @@ author: "Smith Freeman"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Using mixedSSA}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ We include a helper function here for fitting the models using `glmmTMB`:
 # Model fitting function
 fit_model <- function(data, model_name, interaction_var_name,
                       habitat_selection_var_name, include_random_effects,
-                      save_model = TRUE,
+                      save_model = FALSE,
                       from_cache = FALSE) {
   # If you've already fit the model once, just pull it from the cache
   file_path <- here(paste0(model_name, ".rds"))
