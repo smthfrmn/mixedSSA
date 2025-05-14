@@ -67,13 +67,23 @@ fit_model <- function(data, model_name, interaction_var_name,
   }
 
 
-
   model_config <- glmmTMB(
     formula,
     REML = TRUE,
     family = poisson(), data = data,
     doFit = FALSE
   )
+
+  # This model_config section sets the variance of the random intercept for
+  # step_id to be a large, fixed number
+  model_config$parameters$theta[1] <- log(1e3)
+  nthetas <- length(model_config$parameters$theta)
+
+  if (nthetas > 1) {
+    model_config$mapArg <- list(theta = factor(c(NA, 2:nthetas)))
+  } else {
+    model_config$mapArg <- list(theta = factor(c(NA)))
+  }
 
   model <- glmmTMB:::fitTMB(model_config)
 
@@ -101,7 +111,8 @@ model1 <- fit_model(
   interaction_var_name = "elevation_fact_start",
   habitat_selection_var_name = "elevation_fact_end",
   include_random_effects = FALSE,
-  save_model = TRUE
+  save_model = TRUE,
+  from_cache = FALSE
 )
 
 summary(model1)
@@ -190,7 +201,8 @@ model2 <- fit_model(
   interaction_var_name = "elevation_start",
   habitat_selection_var_name = "elevation_end",
   include_random_effects = TRUE,
-  save_model = TRUE
+  save_model = TRUE,
+  from_cache = FALSE
 )
 
 summary(model2)
