@@ -194,8 +194,9 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
 })
 
 
-test_that("update_dist_by_categorical_var with interaction with dummy variable", {
+test_that("update_dist_by_categorical_var with interaction with dummy variable two categories", {
   dummy_model <- get_sample_dummy_model()
+  data <- get_sample_fisher_data()
 
 
   results <- update_dist_by_categorical_var(
@@ -224,6 +225,57 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable",
     random_effect = "id",
     movement_data = expected_movement_data,
     model = dummy_model
+  )
+
+  expect_equal(results, expected_results)
+})
+
+
+test_that("update_dist_by_categorical_var with interaction with dummy variable more categories", {
+  dummy_model <- get_sample_mixed_models(interaction_var_name = "elevation_dummy")$gamma
+  data <- get_sample_fisher_data()
+  browser()
+  results <- update_dist_by_categorical_var(
+    model = dummy_model,
+    dist_name = "gamma",
+    random_effects_var_name = NULL,
+    interaction_var_name = "elevation_dummy_start",
+    coef_names = get_default_coef_names("gamma"),
+    tentative_dist = NULL,
+    dummy_parameterization = T
+  )
+
+
+  file_path <- here(str_interp(
+    "${get_data_path_root()}/expected/categorical/three_factors/gamma_dummy.rds"
+  ))
+
+  saveRDS(results@updated_parameters, file_path)
+
+  expected_movement_data <- abs(subset(data, case_ == TRUE)[["sl_"]])
+  expected_results_tibble <- readRDS(file_path)
+
+  expected_dummy_model <- dummy_model
+
+  expected_dummy_model$frame <- expected_dummy_model$frame |>
+    mutate(
+      elevation_dummy_start = case_when(
+        elevation_dummy_startmedium == 1 ~ "medium",
+        elevation_dummy_starthigh == 1 ~ "high",
+        TRUE ~ "DummyReferenceClass"
+      ),
+      elevation_dummy_start = factor(elevation_dummy_start, levels = c("DummyReferenceClass",
+                                                                       "medium", "high"))
+    )
+
+  expected_results <- updatedDistributionParameters(
+    updated_parameters = expected_results_tibble,
+    distribution_name = "gamma",
+    grouping_type = "category",
+    interaction_var = "elevation_dummy_start",
+    random_effect = NULL,
+    movement_data = expected_movement_data,
+    model = expected_dummy_model
   )
 
   expect_equal(results, expected_results)

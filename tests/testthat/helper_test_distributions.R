@@ -59,8 +59,8 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
     amt::random_steps()
 
   data <- rbind(
-      m1, m4, f2, f1
-    ) %>%
+    m1, m4, f2, f1
+  ) %>%
     within(sex <- relevel(as.factor(sex), ref = REFERENCE_CATEGORY)) %>%
     mutate(
       sl_sq_ = sl_ * sl_,
@@ -86,7 +86,13 @@ get_sample_fisher_data <- function(custom_coefs = FALSE) {
         elevation_end < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
         elevation_end < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
         elevation_end < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
-      ) |> as.factor()
+      ) |> as.factor(),
+      elevation_dummy_startlow = ifelse(elevation_fact_start == "low", 1, 0),
+      elevation_dummy_startmedium = ifelse(elevation_fact_start == "medium", 1, 0),
+      elevation_dummy_starthigh = ifelse(elevation_fact_start == "high", 1, 0),
+      elevation_dummy_endlow = ifelse(elevation_fact_end == "low", 1, 0),
+      elevation_dummy_endtmedium = ifelse(elevation_fact_end == "medium", 1, 0),
+      elevation_dummy_endhigh = ifelse(elevation_fact_end == "high", 1, 0)
     )
 
   file_path <- str_interp("${get_data_path_root()}/fisher_data.rds")
@@ -206,6 +212,43 @@ get_sample_models <- function(data = get_sample_fisher_data(), interaction_var_n
 get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction_var_name = "elevation_fact") {
   # suppress model convergence warnings :/
   suppressWarnings({
+    if (interaction_var_name == "elevation_dummy") {
+      models <- hash(
+        "gamma" = glmmTMB(case_ ~ sl_ +
+                            log_sl_ +
+                            sl_:elevation_dummy_startmedium +
+                            sl_:elevation_dummy_starthigh +
+                            log_sl_:elevation_dummy_startmedium +
+                            log_sl_:elevation_dummy_starthigh +
+                            (0 + sl_ + log_sl_ | id), data = data),
+        "exp" = glmmTMB(case_ ~ sl_ +
+                          sl_:elevation_dummy_startmedium +
+                          sl_:elevation_dummy_starthigh +
+                          (0 + sl_ | id), data = data),
+        "hnorm" = glmmTMB(case_ ~ sl_sq_ +
+                            sl_sq_:elevation_dummy_startmedium +
+                            sl_sq_:elevation_dummy_starthigh +
+                            (0 + sl_sq_ | id), data = data),
+        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ +
+                            log_sl_:elevation_dummy_startmedium +
+                            log_sl_:elevation_dummy_starthigh +
+                            log_sl_sq_:elevation_dummy_startmedium +
+                            log_sl_sq_:elevation_dummy_starthigh +
+                            (0 + log_sl_ + log_sl_sq_ | id), data = data),
+        "vonmises" = glmmTMB(case_ ~ cos_ta_ +
+                               cos_ta_:elevation_dummy_startmedium +
+                               cos_ta_:elevation_dummy_starthigh +
+                               (0 + cos_ta_ | id), data = data),
+        "unif" = glmmTMB(case_ ~ cos_ta_ +
+                               cos_ta_:elevation_dummy_startmedium +
+                               cos_ta_:elevation_dummy_starthigh +
+                               (0 + cos_ta_ | id), data = data)
+      )
+
+      file_path <- str_interp("${get_data_path_root()}/models/mixed/elevation_dummy_models.rds")
+      saveRDS(models, file_path)
+    }
+
     if (interaction_var_name == "elevation_fact") {
       # models <- hash(
       #   "gamma" = glmmTMB(case_ ~ sl_ + log_sl_ + sl_:elevation_fact + log_sl_:elevation_fact + (0 + sl_ + log_sl_ | id), data = data),
