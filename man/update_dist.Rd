@@ -15,7 +15,8 @@ update_dist(
   random_effects_var_name = NULL,
   interaction_var_name = NULL,
   tentative_dist = NULL,
-  quantiles = NULL
+  quantiles = NULL,
+  dummy_parameterization = NULL
 )
 }
 \arguments{

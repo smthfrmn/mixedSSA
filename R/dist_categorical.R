@@ -1,4 +1,6 @@
-get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name, random_effects_var_name) {
+get_summed_coefs_all <- function(model, coefs, coef_names,
+                                 interaction_var_name, random_effects_var_name,
+                                 dummy_parameterization) {
   coef_names_str <- paste(make_regex_safe(coef_names), collapse = "|")
   interaction_str <- make_regex_safe(
     stringr::str_interp("${interaction_var_name}")
@@ -43,10 +45,10 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
     mutate( # get the new values and the category for each row
       coef_value = coef_base_value + coef_value_add,
       grouping = ifelse(
-        is.na(stringr::str_extract(coef_name_add, all_categories_string)),
-        "1",
-        stringr::str_extract(coef_name_add, all_categories_string)
-      )
+          is.na(stringr::str_extract(coef_name_add, all_categories_string)),
+          "1",
+          stringr::str_extract(coef_name_add, all_categories_string)
+        )
     )
 
 
@@ -77,14 +79,44 @@ get_summed_coefs_all <- function(model, coefs, coef_names, interaction_var_name,
 
 
 #' @noRd
+add_nondummy_interaction_var_col <- function(model, interaction_var_name,
+                                             reference_class = "DummyReferenceClass") {
+  sep <- str_escape(interaction_var_name)
+  dummy_cols <- names(dplyr::select(model$frame, matches(paste0("^", sep))))
+  levels <- str_extract(dummy_cols, paste0("^", sep, "(.+)"), group = 1)
+
+  dummy_matrix <- model$frame[dummy_cols]
+  all_zero_rows <- rowSums(dummy_matrix) == 0
+
+  assigned <- levels[max.col(dummy_matrix, ties.method = "first")]
+  assigned[all_zero_rows] <- reference_class
+
+  browser()
+  all_levels <- c(reference_class, levels)
+  model$frame[[interaction_var_name]] <- factor(assigned, levels = all_levels)
+  return(model)
+}
+
+
+
+#' @noRd
 update_dist_by_categorical_var <- function(model,
                                            dist_name,
                                            random_effects_var_name,
                                            interaction_var_name,
                                            coef_names,
-                                           tentative_dist) {
+                                           tentative_dist,
+                                           dummy_parameterization) {
   # update the variable to be a factor, to make treatment of model the same
-  model$frame[[interaction_var_name]] <- as.factor(model$frame[[interaction_var_name]])
+
+  if (dummy_parameterization) {
+    model <- add_nondummy_interaction_var_col(model = model,
+                   interaction_var_name = interaction_var_name)
+
+  } else {
+    model$frame[[interaction_var_name]] <- as.factor(model$frame[[interaction_var_name]])
+  }
+
   coefs <- get_coefs_from_model(model, random_effects_var_name)
 
   summed_coefs_tibble <- get_summed_coefs_all(
@@ -92,7 +124,8 @@ update_dist_by_categorical_var <- function(model,
     coefs = coefs,
     coef_names = coef_names,
     interaction_var_name = interaction_var_name,
-    random_effects_var_name = random_effects_var_name
+    random_effects_var_name = random_effects_var_name,
+    dummy_parameterization = dummy_parameterization
   )
 
   movement_coef_name <- coef_names[1]

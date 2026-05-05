@@ -1,11 +1,11 @@
-is_categorical <- function(model, interaction_var_name) {
+is_categorical <- function(model, interaction_var_name, dummy_parameterization) {
   interaction_var <- model$frame[[interaction_var_name]]
 
   var_is_factor_or_char <- is.factor(interaction_var) | is.character(interaction_var)
   unique_vals <- unique(interaction_var)
-  var_is_dummy <- length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))
+  var_is_dummy <- length(unique_vals) == 2 && all(unique_vals %in% c(0, 1)) # Dummy variable representing two categories
 
-  categorical <- var_is_factor_or_char | var_is_dummy
+  categorical <- dummy_parameterization | var_is_factor_or_char | var_is_dummy
   return(categorical)
 }
 
@@ -22,12 +22,12 @@ is_continuous <- function(model, interaction_var_name) {
 }
 
 
-get_update_dist_fn <- function(model, interaction_var_name) {
+get_update_dist_fn <- function(model, interaction_var_name, dummy_parameterization) {
   if (is.null(interaction_var_name)) {
     return("update_dist_no_interaction")
   }
 
-  if (is_categorical(model, interaction_var_name)) {
+  if (is_categorical(model, interaction_var_name, dummy_parameterization)) {
     return("update_dist_by_categorical_var")
   } else if (is_continuous(model, interaction_var_name)) {
     return("update_dist_by_continuous_var")
@@ -53,7 +53,8 @@ get_update_dist_args <- function(args) {
     dist_name = args$dist_name,
     coef_names = coef_names,
     random_effects_var_name = args$random_effects_var_name,
-    tentative_dist = args$tentative_dist
+    tentative_dist = args$tentative_dist,
+    dummy_parameterization = args$dummy_parameterization
   )
 
   if (!is.null(args$interaction_var_name)) {
@@ -163,7 +164,8 @@ update_dist <- function(model,
                         random_effects_var_name = NULL,
                         interaction_var_name = NULL,
                         tentative_dist = NULL,
-                        quantiles = NULL) {
+                        quantiles = NULL,
+                        dummy_parameterization = NULL) {
   formal_args <- list()
 
   formal_args$model <- model
@@ -177,10 +179,11 @@ update_dist <- function(model,
   formal_args$interaction_var_name <- interaction_var_name
   formal_args$tentative_dist <- tentative_dist
   formal_args$quantiles <- quantiles
+  formal_args$dummy_parameterization <- dummy_parameterization
 
   validate_base_args(formal_args)
 
-  update_dist_fn <- get_update_dist_fn(model, interaction_var_name)
+  update_dist_fn <- get_update_dist_fn(model, interaction_var_name, dummy_parameterization)
   update_dist_args <- get_update_dist_args(formal_args)
 
   updated_dist_parameters <- do.call(update_dist_fn, args = update_dist_args)
