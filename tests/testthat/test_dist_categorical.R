@@ -178,6 +178,7 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
       "${get_data_path_root()}/expected/categorical/mixed/${dist_name}.rds"
     ))
 
+
     expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
 
     expected_results_tibble <- readRDS(file_path)
@@ -238,6 +239,10 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable t
 test_that("update_dist_by_categorical_var with interaction with dummy variable more categories", {
   dummy_model <- get_sample_mixed_models(interaction_var_name = "elevation_dummy")$gamma
   data <- get_sample_fisher_data()
+
+  mockr::local_mock(
+    fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
+  )
   results <- update_dist_by_categorical_var(
     model = dummy_model,
     dist_name = "gamma",
@@ -252,8 +257,6 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable m
   file_path <- here(str_interp(
     "${get_data_path_root()}/expected/categorical/three_factors/gamma_dummy.rds"
   ))
-
-  saveRDS(results@updated_parameters, file_path)
 
   expected_movement_data <- subset(data, case_ == TRUE)[["sl_"]]
   expected_results_tibble <- readRDS(file_path)

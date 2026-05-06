@@ -16,7 +16,7 @@ update_dist(
   interaction_var_name = NULL,
   tentative_dist = NULL,
   quantiles = NULL,
-  dummy_parameterization = NULL
+  dummy_parameterization = FALSE
 )
 }
 \arguments{

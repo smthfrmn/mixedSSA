@@ -507,6 +507,7 @@ test_that("update_dist categorical no random effects dummy variable with more th
     file_path <- here(str_interp(
       "${get_data_path_root()}/expected/categorical/three_factors/${dist_name}_dummy.rds"
     ))
+    # saveRDS(results@updated_parameters, file_path)
 
     expected_results_tibble <- readRDS(file_path)
 

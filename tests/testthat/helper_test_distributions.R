@@ -391,7 +391,7 @@ get_cached_distribution <- function(dist_name) {
 
 get_sample_tentative_distribution <- function(dist_name = "gamma", column = "sl_") {
   distribution <- get_cached_distribution(dist_name)
-  if (is.null(NULL)) {
+  if (is.null(distribution)) {
     data <- get_sample_fisher_data() |>
       dplyr::filter(case_ == TRUE) |>
       dplyr::pull(column)
