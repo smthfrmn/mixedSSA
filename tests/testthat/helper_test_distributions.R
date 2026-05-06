@@ -25,82 +25,89 @@ get_data_path_root <- function() {
 }
 
 get_sample_fisher_data <- function(custom_coefs = FALSE) {
-  data("amt_fisher")
+  # data("amt_fisher")
 
-  track <- amt_fisher %>%
-    make_track(x_, y_, t_ = t_, id = id, sex = sex, name = name) %>%
-    nest(data = !any_of(c("id", "sex", "name"))) %>%
-    mutate(
-      steps = map(data, function(x) {
-        steps_final <- x %>%
-          track_resample(rate = minutes(30), tolerance = minutes(5)) %>%
-          steps_by_burst()
-        return(steps_final)
-      })
-    ) %>%
-    unnest(cols = steps) %>%
-    select(-data)
-
-
-  m1 <- track %>%
-    filter(id == "M1") %>%
-    amt::random_steps()
-
-  m4 <- track %>%
-    filter(id == "M4") %>%
-    amt::random_steps()
-
-  f2 <- track %>%
-    filter(id == "F2") %>%
-    amt::random_steps()
-
-  f1 <- track %>%
-    filter(id == "F1") %>%
-    amt::random_steps()
-
-  data <- rbind(
-    m1, m4, f2, f1
-  ) %>%
-    within(sex <- relevel(as.factor(sex), ref = REFERENCE_CATEGORY)) %>%
-    mutate(
-      sl_sq_ = sl_ * sl_,
-      log_sl_ = log(sl_),
-      log_sl_sq_ = log_sl_ * log_sl_,
-      cos_ta_ = cos(ta_),
-      sex_three_factors = factor(ifelse(id == "F2", as.character("UNK"), as.character(sex)))
-    ) %>%
-    extract_covariates(terra::unwrap(amt_fisher_covar$elevation)) |>
-    extract_covariates(terra::unwrap(amt_fisher_covar$elevation), where = "both") |>
-    mutate(
-      elevation_fact = case_when(
-        elevation < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
-        elevation < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
-        elevation < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
-      ) |> as.factor(),
-      elevation_fact_start = case_when(
-        elevation_start < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
-        elevation_start < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
-        elevation_start < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
-      ) |> as.factor(),
-      elevation_fact_end = case_when(
-        elevation_end < quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
-        elevation_end < quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
-        elevation_end < quantile(elevation, probs = c(1), na.rm = T) ~ "high"
-      ) |> as.factor(),
-      elevation_dummy_startlow = ifelse(elevation_fact_start == "low", 1, 0),
-      elevation_dummy_startmedium = ifelse(elevation_fact_start == "medium", 1, 0),
-      elevation_dummy_starthigh = ifelse(elevation_fact_start == "high", 1, 0),
-      elevation_dummy_endlow = ifelse(elevation_fact_end == "low", 1, 0),
-      elevation_dummy_endtmedium = ifelse(elevation_fact_end == "medium", 1, 0),
-      elevation_dummy_endhigh = ifelse(elevation_fact_end == "high", 1, 0)
-    )
+  # withCallingHandlers(
+  #   {
+  #     track <- amt_fisher |>
+  #       make_track(x_, y_, t_ = t_, id = id, sex = sex, name = name) |>
+  #       nest(data = !any_of(c("id", "sex", "name"))) |>
+  #       mutate(
+  #         steps = map(data, function(x) {
+  #           steps_final <- x |>
+  #             track_resample(rate = minutes(30), tolerance = minutes(5)) |>
+  #             steps_by_burst()
+  #           return(steps_final)
+  #         })
+  #       ) |>
+  #       unnest(cols = steps) |>
+  #       select(-data)
+  #
+  #     m1 <- track |>
+  #       filter(id == "M1") |>
+  #       amt::random_steps()
+  #
+  #     m4 <- track |>
+  #       filter(id == "M4") |>
+  #       amt::random_steps()
+  #
+  #     f2 <- track |>
+  #       filter(id == "F2") |>
+  #       amt::random_steps()
+  #
+  #     f1 <- track |>
+  #       filter(id == "F1") |>
+  #       amt::random_steps()
+  #
+  #   },
+  #   warning = function(w) invokeRestart("muffleWarning")
+  # )
+  #
+  #
+  #
+  # data <- rbind(
+  #   m1, m4, f2, f1
+  # ) |>
+  #   within(sex <- relevel(as.factor(sex), ref = REFERENCE_CATEGORY)) |>
+  #   mutate(
+  #     sl_sq_ = sl_ * sl_,
+  #     log_sl_ = log(sl_),
+  #     log_sl_sq_ = log_sl_ * log_sl_,
+  #     cos_ta_ = cos(ta_),
+  #     sex_three_factors = factor(ifelse(id == "F2", as.character("UNK"), as.character(sex)))
+  #   ) |>
+  #   extract_covariates(terra::unwrap(amt_fisher_covar$elevation)) |>
+  #   extract_covariates(terra::unwrap(amt_fisher_covar$elevation), where = "both") |>
+  #   mutate(
+  #     elevation_fact = case_when(
+  #       elevation <= quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+  #       elevation <= quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+  #       elevation <= quantile(elevation, probs = c(1), na.rm = T) ~ "high"
+  #     ) |> as.factor(),
+  #     elevation_fact_start = case_when(
+  #       elevation_start <= quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+  #       elevation_start <= quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+  #       elevation_start <= quantile(elevation, probs = c(1), na.rm = T) ~ "high"
+  #     ) |> as.factor(),
+  #     elevation_fact_end = case_when(
+  #       elevation_end <= quantile(elevation, probs = c(0.33), na.rm = T) ~ "low",
+  #       elevation_end <= quantile(elevation, probs = c(0.66), na.rm = T) ~ "medium",
+  #       elevation_end <= quantile(elevation, probs = c(1), na.rm = T) ~ "high"
+  #     ) |> as.factor(),
+  #     elevation_dummy_startlow = ifelse(elevation_fact_start == "low", 1, 0),
+  #     elevation_dummy_startmedium = ifelse(elevation_fact_start == "medium", 1, 0),
+  #     elevation_dummy_starthigh = ifelse(elevation_fact_start == "high", 1, 0),
+  #     elevation_dummy_endlow = ifelse(elevation_fact_end == "low", 1, 0),
+  #     elevation_dummy_endtmedium = ifelse(elevation_fact_end == "medium", 1, 0),
+  #     elevation_dummy_endhigh = ifelse(elevation_fact_end == "high", 1, 0)
+  #   )
 
   file_path <- str_interp("${get_data_path_root()}/fisher_data.rds")
-  saveRDS(data, file_path)
+  # saveRDS(data, file_path)
   data <- readRDS(file_path)
   if (custom_coefs) {
     # If the user isn't using the amt nomenclature
-    data <- data %>%
+    data <- data |>
       rename(
         step_length = sl_,
         turn_angle = ta_,
@@ -213,40 +220,40 @@ get_sample_mixed_models <- function(data = get_sample_fisher_data(), interaction
   # suppress model convergence warnings :/
   suppressWarnings({
     if (interaction_var_name == "elevation_dummy") {
-      models <- hash(
-        "gamma" = glmmTMB(case_ ~ sl_ +
-                            log_sl_ +
-                            sl_:elevation_dummy_startmedium +
-                            sl_:elevation_dummy_starthigh +
-                            log_sl_:elevation_dummy_startmedium +
-                            log_sl_:elevation_dummy_starthigh +
-                            (0 + sl_ + log_sl_ | id), data = data),
-        "exp" = glmmTMB(case_ ~ sl_ +
-                          sl_:elevation_dummy_startmedium +
-                          sl_:elevation_dummy_starthigh +
-                          (0 + sl_ | id), data = data),
-        "hnorm" = glmmTMB(case_ ~ sl_sq_ +
-                            sl_sq_:elevation_dummy_startmedium +
-                            sl_sq_:elevation_dummy_starthigh +
-                            (0 + sl_sq_ | id), data = data),
-        "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ +
-                            log_sl_:elevation_dummy_startmedium +
-                            log_sl_:elevation_dummy_starthigh +
-                            log_sl_sq_:elevation_dummy_startmedium +
-                            log_sl_sq_:elevation_dummy_starthigh +
-                            (0 + log_sl_ + log_sl_sq_ | id), data = data),
-        "vonmises" = glmmTMB(case_ ~ cos_ta_ +
-                               cos_ta_:elevation_dummy_startmedium +
-                               cos_ta_:elevation_dummy_starthigh +
-                               (0 + cos_ta_ | id), data = data),
-        "unif" = glmmTMB(case_ ~ cos_ta_ +
-                               cos_ta_:elevation_dummy_startmedium +
-                               cos_ta_:elevation_dummy_starthigh +
-                               (0 + cos_ta_ | id), data = data)
-      )
+      # models <- hash(
+      #   "gamma" = glmmTMB(case_ ~ sl_ +
+      #                       log_sl_ +
+      #                       sl_:elevation_dummy_startmedium +
+      #                       sl_:elevation_dummy_starthigh +
+      #                       log_sl_:elevation_dummy_startmedium +
+      #                       log_sl_:elevation_dummy_starthigh +
+      #                       (0 + sl_ + log_sl_ | id), data = data),
+      #   "exp" = glmmTMB(case_ ~ sl_ +
+      #                     sl_:elevation_dummy_startmedium +
+      #                     sl_:elevation_dummy_starthigh +
+      #                     (0 + sl_ | id), data = data),
+      #   "hnorm" = glmmTMB(case_ ~ sl_sq_ +
+      #                       sl_sq_:elevation_dummy_startmedium +
+      #                       sl_sq_:elevation_dummy_starthigh +
+      #                       (0 + sl_sq_ | id), data = data),
+      #   "lnorm" = glmmTMB(case_ ~ log_sl_ + log_sl_sq_ +
+      #                       log_sl_:elevation_dummy_startmedium +
+      #                       log_sl_:elevation_dummy_starthigh +
+      #                       log_sl_sq_:elevation_dummy_startmedium +
+      #                       log_sl_sq_:elevation_dummy_starthigh +
+      #                       (0 + log_sl_ + log_sl_sq_ | id), data = data),
+      #   "vonmises" = glmmTMB(case_ ~ cos_ta_ +
+      #                          cos_ta_:elevation_dummy_startmedium +
+      #                          cos_ta_:elevation_dummy_starthigh +
+      #                          (0 + cos_ta_ | id), data = data),
+      #   "unif" = glmmTMB(case_ ~ cos_ta_ +
+      #                          cos_ta_:elevation_dummy_startmedium +
+      #                          cos_ta_:elevation_dummy_starthigh +
+      #                          (0 + cos_ta_ | id), data = data)
+      # )
 
       file_path <- str_interp("${get_data_path_root()}/models/mixed/elevation_dummy_models.rds")
-      saveRDS(models, file_path)
+      # saveRDS(models, file_path)
     }
 
     if (interaction_var_name == "elevation_fact") {
@@ -384,9 +391,9 @@ get_cached_distribution <- function(dist_name) {
 
 get_sample_tentative_distribution <- function(dist_name = "gamma", column = "sl_") {
   distribution <- get_cached_distribution(dist_name)
-  if (is.null(distribution)) {
-    data <- get_sample_fisher_data() %>%
-      dplyr::filter(case_ == TRUE) %>%
+  if (is.null(NULL)) {
+    data <- get_sample_fisher_data() |>
+      dplyr::filter(case_ == TRUE) |>
       dplyr::pull(column)
     distribution <- amt::fit_distr(data, dist_name = dist_name, na.rm = TRUE)
     file_path <- here(str_interp("${get_data_path_root()}/fitted/${dist_name}.rds"))

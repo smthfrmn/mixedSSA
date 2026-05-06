@@ -91,7 +91,6 @@ add_nondummy_interaction_var_col <- function(model, interaction_var_name,
   assigned <- levels[max.col(dummy_matrix, ties.method = "first")]
   assigned[all_zero_rows] <- reference_class
 
-  browser()
   all_levels <- c(reference_class, levels)
   model$frame[[interaction_var_name]] <- factor(assigned, levels = all_levels)
   return(model)
@@ -142,3 +141,4 @@ update_dist_by_categorical_var <- function(model,
 
   return(updated_parameters)
 }
+

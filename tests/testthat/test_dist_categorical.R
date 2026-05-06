@@ -67,7 +67,8 @@ test_that("update_dist_by_categorical_var with interaction", {
       random_effects_var_name = NULL,
       interaction_var_name = "sex",
       coef_names = get_default_coef_names(dist_name),
-      tentative_dist = NULL
+      tentative_dist = NULL,
+      dummy_parameterization = F
     )
 
 
@@ -117,7 +118,8 @@ test_that("update_dist_by_categorical_var with interaction with more than two ca
       random_effects_var_name = NULL,
       interaction_var_name = "sex_three_factors",
       coef_names = get_default_coef_names(dist_name),
-      tentative_dist = NULL
+      tentative_dist = NULL,
+      dummy_parameterization = F
     )
 
     file_path <- here(str_interp(
@@ -167,7 +169,8 @@ test_that("update_dist_by_categorical_var with interaction with more than 2 cate
       random_effects_var_name = "id",
       interaction_var_name = "elevation_fact",
       coef_names = get_default_coef_names(dist_name),
-      tentative_dist = NULL
+      tentative_dist = NULL,
+      dummy_parameterization = F
     )
 
 
@@ -205,7 +208,8 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable t
     random_effects_var_name = "id",
     interaction_var_name = "sex",
     coef_names = get_default_coef_names("gamma"),
-    tentative_dist = NULL
+    tentative_dist = NULL,
+    dummy_parameterization = F
   )
 
 
@@ -234,7 +238,6 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable t
 test_that("update_dist_by_categorical_var with interaction with dummy variable more categories", {
   dummy_model <- get_sample_mixed_models(interaction_var_name = "elevation_dummy")$gamma
   data <- get_sample_fisher_data()
-  browser()
   results <- update_dist_by_categorical_var(
     model = dummy_model,
     dist_name = "gamma",
@@ -252,7 +255,7 @@ test_that("update_dist_by_categorical_var with interaction with dummy variable m
 
   saveRDS(results@updated_parameters, file_path)
 
-  expected_movement_data <- abs(subset(data, case_ == TRUE)[["sl_"]])
+  expected_movement_data <- subset(data, case_ == TRUE)[["sl_"]]
   expected_results_tibble <- readRDS(file_path)
 
   expected_dummy_model <- dummy_model

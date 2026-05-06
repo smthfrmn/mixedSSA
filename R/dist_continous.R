@@ -75,7 +75,8 @@ update_dist_by_continuous_var <- function(model,
                                           interaction_var_name,
                                           coef_names,
                                           quantiles,
-                                          tentative_dist) {
+                                          tentative_dist,
+                                          dummy_parameterization) {
   validate_continuous_args(
     quantiles = quantiles
   )

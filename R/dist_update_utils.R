@@ -374,8 +374,8 @@ get_movement_data <- function(model, movement_coef_name, dist_name) {
     attr(model$modelInfo$terms$cond$fixed, which = "variables")[2]
   )
 
-  movement_data <- data %>%
-    dplyr::filter(!!sym(case_var) == TRUE) %>%
+  movement_data <- data |>
+    dplyr::filter(!!sym(case_var) == TRUE) |>
     dplyr::pull(movement_coef_name)
 
   transformed_data <- transform_movement_data(movement_data, dist_name)

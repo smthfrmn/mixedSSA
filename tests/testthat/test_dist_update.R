@@ -1,19 +1,25 @@
 test_that("is_categorical gets dummy variable", {
   model <- get_sample_dummy_model()
-  expect_true(is_categorical(model, "sex"))
+  expect_true(is_categorical(model, "sex", dummy_parameterization = F))
+})
+
+
+test_that("is_categorical gets more than 3 category dummy variable", {
+  model <- get_sample_mixed_models(interaction_var_name = "elevation_dummy")$gamma
+  expect_true(is_categorical(model, "elevation_dummy_start", dummy_parameterization = T))
 })
 
 
 test_that("is_categorical gets character variable", {
   model <- get_sample_models(interaction_var_name = "sex")[["gamma"]]
   model$frame$sex <- as.character(model$frame$sex)
-  expect_true(is_categorical(model, "sex"))
+  expect_true(is_categorical(model, "sex", dummy_parameterization = F))
 })
 
 
 test_that("is_categorical gets categorical variable", {
   model <- get_sample_models(interaction_var_name = "sex")[["gamma"]]
-  expect_true(is_categorical(model, "sex"))
+  expect_true(is_categorical(model, "sex", dummy_parameterization = F))
 })
 
 
@@ -448,6 +454,83 @@ test_that("update_dist special characters in movement params categorical", {
       interaction_var = interaction_var,
       movement_data = NULL,
       model = model
+    )
+
+    expect_equal(results, expected_results)
+  }
+})
+
+
+
+test_that("update_dist categorical no random effects dummy variable with more than three categories", {
+  dists <- get_supported_distributions()
+  data <- get_sample_fisher_data()
+  models <- get_sample_mixed_models(
+    data = data,
+    interaction_var_name = "elevation_dummy"
+  )
+  for (i in 1:length(dists)) {
+    dist_name <- dists[i]
+    model <- models[[dist_name]]
+
+    column <- ifelse(dist_name %in% TURN_ANGLE_DISTRIBUTIONS, "ta_", "sl_")
+
+    mockr::local_mock(
+      fit_distribution = function(movement_data, dist_name, na_rm) get_sample_tentative_distribution(dist_name = dist_name, column = column)
+    )
+
+    args <- list(
+      model = model,
+      dist_name = dist_name,
+      interaction_var_name = "elevation_dummy_start",
+      dummy_parameterization = TRUE
+    )
+
+    if (dist_name %in% NEED_TENTATIVE_DIST) {
+      args$tentative_dist <- get_sample_tentative_distribution(
+        dist_name = dist_name, column = column
+      )
+      expected_movement_data <- NULL
+    } else {
+      expected_movement_data <- abs(subset(data, case_ == TRUE)[[column]])
+    }
+
+    update_args <- switch(as.character(dist_name),
+                          "gamma" = list(beta_sl = "sl_", beta_log_sl = "log_sl_"),
+                          "exp" = list(beta_sl = "sl_"),
+                          "hnorm" = list(beta_sl_sq = "sl_sq_"),
+                          "lnorm" = list(beta_log_sl = "log_sl_", beta_log_sl_sq = "log_sl_sq_"),
+                          "vonmises" = list(beta_cos_ta = "cos_ta_")
+    )
+
+    results <- do.call(update_dist, args = c(args, update_args))
+    file_path <- here(str_interp(
+      "${get_data_path_root()}/expected/categorical/three_factors/${dist_name}_dummy.rds"
+    ))
+
+    expected_results_tibble <- readRDS(file_path)
+
+    expected_dummy_model <- model
+
+    expected_dummy_model$frame <- expected_dummy_model$frame |>
+      mutate(
+        elevation_dummy_start = case_when(
+          elevation_dummy_startmedium == 1 ~ "medium",
+          elevation_dummy_starthigh == 1 ~ "high",
+          TRUE ~ "DummyReferenceClass"
+        ),
+        elevation_dummy_start = factor(elevation_dummy_start, levels = c("DummyReferenceClass",
+                                                                         "medium", "high"))
+      )
+
+    expected_results <- updatedDistributionParameters(
+      updated_parameters = expected_results_tibble,
+      distribution_name = dist_name,
+      grouping_type = "category",
+      interaction_var = "elevation_dummy_start",
+      random_effect = NULL,
+      movement_data = expected_movement_data,
+      model = expected_dummy_model
     )
 
     expect_equal(results, expected_results)
