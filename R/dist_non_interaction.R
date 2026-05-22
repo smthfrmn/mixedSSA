@@ -29,7 +29,7 @@ update_dist_no_interaction <- function(model,
                                        coef_names,
                                        random_effects_var_name,
                                        tentative_dist,
-                                       dummy_parameterization) {
+                                       ...) {
   coefs <- get_coefs_from_model(
     model = model,
     random_effects_var_name = random_effects_var_name
